@@ -2550,7 +2550,7 @@ You can search for labels using the @t{label:} field. For instance,
 are not changed). This means that you would @emph{loose} this information when
 you remove the database and recreate it, @emph{unless} you @emph{export} the
 labels before removin the database and re-@emph{import} them after re-creating
-and re-indexing it; see the @t{mu-label} man-page for further details.
+and re-indexing it; see the @command{mu-labels} man-page for further details.
 
 @subsection Doing @emph{something}
 

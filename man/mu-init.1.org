@@ -110,7 +110,7 @@ You can restore those labels _after_ re-indexing, e.g.,
 $ mu label import /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
 #+end_example
 
-Please see {{{man-link(mu-label,1)}}} for further details.
+Please see {{{man-link(mu-labels,1)}}} for further details.
 
 * EXAMPLE
 #+begin_example
@@ -123,6 +123,6 @@ $ mu init --maildir=~/Maildir --my-address=alice@example.com --my-address=bob@ex
 
 {{{man-link(mu-index,1)}}},
 {{{man-link(mu-find,1)}}},
-{{{man-link(mu-label,1)}}},
+{{{man-link(mu-labels,1)}}},
 {{{man-link(mu-cfind,1)}}},
 {{{man-link(pcre,3)}}}

@@ -37,7 +37,7 @@ label_update(Mu::Store& store, const Options& opts)
 	// First get our list of parsed delta-label, and ensure they
 	// are valid.
 	DeltaLabelVec deltas{};
-	for (auto&& delta_label : opts.label.delta_labels) {
+	for (auto&& delta_label : opts.labels.delta_labels) {
 	  if (const auto res = parse_delta_label(delta_label); !res)
 		  return Err(Error{Error::Code::InvalidArgument,
 				   "invalid delta-label '{}': {}", delta_label,
@@ -46,12 +46,12 @@ label_update(Mu::Store& store, const Options& opts)
 		  deltas.emplace_back(std::move(*res));
 	}
 
-	if (!opts.label.query)
+	if (!opts.labels.query)
 		return Err(Error{Error::Code::Query,
 				 "missing query"});
 
 	// now run the query and apply the deltas to each.
-	const auto query{*opts.label.query};
+	const auto query{*opts.labels.query};
 	auto results{store.run_query(query)};
 	if (!results)
 		return Err(Error{Error::Code::Query,
@@ -59,23 +59,23 @@ label_update(Mu::Store& store, const Options& opts)
 
 	// seems we got some results... let's apply to each
 	size_t n{};
-	const auto labelstr{join(opts.label.delta_labels, " ")};
+	const auto labelstr{join(opts.labels.delta_labels, " ")};
 	for (auto&& result : *results) {
 		if (auto &&msg{result.message()}; msg) {
 
-			if (opts.label.dry_run || opts.verbose)
+			if (opts.labels.dry_run || opts.verbose)
 				mu_println("labels: apply {} to {}", labelstr, msg->path());
 
-			if (!opts.label.dry_run) {
+			if (!opts.labels.dry_run) {
 				store.update_labels(*msg, deltas);
 			}
 			++n;
 		}
 	}
 
-	if (opts.verbose || opts.label.dry_run)
+	if (opts.verbose || opts.labels.dry_run)
 		mu_println("labels: {}updated {} message(s)",
-			   opts.label.dry_run ? "would have " : "", n);
+			   opts.labels.dry_run ? "would have " : "", n);
 
 	return Ok();
 }
@@ -83,11 +83,11 @@ label_update(Mu::Store& store, const Options& opts)
 static Result<void>
 label_clear(Mu::Store& store, const Options& opts)
 {
-	if (!opts.label.query)
+	if (!opts.labels.query)
 		return Err(Error{Error::Code::Query,
 				 "missing query"});
 
-	const auto query{*opts.label.query};
+	const auto query{*opts.labels.query};
 	auto results{store.run_query(query)};
 	if (!results)
 		return Err(Error{Error::Code::Query,
@@ -97,19 +97,19 @@ label_clear(Mu::Store& store, const Options& opts)
 	for (auto&& result : *results) {
 		if (auto &&msg{result.message()}; msg) {
 
-			if (opts.label.dry_run || opts.verbose)
+			if (opts.labels.dry_run || opts.verbose)
 				mu_println("labels: clear all from {}", msg->path());
 
-			if (!opts.label.dry_run) {
+			if (!opts.labels.dry_run) {
 				store.clear_labels(*msg);
 			}
 			++n;
 		}
 	}
 
-	if (opts.verbose || opts.label.dry_run)
+	if (opts.verbose || opts.labels.dry_run)
 		mu_println("labels: {}cleared {} message(s)",
-			   opts.label.dry_run ? "would have " : "", n);
+			   opts.labels.dry_run ? "would have " : "", n);
 
 	return Ok();
 }
@@ -117,14 +117,6 @@ label_clear(Mu::Store& store, const Options& opts)
 static Result<void>
 label_list(Mu::Store& store, const Options& opts)
 {
-	if (opts.label.restore) {
-		if (!opts.quiet)
-			mu_println("labels: restoring list from store...");
-		if (const auto res = store.restore_label_map(); !res) {
-			return res;
-		}
-	}
-
 	for (const auto& [label, n]: store.label_map())
 		if (opts.verbose)
 			mu_println("{}: {}", label, n);
@@ -134,10 +126,24 @@ label_list(Mu::Store& store, const Options& opts)
 	return Ok();
 }
 
+
+
+static Result<void>
+label_restore_list(Mu::Store& store, const Options& opts)
+{
+	if (!opts.quiet)
+		mu_println("labels: restoring list from store...");
+	if (const auto res = store.restore_label_map(); !res || opts.quiet)
+		return res;
+
+	return label_list(store, opts);
+}
+
+
 static Result<void>
 label_export(const Mu::Store& store, const Options& opts)
 {
-	const auto res = export_labels(store, "", opts.label.file);
+	const auto res = export_labels(store, "", opts.labels.file);
 	if (!res)
 		return Err(res.error());
 
@@ -151,27 +157,29 @@ static Result<void>
 label_import(Mu::Store& store, const Options& opts)
 {
 	// sanity check, should be caught during arg parsing
-	if (!opts.label.file)
+	if (!opts.labels.file)
 		return Err(Error{Error::Code::InvalidArgument,
 				"missing input file"});
 
-	return Mu::import_labels(store, *opts.label.file,
-				     opts.label.dry_run, opts.quiet, opts.verbose);
+	return Mu::import_labels(store, *opts.labels.file,
+				     opts.labels.dry_run, opts.quiet, opts.verbose);
 }
 
 Result<void>
-Mu::mu_cmd_label(Mu::Store &store, const Options &opts)
+Mu::mu_cmd_labels(Mu::Store &store, const Options &opts)
 {
-	switch (opts.label.sub) {
-	case Options::Label::Sub::List:
+	switch (opts.labels.sub) {
+	case Options::Labels::Sub::List:
 		return label_list(store, opts);
-	case Options::Label::Sub::Update:
+	case Options::Labels::Sub::RestoreList:
+		return label_restore_list(store, opts);
+	case Options::Labels::Sub::Update:
 		return label_update(store, opts);
-	case Options::Label::Sub::Clear:
+	case Options::Labels::Sub::Clear:
 		return label_clear(store, opts);
-	case Options::Label::Sub::Export:
+	case Options::Labels::Sub::Export:
 		return label_export(store, opts);
-	case Options::Label::Sub::Import:
+	case Options::Labels::Sub::Import:
 		return label_import(store, opts);
 
 	default:
@@ -193,11 +201,11 @@ Mu::mu_cmd_label(Mu::Store &store, const Options &opts)
 static std::string test_mu_home;
 
 static void
-test_mu_label_update()
+test_mu_labels_update()
 {
 	{
 		const auto res = run_command({MU_PROGRAM,
-			"label", "update", "subject:abc",
+			"labels", "update", "subject:abc",
 			"--labels", "+foo,-bar",
 			"--muhome", test_mu_home});
 		assert_valid_result(res);
@@ -223,7 +231,7 @@ test_mu_label_update()
 
 	{
 		const auto res = run_command({MU_PROGRAM,
-			"label", "update",
+			"labels", "update",
 			"subject:abc",
 			"--labels", "-foo,+bar",
 			"--muhome", test_mu_home});
@@ -250,11 +258,11 @@ test_mu_label_update()
 }
 
 static void
-test_mu_label_clear()
+test_mu_labels_clear()
 {
 	{
 		const auto res = run_command({MU_PROGRAM,
-			"label", "update", "subject:abc",
+			"labels", "update", "subject:abc",
 			"--labels", "+foo",
 			"--muhome", test_mu_home});
 		assert_valid_result(res);
@@ -271,7 +279,7 @@ test_mu_label_clear()
 	}
 	{
 		const auto res = run_command({MU_PROGRAM,
-			"label", "clear", "subject:abc",
+			"labels", "clear", "subject:abc",
 			"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -289,11 +297,11 @@ test_mu_label_clear()
 
 
 static void
-test_mu_label_list()
+test_mu_labels_list()
 {
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "update", "subject:abc",
+				"labels", "update", "subject:abc",
 				"--labels", "+foo,-bar,+cuux,+fnorb",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
@@ -302,7 +310,7 @@ test_mu_label_list()
 
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "update", "subject:abc",
+				"labels", "update", "subject:abc",
 				"--labels", "-cuux",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
@@ -312,7 +320,7 @@ test_mu_label_list()
 
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "list",
+				"labels", "list",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -322,7 +330,7 @@ test_mu_label_list()
 }
 
 static void
-test_mu_label_export_import()
+test_mu_labels_export_import()
 {
 	TempDir temp_dir{};
 	const auto exportfile{join_paths(temp_dir.path(), "export.txt")};
@@ -330,7 +338,7 @@ test_mu_label_export_import()
 	// ensure  there are some labels (from previous test)
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "list",
+				"labels", "list",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -342,7 +350,7 @@ test_mu_label_export_import()
 	// fnorb,foo
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "export", exportfile,
+				"labels", "export", exportfile,
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -362,7 +370,7 @@ test_mu_label_export_import()
 	// ensure the labels are gone.
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "list",
+				"labels", "list",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -372,7 +380,7 @@ test_mu_label_export_import()
 	// import the labels
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "import", exportfile,
+				"labels", "import", exportfile,
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -381,7 +389,7 @@ test_mu_label_export_import()
 	// ensure the label are back
 	{
 		const auto res = run_command({MU_PROGRAM,
-				"label", "list",
+				"labels", "list",
 				"--muhome", test_mu_home});
 		assert_valid_result(res);
 		g_assert_cmpuint(res->exit_code,==,0);
@@ -410,10 +418,10 @@ main(int argc, char* argv[])
 		assert_valid_result(res2);
 	}
 
-	g_test_add_func("/cmd/label/update", test_mu_label_update);
-	g_test_add_func("/cmd/label/clear",  test_mu_label_clear);
-	g_test_add_func("/cmd/label/list",   test_mu_label_list);
-	g_test_add_func("/cmd/label/export-import",   test_mu_label_export_import);
+	g_test_add_func("/cmd/labels/update", test_mu_labels_update);
+	g_test_add_func("/cmd/labels/clear", test_mu_labels_clear);
+	g_test_add_func("/cmd/labels/list", test_mu_labels_list);
+	g_test_add_func("/cmd/labels/export-import", test_mu_labels_export_import);
 
 
 	return g_test_run();

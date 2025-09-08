@@ -177,11 +177,11 @@ Mu::mu_cmd_execute(const Options& opts) try {
 	/*
 	 *  read-only _or_ writable store
 	 */
-	case Options::SubCommand::Label:
-		if (opts.label.read_only)
-			return with_readonly_store2(mu_cmd_label, opts);
+	case Options::SubCommand::Labels:
+		if (opts.labels.read_only)
+			return with_readonly_store2(mu_cmd_labels, opts);
 		else
-			return with_writable_store(mu_cmd_label, opts);
+			return with_writable_store(mu_cmd_labels, opts);
 	/*
 	 * commands instantiate store themselves
 	 */

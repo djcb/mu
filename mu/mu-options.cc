@@ -33,7 +33,6 @@
  *
  */
 
-
 #include <config.h>
 #include <stdexcept>
 #include <array>
@@ -67,7 +66,6 @@ using namespace Mu;
  */
 template<typename T1, typename T2, std::size_t N>
       using AssocPairs = std::array<std::pair<T1, T2>, N>;
-
 
 /**
   * Get the first value of the pair where the second element is @param s.
@@ -104,7 +102,6 @@ to_second(const P& p, typename P::value_type::first_type f)
 			return item.second;
 	return Nothing;
 }
-
 
 /**
  * Options-specific array-bases type that maps some enum to a <name, description> pair
@@ -169,7 +166,6 @@ options_help(const IE& ie, typename IE::value_type::first_type default_opt)
 	}
 	return s;
 }
-
 
 /**
  * Get map from string->type
@@ -275,7 +271,6 @@ sub_cfind(CLI::App& sub, Options& opts)
 }
 
 
-
 static void
 sub_extract(CLI::App& sub, Options& opts)
 {
@@ -327,7 +322,6 @@ sub_fields(CLI::App& sub, Options& opts)
 {
 	// nothing to do.
 }
-
 
 static void
 sub_find(CLI::App& sub, Options& opts)
@@ -447,7 +441,6 @@ sub_index(CLI::App& sub, Options& opts)
 		     "Perform a complete reindexing");
 }
 
-
 static void
 sub_info(CLI::App& sub, Options& opts)
 {
@@ -501,48 +494,51 @@ sub_init(CLI::App& sub, Options& opts)
 }
 
 static void
-sub_label(CLI::App& sub, Options& opts)
+sub_labels(CLI::App& sub, Options& opts)
 {
-	sub.require_subcommand(1);
+	sub.require_subcommand(0);
 
 	// update
 	auto update{sub.add_subcommand("update", "update labels")};
-	update->add_option("--labels", opts.label.delta_labels,
+	update->add_option("--labels", opts.labels.delta_labels,
 		       "One or more comma-separated +label,-label")
 		->delimiter(',')
 		->type_name("<delta-label>")
 		->required();
-	update->add_flag("-n,--dry-run", opts.label.dry_run,
+	update->add_flag("-n,--dry-run", opts.labels.dry_run,
 		     "Output what would change without changing anything");
-	update->add_option("query", opts.label.query, "Query for messages to update")
+	update->add_option("query", opts.labels.query, "Query for messages to update")
 		->required();
 	add_muhome_option(*update, opts);
 
 	// clear
 	auto clear = sub.add_subcommand("clear", "clear all labels from matched messages");
-	clear ->add_option("query", opts.label.query, "Query for messages to clear of labels")
+	clear ->add_option("query", opts.labels.query, "Query for messages to clear of labels")
 		->required();
-	clear->add_flag("-n,--dry-run", opts.label.dry_run,
+	clear->add_flag("-n,--dry-run", opts.labels.dry_run,
 		     "Output what would change without changing anything");
 	add_muhome_option(*clear, opts);
 
 	// list
 	[[maybe_unused]] auto list = sub.add_subcommand("list", "list labels in the store");
-	list->add_flag("--restore", opts.label.restore,
-			 "Restore the label-list from the labels in store");
 	add_muhome_option(*list, opts);
+
+	// restore-list
+	[[maybe_unused]] auto restore_list = sub.add_subcommand(
+		"restore-list", "restore the labels cache");
+	add_muhome_option(*restore_list, opts);
 
 	// export
 	[[maybe_unused]] auto exportsub = sub.add_subcommand("export", "export labels to a file");
 	add_muhome_option(*exportsub, opts);
-	exportsub->add_option("output", opts.label.file, "File to export labels to")
+	exportsub->add_option("output", opts.labels.file, "File to export labels to")
 		->type_name("<file>");
 
 	// import
 	auto importsub = sub.add_subcommand("import", "import labels from a file");
-	importsub->add_flag("-n,--dry-run", opts.label.dry_run,
+	importsub->add_flag("-n,--dry-run", opts.labels.dry_run,
 			    "Output what would change without changing anything");
-	importsub->add_option("input", opts.label.file, "File with labels to import")
+	importsub->add_option("input", opts.labels.file, "File with labels to import")
 		->required()
 		->type_name("<file>");
 	add_muhome_option(*importsub, opts);
@@ -555,24 +551,26 @@ sub_label(CLI::App& sub, Options& opts)
 
 	sub.final_callback([&](){
 		if (sub.got_subcommand("list")) {
-			opts.label.sub = Options::Label::Sub::List;
-			opts.label.read_only = opts.label.restore ? false : true;
+			opts.labels.sub = Options::Labels::Sub::List;
+			opts.labels.read_only = true;
+		} else if (sub.got_subcommand("restore-list")) {
+			opts.labels.sub = Options::Labels::Sub::RestoreList;
+			opts.labels.read_only  = false;/*opts.labels.dry_run*/
 		} else if (sub.got_subcommand("clear")) {
-			opts.label.sub = Options::Label::Sub::Clear;
-			opts.label.read_only = opts.label.dry_run;
+			opts.labels.sub = Options::Labels::Sub::Clear;
+			opts.labels.read_only = opts.labels.dry_run;
 		} else if (sub.got_subcommand("update")){
-			opts.label.sub = Options::Label::Sub::Update;
-			opts.label.read_only = opts.label.dry_run;
+			opts.labels.sub = Options::Labels::Sub::Update;
+			opts.labels.read_only = opts.labels.dry_run;
 		} else if (sub.got_subcommand("export")){
-			opts.label.sub = Options::Label::Sub::Export;
-			opts.label.read_only = true;
+			opts.labels.sub = Options::Labels::Sub::Export;
+			opts.labels.read_only = true;
 		} else if (sub.got_subcommand("import")){
-			opts.label.sub = Options::Label::Sub::Import;
-			opts.label.read_only = opts.label.dry_run;
+			opts.labels.sub = Options::Labels::Sub::Import;
+			opts.labels.read_only = opts.labels.dry_run;
 		}
 	});
 }
-
 
 static void
 sub_mkdir(CLI::App& sub, Options& opts)
@@ -585,7 +583,6 @@ sub_mkdir(CLI::App& sub, Options& opts)
 		->type_name("<dir>")
 		->required();
 }
-
 
 static void
 sub_move(CLI::App& sub, Options& opts)
@@ -608,7 +605,6 @@ sub_move(CLI::App& sub, Options& opts)
 		       "Destination maildir")
 		->type_name("<maildir>");
 }
-
 
 static void
 sub_remove(CLI::App& sub, Options& opts)
@@ -719,7 +715,6 @@ sub_view(CLI::App& sub, Options& opts)
 		->type_name("<message-path>");
 }
 
-
 using	SubCommand = Options::SubCommand;
 using   Category   = Options::Category;
 
@@ -771,9 +766,9 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		  {Category::NeedsWritableStore,
 		  "init", "Initialize the mu database", sub_init }
 		},
-		{ SubCommand::Label,
+		{ SubCommand::Labels,
 		  {Category::None, // note Store handled on sub-subcommmands
-		  "label", "Add/remove labels form messages", sub_label }
+		  "labels", "Manage message labels", sub_labels }
 		},
 		{ SubCommand::Mkdir,
 		  {Category::None,
@@ -811,7 +806,6 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 	}};
 
-
 static ScriptInfos
 add_scripts(CLI::App& app, Options& opts)
 {
@@ -832,7 +826,6 @@ add_scripts(CLI::App& app, Options& opts)
 #endif /*BUILD_GUILE*/
 }
 
-
 static Result<Options>
 show_manpage(Options& opts, const std::string& name)
 {
@@ -850,7 +843,6 @@ show_manpage(Options& opts, const std::string& name)
 
 	return Ok(std::move(opts));
 }
-
 
 static Result<Options>
 cmd_help(const CLI::App& app, Options& opts)
@@ -905,7 +897,7 @@ Result<Options>
 Options::make(int argc, char *argv[])
 {
 	Options opts{};
-	CLI::App app{"mu mail indexer/searcher", "mu"};
+	CLI::App app{"mu mail indexer/searcher " PACKAGE_VERSION, "mu"};
 
 	app.description(R"(mu mail indexer/searcher
 Copyright (C) 2008-2025 Dirk-Jan C. Binnema
@@ -915,7 +907,7 @@ This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 )");
 	app.set_version_flag("-V,--version", PACKAGE_VERSION);
-	app.set_help_flag("-h,--help", "Show help informmation");
+	app.set_help_flag("-h,--help", "Show help information");
 	app.set_help_all_flag("--help-all");
 	app.require_subcommand(0, 1);
 
@@ -1030,7 +1022,6 @@ validate_subcommand_ids()
 #ifdef BUILD_TESTS
 #define static_assert g_assert_true
 #endif /*BUILD_TESTS*/
-
 
 [[maybe_unused]]
 static void

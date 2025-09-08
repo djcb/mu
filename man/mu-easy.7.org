@@ -305,7 +305,7 @@ fields, since labels are not intrinsic parts of messages, so removing your
 message database, and then re-indexing won't bring back your labels.
 
 For that reason, you can export labels to a file and later import them again
-(see {{{man-link(mu-label,1)}}})
+(see {{{man-link(mu-labels,1)}}})
 
 Some examples:
 
@@ -329,7 +329,7 @@ There's also *mu label clear* to remove all labels from matching messages; and t
 the mutating *label* subcommands (*update*, *clear*, *import*) accept a *--dry-run* option
 for just printing what they /would/ change, without actually changing anything.
 
-{{{man-link(mu-label,1)}}} has all the details.
+{{{man-link(mu-labels,1)}}} has all the details.
 
 #+include: "prefooter.inc" :minlevel 1
 
@@ -343,4 +343,4 @@ for just printing what they /would/ change, without actually changing anything.
 {{{man-link(mu-mkdir,1)}}},
 {{{man-link(mu-view,1)}}},
 {{{man-link(mu-extract,1)}}}
-{{{man-link(mu-label,1)}}}
+{{{man-link(mu-labels,1)}}}

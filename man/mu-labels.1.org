@@ -1,34 +1,37 @@
-#+TITLE: MU LABEL
+#+TITLE: MU LABELS
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 #+include: macros.inc
 
 * NAME
 
-mu-label - attach labels to messages. Export labels to file, and import them.
+mu-labels - attach labels to messages. Export labels to file, and import them.
 
 * SYNOPSIS
 
-*mu* [​_COMMON-OPTIONS_​] *label* update [​UPDATE-OPTIONS​] "<query>" --labels [{+,-}<label>]...
+*mu* [​_COMMON-OPTIONS_​] labels update [​UPDATE-OPTIONS​] "<query>" --labels [{+,-}<label>]...
 
-*mu* [​_COMMON-OPTIONS_​] *label* list [LIST-OPTIONS]
+*mu* [​_COMMON-OPTIONS_​] labels list
 
-mu [​_COMMON-OPTIONS_​] *label* clear [CLEAR-OPTIONS] "<query>"
+*mu* [​_COMMON-OPTIONS_​] labels list-restore
 
-mu [​_COMMON-OPTIONS_​] *label* export [<file>]
+*mu* [​_COMMON-OPTIONS_​] labels clear [CLEAR-OPTIONS] "<query>"
 
-mu [​_COMMON-OPTIONS_​] *label* import <file>
+*mu* [​_COMMON-OPTIONS_​] labels export [<file>]
+
+*mu* [​_COMMON-OPTIONS_​] labels import <file>
 
 * DESCRIPTION
 
-*mu label* is the sub-command for adding and removing and listing message labels.
+*mu labels* is the sub-command for adding and removing and listing message labels.
 
 A label is a string associated with a message.
 
-*mu label* has five sub-commands (i.e., 'sub-sub-commands'):
+*mu labels* has five sub-commands (i.e., 'sub-sub-commands'):
 
 - *update* for changing the labels for the messages matching some query
 - *clear* for clearing all labels from messages matching some query
-- *list* to list all labels that are in use in the store
+- *list* to list all labels that are used in the store
+- *list-restore* to restore the list of labels from the store
 - *export* to write the label information to a file
 - *import* the read label information from a file
 
@@ -38,7 +41,7 @@ must *export* it before re-indexing, and *import* afterwards.
 
 * UPDATE OPTIONS
 
-The *update* coxmmand changes the labels for messages that match some query. The
+The *update* command changes the labels for messages that match some query. The
 query must be recognized as a single parameter; hence, it must be quoted when
 using from a shell.
 
@@ -66,20 +69,21 @@ when using a shell.
 
   only print what /would/ change, but do not change anything
 
-#+include: "muhome.inc" :minlevel 2
+  #+include: "muhome.inc" :minlevel 2
 
 * LIST OPTIONS
 
 The *list* command lists all the labels that are currently in use in the store.
-This is the same information used for auto-completion in *mu4e*.
+This is the information is used for auto-completion in *mu4e*.
 
 With the (global, directly after *mu) *--verbose* option, this also includes the
 counts.
 
-** --restore
+* LIST-RESTORE OPTIONS
 
-  attempt to restore the list from the labels in the store.
-  It is possible that the list to get outdated, *--restore* fixes this.
+It is possible that the list of labels (as per the *list* sub-command) gets
+outdated for various reasons. With *list-restore*, this list get refreshed with
+the actual labels as seen in the store.
 
 * EXPORT OPTIONS
 
@@ -125,14 +129,19 @@ ones are: ~holiday plan~ and ~+fancy$/dinner~.
 
 * EXPORT FORMAT
 
-The formats for import/export are UTF-8 encoded text. The first line starts with
+The formats for import/export are UTF8-encoded text. The first line starts with
 ~;;~ and some internal data. Empty lines are ignored.
 
-Each entry represents the tags for a message. It consists of three lines. The
-first starts with ~path:~ followed by the file-system path to the message. The
-second line starts with ~message-id:~ followed by the message-id for the message.
-Finally, the third line starts with ~tag:~ followed by space-separated tags for
-the message
+Each entry represents the labels for a message. Messages without labels are not
+included.
+
+An entry consists of three lines:
+1. The first line starts with ~path:~ followed by the file-system path to the
+   message.
+2. The second line starts with ~message-id:~ followed by the message-id for the
+   message.
+3. Finally, the third line starts with ~labels:~ followed by the space-separated
+   labels for the message
 
 #+begin_example
 path:/home/user/Maildir/inbox/cur/1720645394.99f64f5d81f42ba4.hyperion:2,S
@@ -140,7 +149,7 @@ message-id:669338009127192q7821feh1t826d0c4c90bd8fdf@mail.gmail.com
 labels:foo,bar,cuux
 #+end_example
 
-Note, the ~message-id:~ is only used if the message cannot be found using ~path:~.
+The ~message-id:~ is only used if the message cannot be found using ~path:~.
 
 This adds some fault-tolerance for the case where the precise file-system
 positions have changed since the labels were exported. The upshot of that is
@@ -157,12 +166,12 @@ it is recognized as a single parameter.
 Remove the label "planet" and add the label "dwarf-planet" to all messages that
 have "pluto" in their subject:
 #+begin_export
-$ mu label update "subject:pluto" --labels -planet,+dwarf-planet
+$ mu labels update "subject:pluto" --labels -planet,+dwarf-planet
 #+end_export
 
 Clear all labels from messages with the label "boring":
 #+begin_export
-$ mu label clear "label:boring"
+$ mu labels clear "label:boring"
 #+end_export
 
 #+include: "prefooter.inc" :minlevel 1

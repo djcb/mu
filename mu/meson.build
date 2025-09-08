@@ -25,7 +25,7 @@ mu = executable(
   'mu-cmd-info.cc',
   'mu-cmd-init.cc',
   'mu-cmd-index.cc',
-  'mu-cmd-label.cc',
+  'mu-cmd-labels.cc',
   'mu-cmd-mkdir.cc',
   'mu-cmd-move.cc',
   'mu-cmd-remove.cc',

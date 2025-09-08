@@ -117,14 +117,14 @@ Result<void> mu_cmd_info(const Mu::Store& store, const Options& opts);
 Result<void> mu_cmd_init(const Options& opts);
 
 /**
- * execute the 'label' command
+ * execute the 'labels' sub-command
  *
  * @param store message store object.
  * @param opts configuration options
  *
  * @return Ok() or some error
  */
-Result<void> mu_cmd_label(Store& store, const Options& opts);
+Result<void> mu_cmd_labels(Store& store, const Options& opts);
 
 /**
  * execute the 'mkdir' command
