@@ -482,10 +482,11 @@ The server output is as follows:
 
           (funcall mu4e-info-func sexp))
 
-         ;; get some data
-         ((plist-get sexp :maildirs)
+         ;; get some data; use plist-members, since the
+         ;; the value may be nil.
+         ((plist-member sexp :maildirs)
           (setq mu4e-maildir-list (mu4e--server-plist-get sexp :maildirs)))
-         ((plist-get sexp :labels)
+         ((plist-member sexp :labels)
           (setq mu4e-labels-list (mu4e--server-plist-get sexp :labels)))
 
          ;; receive an error
