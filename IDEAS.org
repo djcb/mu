@@ -38,11 +38,13 @@ future.
   https://github.com/djcb/mu/issues/2308
   Shouldn't be _too_ hard, for someone that uses the functionality.
 
-- Support "aggregate actions" apply to a set of messages, e.g. apply patch-set
-  in a set of messages. That'll require some advanced scripting, maybe using
-  Guile.
-  https://github.com/djcb/mu/issues/301
-  https://github.com/djcb/mu/issues/2704
+- Apply the same action on multiple message, i.e., support "aggregate actions"
+  apply to a set of messages, e.g. apply patch-set in a set of messages. That'll
+  require some advanced scripting, maybe using Guile.
+  https://github.com/djcb/mu/issues/301 https://github.com/djcb/mu/issues/2704
+
+- As the flip-side of the previous, apply multiple marks/actions on the same
+  message. https://github.com/djcb/mu/issues/2671
 
 - Make sorting stable if there are multiple messages with the same date. We
   _could_ do this by adding some random millisecs to each message's timestamp; _or_
@@ -52,6 +54,11 @@ future.
 - Perhaps better support file names with commas.. perhaps temporarily add some
   invisible unicode to fool crm-separator?
   https://github.com/djcb/mu/issues/2768
+
+- More general, make the MIME-part handling in the viewer a bit better, we have
+  the ~e~-path and the ~A~-path which is a bit confusing. Perhaps we should generate
+  the MIME parts off-screen (buffer).
+  https://github.com/djcb/mu/issues/2647
 
 - Org-link type for any message matching some reference See:
   https://github.com/djcb/mu/issues/2787. Some first steps implemented
@@ -78,11 +85,11 @@ future.
 
 * Done
 
-- Support mu4e-mark-handle-when also for when leaving emacs
+** DONE Support mu4e-mark-handle-when also for when leaving emacs
   (kill-emacs-query-functions).
   https://github.com/djcb/mu/issues/2649
 
-- Support automatic handling for List-Unsubscribe headers and more in general,
+** DONE Support automatic handling for List-Unsubscribe headers and more in general,
   handle mailing-list commands https://github.com/djcb/mu/issues/2623 and
   https://github.com/djcb/mu/issues/2724 This seems useful, but probably
   requires a lot of testing to get right. Can we re-use the Gnus code for this?
@@ -91,5 +98,5 @@ future.
   are now available in the mu4e message view as well, such as
   ~gnus-mailing-list-subscribe~, ~gnus-mailing-list-unsubscribe~.
 
-- perhaps use =--personal-addres= instead of =--my-address= for consistency
+** DONE perhaps use =--personal-addres= instead of =--my-address= for consistency
   https://github.com/djcb/mu/issues/2806 (done as per 1.12.12)
