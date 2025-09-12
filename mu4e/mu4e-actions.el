@@ -215,7 +215,7 @@ would add \"tag\" and \"long tag\", and remove \"oldtag\"."
         (setq taglist (push tag taglist)))))
 
     (setq taglist (delete "" (sort (delete-dups taglist) 'string<)))
-    (setq tagstr (mapconcat 'identity taglist sep))
+    (setq tagstr (string-join taglist sep))
 
     (setq tagstr (replace-regexp-in-string "[\\&]" "\\\\\\&" tagstr))
     (setq tagstr (replace-regexp-in-string "[/]"   "\\&" tagstr))
@@ -231,7 +231,7 @@ would add \"tag\" and \"long tag\", and remove \"oldtag\"."
        (concat header ": " tagstr)
        path))
 
-    (mu4e-message (concat "tagging: " (mapconcat 'identity taglist ", ")))
+    (mu4e-message (concat "tagging: " (string-join taglist ", ")))
     (mu4e--refresh-message path)))
 
 (defun mu4e-action-show-thread (msg)
