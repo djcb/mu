@@ -30,21 +30,13 @@
 (require 'mu4e-helpers)
 
 (defconst mu4e-label-regex
-  "[^\"'+/\\`[:cntrl:][:blank:]-][^\"'/\\`[:cntrl:][:blank:]]*"
-  ;;Emacs 30:
-  ;;(rx-let ((taboo (any cntrl blank "\"'\\/`$"))
-  ;;          (taboo1-extra (any "-+")))
-  ;;   (rx (seq
-  ;;        ;; First character: base forbidden + extra chars
-  ;;        (not (or taboo taboo1-extra))
-  ;;        ;; Rest: just base forbidden chars
-  ;;        (zero-or-more (not taboo)))))
+  "[^\"',+/\\`[:cntrl:][:blank:]-][^\"'$,/\\`[:cntrl:][:blank:]]+"
   "Unanchored regular expression matching a valid label.
 
 Any character is allowed that is not a control-character, a
-blank, or ASCII single/double quotes,backtick or
-forward/backward slash; additionally, the first character cannot
-be a \"+\" or \"-\", \"$\" either.")
+blank, or a number of special characters. Additionally, the first
+character cannot be + or - either.")
+;; sadly, the 'rx' macro is not expressive enough, pre-emacs30
 
 (defun mu4e-label-validate (str)
   "Validate label STR.
@@ -55,45 +47,34 @@ checking a regular expression.
 
 See `mu4e-label-regex' for the definition of the valid format."
   (when (string-empty-p str) ;; i. must not be empty
-    (mu4e-warn "invalid: empty string"))
-  (let ((first (aref str 0)))
+    (mu4e-warn "an empty string is a not a valid label"))
+  (let ((first (aref str 0))
+        ;; anchored
+        (valid-rx (rx bos (regex mu4e-label-regex) eos)))
     ;; ii. must not start with + or -
     (when (or (char-equal first ?+) (char-equal first ?-))
-      (mu4e-warn "invalid: starts with '%c'" first))
-    ;; iii. check all characters a  valid:
-    (seq-do (lambda (kar)
-             (unless (string-match-p mu4e-label-regex
-                                     (string ?_ kar))
-               (mu4e-warn "invalid: character '%c'" kar)))
-            str))
+      (mu4e-warn "labels cannot starts with '%c'" first))
+    ;; iii. match the regexp
+    (unless (string-match-p valid-rx str)
+      (mu4e-warn "not a valid label: %S" str)))
   str)
 
-(defun mu4e-label-parse-expr (expr)
-  "Parse a single delta expression EXPR.
+(defun mu4e-label-parse-delta-exprs (delta-exprs)
+  "Parse a string a DELTA-EXPRS.
 
-If EXPR is non-empty, raises a warning if EXPR is not a valid
-delta expression. Otherwise, returns EXPR with extra whitespace
-removed.
-
-If STR is empty, return nil."
-  (let ((op (aref expr 0))
-        (label (substring expr 1)))
-    ;; guess we could _imply_ '+', but for now let's not
-    ;; be too magical.
-    (unless (or (char-equal op ?+) (char-equal op ?-))
-      (mu4e-warn "delta-expressions must start with + or - ('%s')"
-                 expr))
-    (concat (char-to-string op)
-            (mu4e-label-validate label))))
-
-(defun mu4e-label-parse-exprs (exprs)
-  "Parse a string EXPRS with deltas to a string.
-
-If EXPRS is non-empty, raises an error if EXPRS is invalid.
-Otherwise, return EXPRS with extra whitespace removed.
-
-If EXPRS is empty, return nil."
-  (mapconcat #'mu4e-label-parse-expr (split-string exprs) " "))
+If empty, return nil. Otherwise, raise an error if it is invalid.
+Otherwise, return a list with the invidual elements."
+  (seq-map (lambda (delta-expr)
+             (when (string-empty-p delta-expr)
+               (mu4e-warn "delta-expression cannot be empty"))
+             (let ((op (aref delta-expr 0))
+                   (label (substring delta-expr 1)))
+               (unless (or (char-equal op ?+) (char-equal op ?-))
+                 (mu4e-warn (concat  "labels in delta-expression"
+                                     " must start with +/- ('%s')")
+                            delta-expr))
+               (concat (char-to-string op) (mu4e-label-validate label))))
+           (split-string delta-exprs "[,[:space:]]+" t)))
 
 (defvar mu4e-labels-list nil "Cached list of labels.")
 
@@ -119,14 +100,20 @@ If EXPRS is empty, return nil."
   "The keymap for reading label delta expression.")
 
 (defun mu4e-labels-delta-read ()
-  "Ask for a labels delta expression."
+  "Ask for a label delta +/  expression.
+
+I.e., a sequence of 1 or more space-separated labels, each
+prefixed with \"+\" for addding the label, or \"-\" for removing
+it."
   (minibuffer-with-setup-hook
       (lambda ()
         (setq-local completion-at-point-functions
                     #'mu4e--labels-completion-at-point)
         (use-local-map mu4e-minibuffer-label-expr-map))
-    (mu4e-label-parse-exprs
-     (read-string "Label delta expression: "))))
+    (string-join
+     (mu4e-label-parse-delta-exprs
+      (read-string "Label delta (+/-) expression: "))
+     " ")))
 
 (defun mu4e--labels-update-server (docid expr)
   "Tell the server to update message with DOCID with EXPR.
@@ -134,18 +121,13 @@ EXPR is a label delta-expression, such as \"+foo -bar\".
 
 Update the label cache while doing so."
   ;; update the cache
-  (let ((expr (mu4e-label-parse-exprs expr))
-        (labels ;; the list of labels without +/- prefix
-         (seq-map (lambda (pmlabel)
-                (substring pmlabel 1))
-                  (split-string expr " "))))
-    ;; don't care about dups etc.; the list
-    ;; will be replaced by a fresh server-side one, after
-    ;; update / restart
-    (setq mu4e-labels-list
-          (append labels mu4e-labels-list))
-    ;; update the server
-    (mu4e--server-label docid expr)))
+  (let ((deltas (mu4e-label-parse-delta-exprs expr)))
+    ;; update cache
+    (seq-do (lambda (delta-label)
+              (cl-pushnew (substring delta-label 1) mu4e-labels-list))
+            deltas)
+    ;; maybe pass as list?
+    (mu4e--server-label docid (string-join deltas " "))))
 
 (defun mu4e--labels-clear-server (docid)
   "Clear all labels from message with DOCID."

@@ -329,11 +329,6 @@ The following marks are available, and the corresponding props:
     (when (mu4e-create-maildir-maybe fulltarget)
       target)))
 
-(defun mu4e--mark-get-labels-target ()
-  "Ask for a labels expression."
-  (let* ((exprs (read-from-minibuffer "Label expression: ")))
-    (mu4e-label-parse-exprs exprs)))
-
 (defun mu4e--mark-ask-target (mark)
   "Ask the target for MARK, if the user should be asked the target."
   (let ((getter (plist-get (cdr (assq mark mu4e-marks)) :ask-target)))
