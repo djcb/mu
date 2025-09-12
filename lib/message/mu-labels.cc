@@ -51,16 +51,16 @@ Mu::Labels::validate_label(const std::string &label)
 
 		if (::iscntrl(uc))
 			return Err(Error{Error::Code::InvalidArgument,
-					"control character {} is not allowed",
+					"control character {} not allowed in label",
 					static_cast<int>(uc)});
 		if (::isblank(uc))
 			return Err(Error{Error::Code::InvalidArgument,
-					"blank character {} is not allowed",
+					"blank character {} not allowed in label",
 					static_cast<int>(uc)});
-		if (uc == '"' || uc == '\'' || uc == '`' ||
+		if (uc == '"' || uc == '\'' || uc == '`' || uc == ',' ||
 		    uc == '\\' || uc == '/' || uc == '$')
 			return Err(Error{Error::Code::InvalidArgument,
-					"character '{}' is not allowed", uc});
+					"character '{}' not allowed in label", uc});
 	}
 
 	return Ok();
@@ -217,11 +217,14 @@ test_validate_label()
 	g_assert_true(!!validate_label("@raven+king"));
 	g_assert_true(!!validate_label("operation:mindcrime"));
 	g_assert_true(!!validate_label("😨"));
+	g_assert_true(!!validate_label("foo%bar+1"));
 
 	g_assert_false(!!validate_label("norrell strange"));
 	g_assert_false(!!validate_label(""));
 	g_assert_false(!!validate_label("+"));
 	g_assert_false(!!validate_label("-"));
+	g_assert_false(!!validate_label("foo$bar"));
+	g_assert_false(!!validate_label("foo,bar"));
 	g_assert_false(!!validate_label("foo`bar"));
 	g_assert_false(!!validate_label("\"quoted\""));
 }

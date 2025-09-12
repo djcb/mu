@@ -119,8 +119,8 @@ See *EXPORT FORMAT* below for details on the format.
 *mu* does not wish to limit your creativity, but nevertheless puts a few
 restrictions on what is accepted as a label.
 
-- a *valid label character* is any character that is not a control-character, a
-  blank, or any of *'*, *"*, *`*, */*, *\*, *$*
+- a *valid label character* is any character that is not a control-character, not
+  a blank, nor anything matching the regular expression ~[^\"$',/\\`]~
 - a *valid label* consists of one or more valid label characters, the first of
   which must *not* be either *+* or *-*
 
@@ -165,14 +165,16 @@ it is recognized as a single parameter.
 
 Remove the label "planet" and add the label "dwarf-planet" to all messages that
 have "pluto" in their subject:
-#+begin_export
+
+#+begin_example
 $ mu labels update "subject:pluto" --labels -planet,+dwarf-planet
-#+end_export
+#+end_example
 
 Clear all labels from messages with the label "boring":
-#+begin_export
+
+#+begin_example
 $ mu labels clear "label:boring"
-#+end_export
+#+end_example
 
 #+include: "prefooter.inc" :minlevel 1
 
