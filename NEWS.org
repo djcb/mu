@@ -129,7 +129,10 @@
 
     - 1.12.13: if available, *mu* now uses the system versions of ~CLI11~ and ~fmt~
       instead of the "vendored" ones. This can be overridden by passing the
-      ~-Duse-embedded-cli11=true~ and ~-Duse-embedded-fmt=true~ to Meson.
+      ~-Duse-embedded-cli11=true~ and ~-Duse-embedded-fmt=true~ to Meson. You can
+      influence where the build system (i.e., meson) looks through the
+      `PKG_CONFIG_PATH` environment variable (see the pkg-config/pkgconf
+      man-pages)
 
     - 1.12.13: test commands are now built "lazily", i.e., building is only
       triggered when running the tests. This speed up the build when not
