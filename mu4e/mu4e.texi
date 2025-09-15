@@ -2528,8 +2528,26 @@ later what this something should be; see below
 
 The @t{label} mark lets you apply @emph{labels} to messages, which are short
 strings to attach to this message which you can query using the @t{label:}
-field. To see them in your headers / message views, you need to add the field to
-the @code{mu4e-headers-fields} and @code{mu4e-view-fields}, respectively.
+field.
+
+To see them in your headers / message views, you need to add @code{:labels} to
+the @code{mu4e-headers-fields} and/or @code{mu4e-view-fields}, respectively.
+
+For instance:
+@lisp
+(setq mu4e-headers-fields
+   '((:human-date      .  10)
+     (:flags           .  4)
+     (:from-or-to      .  20)
+     (:mailing-list    .  8)
+     (:maildir         .  8)
+     (:labels          .  8)
+     (:thread-subject  .  nil)))
+(setq mu4e-view-fields
+   '(:from :date :to :cc :bcc :subject
+     :flags  :maildir
+     :message-id :labels))
+@end lisp
 
 To change the labels for some message, you specify a @emph{label expression},
 which consists of a space-separated sequence of labels, each prefixed with
