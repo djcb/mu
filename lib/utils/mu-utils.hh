@@ -145,7 +145,9 @@ auto mu_join(Range&& range, std::string_view sepa) {
 template <typename T=::time_t>
 std::tm mu_time(T t={}, bool use_utc=false) {
 	::time_t tt{static_cast<::time_t>(t)};
-	return use_utc ? fmt::gmtime(tt) : fmt::localtime(tt);
+	std::tm time_tm = {};
+	use_utc ? gmtime_r(&tt, &time_tm) : localtime_r(&tt, &time_tm);
+	return time_tm;
 }
 
 using StringVec = std::vector<std::string>;
