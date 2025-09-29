@@ -527,7 +527,7 @@ As per issue #2198."
   "Verify that the versions for mu4e and mu are the same."
   ;; sanity-check 1
   (let ((default-directory temporary-file-directory)) ;;ensure it's local.
-    (unless (and mu4e-mu-binary (file-executable-p mu4e-mu-binary))
+    (unless mu4e-mu-binary
       (mu4e-error
        "Cannot find mu, please set `mu4e-mu-binary' to the mu executable path"))
     ;; sanity-check 2
@@ -574,9 +574,9 @@ Not to be confused with the SCM/Guile REPL, as per
     (setq mu4e--server-buf "")
     (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
               (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
-    (setq mu4e--server-process (apply 'start-process
-                                      mu4e--server-name mu4e--server-name
-                                      mu4e-mu-binary args))
+    (setq mu4e--server-process (start-process-shell-command
+                                mu4e--server-name mu4e--server-name
+                                (concat mu4e-mu-binary " " (mapconcat #'shell-quote-argument args " "))))
     ;; register a function for (:info ...) sexps
     (unless mu4e--server-process
       (mu4e-error "Failed to start the mu4e backend"))
