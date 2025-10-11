@@ -483,10 +483,10 @@ Not to be confused with @code{labels} procedure for a @code{message} object.
 @node Message
 @section Message
 
-A message represents the information about an e-mail message. @t{mu} gets this
-information either from its database (the @t{mu} store), e.g., with @code{mfind}
-(see @xref{Store}) or by reading an email message from the file-systems with
-@code{make-message}.
+A @code{message} object represents the information about an e-mail message.
+@t{mu} gets this information either from its database (the @t{mu} store), e.g.,
+with @code{mfind} (see @xref{Store}) or by reading an email message from the
+file-systems with @code{make-message}.
 
 In many of the examples below we assume there is some @code{message} object,
 e.g. as retrieved through:
@@ -496,11 +496,22 @@ e.g. as retrieved through:
 
 @anchor{full-message} Many of the procedures below use the internal
 representation of the message from the database; this re-uses the same
-information that @code{mu4e} uses. However, that is not sufficient for all:
-@code{body} and @code{header} need the full message. To get this, it needs to
-open the message file from the file-system. Much of this is internal to
-@t{mu-scm}, except that full-method-procedures are a bit slower relatively to
-the database-only ones.
+information that @code{mu4e} uses:
+
+@itemize
+@item Basics: @code{subject}, @code{message-id}, @code{priority}
+@item Contact fields: @code{from}, @code{to}, @code{cc}, @code{bcc}
+@item Dates: @code{date} and @code{last-change}
+@item ``Meta-data'' about a message: @code{maildir}, @code{path}, @code{size}, @code{labels}
+@item Miscellaneous: @code{flags}, @code{references}, @code{thread-id}, @code{mailing-list}, @code{language}
+@end itemize
+
+However, that is not sufficient for all cases: @code{body} and @code{header}
+need the full message. The same is true for @code{mime-parts}.
+
+For these methods, @code{mu} needs to open the message file from the
+file-system. This is handled transparently inside @t{mu-scm}, except that
+full-method-procedures are a bit slower relatively to the database-only ones.
 
 @subsection Basics
 
