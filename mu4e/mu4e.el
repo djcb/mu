@@ -45,11 +45,21 @@
 (require 'mu4e-notification)
 (require 'mu4e-server)     ;; communication with backend
 
-
 (when mu4e-speedbar-support
   (require 'mu4e-speedbar)) ;; support for speedbar
 (when mu4e-org-support
   (require 'mu4e-org))      ;; support for org-mode links
+
+(defcustom mu4e-quit-hook nil
+  "Hook run just before quitting mu4e.
+
+This hook runs just before mu4e performs its own cleanup.
+
+Note that it only fires when mu4e actually terminates; i.e.,
+`mu4e-quit' _without_ the \"bury-only\" parameter."
+  :type 'hook
+  :package-version '(mu4e . "1.12.14")
+  :group 'mu4e)
 
 ;; We can't properly use compose buffers that are revived using
 ;; desktop-save-mode; so let's turn that off.
@@ -171,6 +181,7 @@ invoke FUNC (if available) afterwards."
 
 (defun mu4e--stop ()
   "Stop mu4e."
+  (run-hooks 'mu4e-quit-hook)
   (when mu4e--update-timer
     (cancel-timer mu4e--update-timer)
     (setq mu4e--update-timer nil))

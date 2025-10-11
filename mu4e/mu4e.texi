@@ -909,8 +909,7 @@ visible only if you have actually set up mail-queuing. @ref{Queuing
 mail}
 @item @t{[A]bout mu4e} provides general information about the program
 @item @t{[H]elp} shows help information for this view
-@item Finally, @t{[q]uit mu4e} quits your @code{mu4e}-session@footnote{@t{mu4e-quit}; or with a @t{C-u}
-prefix argument, it merely buries the buffer}
+@item Finally, @t{[q]uit mu4e} quits your @code{mu4e}-session@footnote{@t{mu4e-quit}; or with a @t{C-u} prefix argument, it merely buries the buffer. A hook @code{mu4e-quit-hook} is available as well}
 @end itemize
 
 @node Headers view
@@ -4359,7 +4358,7 @@ usually because one of the following reasons:
 changes in @code{mu4e} are not immediately visible in the command-line @command{mu},
 since it can take a while before changes are committed to disk (for performance
 reasons). Note that quitting @code{mu4e} or invoking @t{mu4e-update-mail-and-index}
-and @t{mu4e-update-index} trigger committing to disk as a side-effect.
+and @t{mu4e-update-index} have the side-effect of committing changed data to disk.
 @item different options:
 @code{mu4e} defaults to having @t{mu4e-headers-include-related}, and
 @t{mu4e-headers-results-limit} set to 500. However, the command-line @command{mu

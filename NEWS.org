@@ -309,6 +309,9 @@
       and connect to the SCM REPL with ~M-x mu4e-mu-scm-repl~ after restart (see
       their docstrings for details)
 
+    - 1.12.14: add ~mu4e-quit-hook~, a hook is just before quitting mu4e. See its
+      docstring for details.
+
 *** scm
 
     - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the
