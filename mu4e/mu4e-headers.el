@@ -788,8 +788,6 @@ present, don't do anything."
                              buf nil t))
       (kill-buffer buf))))
 
-
-
 ;;; Performing queries (internal)
 (defconst mu4e~search-message "Searching...")
 (defconst mu4e~no-matches     "No matching messages found")
@@ -885,10 +883,11 @@ COUNT is the number of messages found."
         (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
       ;; maybe enable thread folding
       (when mu4e-search-threads
-        (mu4e-thread-mode))))
+        (mu4e-thread-mode)))
+    ;; might need updating
+    (setq header-line-format (mu4e~header-line-format)))
   ;; run-hooks
   (run-hooks 'mu4e-headers-found-hook))
-
 
 ;;; Marking
 
@@ -1179,8 +1178,7 @@ The following specs are supported:
   (setq
    truncate-lines t
    buffer-undo-list t ;; don't record undo information
-   overwrite-mode nil
-   header-line-format (mu4e~header-line-format))
+   overwrite-mode nil)
 
   (mu4e--mark-initialize) ;; initialize the marking subsystem
   (mu4e-context-minor-mode)
