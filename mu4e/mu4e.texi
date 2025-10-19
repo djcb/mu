@@ -151,7 +151,7 @@ Under the hood, @code{mu4e} is fully search-based, similar to programs like
 However, @code{mu4e}'s user-interface is quite different. @code{mu4e}'s mail
 handling (deleting, moving, etc.)@: is inspired by
 @uref{http://www.gohome.org/wl/Wanderlust} (another Emacs-based e-mail client),
-@uref{http://www.mutt.org/mutt} and the @t{dired} file-manager for emacs.
+@uref{http://www.mutt.org/mutt} and the @code{dired} file-manager for emacs.
 @cindex wanderlust
 @cindex mutt
 
@@ -209,7 +209,7 @@ In particular, some minimal steps, starting from @t{emacs -Q} and with minimal
 configuration. If the problem is easily producible, it may be easily fixable as
 well; but if it's some subtle interaction in a highly complex setup, we cannot
 do much.
-@item What version of @code{mu4e} and @t{emacs} were you using? What operating system?
+@item What version of @code{mu4e} and @command{emacs} were you using? What operating system?
 Always try with up-to-date versions. And please use the 'normal' @code{mu4e} for
 reproducing your problem, not the ``remix'' version that some Emacs
 ``distributions'' use, such as ``Doom Emacs''.
@@ -370,14 +370,14 @@ If you are already using a maildir, you are lucky. If not, some setup
 is required:
 @itemize
 @item @emph{Using an external IMAP or POP server} --- if you are using an
-@abbr{IMAP} or @abbr{POP} server, you can use tools like @t{getmail},
-@t{fetchmail}, @t{offlineimap} or @t{isync} to download your messages
-into a maildir (@file{~/Maildir}, often). Because it is such a common
-case, there is a full example of setting @code{mu4e} up with
-@t{offlineimap} and Gmail; @pxref{Gmail configuration}.
+@abbr{IMAP} or @abbr{POP} server, you can use tools like @command{getmail},
+@command{fetchmail}, @command{offlineimap} or @command{isync} to download your
+messages into a maildir (@file{~/Maildir}, often). Because it is such a common
+case, there is a full example of setting @code{mu4e} up with @t{offlineimap} and
+Gmail; @pxref{Gmail configuration}.
 @item @emph{Using a local mail server} --- if you are using a local mail- server
-(such as @t{postfix} or @t{qmail}), you can teach them to deliver into
-a maildir as well, maybe in combination with @t{procmail}. A bit of
+(such as @command{postfix} or @command{qmail}), you can teach them to deliver
+into a maildir as well, maybe in combination with @command{procmail}. A bit of
 googling should be able to provide you with the details.
 @end itemize
 
@@ -391,7 +391,7 @@ The first time you run @code{mu}, you need to initialize its store
 (database). The default location for that is @t{~/.cache/mu/xapian}, but
 you can change this using the @t{--muhome} option, and remember to pass
 that to the other commands as well. Alternatively, you can use an
-environment variable @t{MUHOME}.
+environment variable @env{MUHOME}.
 
 Assuming that your maildir is at @file{~/Maildir}, we issue the
 following command:
@@ -909,7 +909,9 @@ visible only if you have actually set up mail-queuing. @ref{Queuing
 mail}
 @item @t{[A]bout mu4e} provides general information about the program
 @item @t{[H]elp} shows help information for this view
-@item Finally, @t{[q]uit mu4e} quits your @code{mu4e}-session@footnote{@t{mu4e-quit}; or with a @t{C-u} prefix argument, it merely buries the buffer. A hook @code{mu4e-quit-hook} is available as well}
+@item Finally, @t{[q]uit mu4e} quits your @code{mu4e}-session
+@footnote{@t{mu4e-quit}; or with a @t{C-u} prefix argument, it merely buries the
+buffer. A hook @code{mu4e-quit-hook} is available as well}
 @end itemize
 
 @node Headers view
@@ -978,7 +980,7 @@ variable @code{mu4e-use-fancy-chars}}, corresponding to the sort order
 (descending or ascending, respectively). You can influence this by a
 mouse click, or @key{O}. Not all fields allow sorting.
 @item Instead of showing the @t{From:} and @t{To:} fields separately, you
-can use From/To (@t{:from-or-to} in @code{mu4e-headers-fields} as a more
+can use From/To (@code{:from-or-to} in @code{mu4e-headers-fields} as a more
 compact way to convey the most important information: it shows @t{From:}
 @emph{except} when the e-mail was sent by the user (i.e., you) --- in
 that case it shows @t{To:} (prefixed by @t{To}@footnote{You can
@@ -1092,7 +1094,7 @@ q            leave the headers buffer
 Some keybindings are available through minor modes:
 @itemize
 @item Context; see @pxref{Contexts}.
-@item Composition; see @pxref{Composer} and @t{mu4e-compose-minor-mode}
+@item Composition; see @pxref{Composer} and @code{mu4e-compose-minor-mode}
 @end itemize
 
 @node HV Marking
@@ -1103,7 +1105,7 @@ changing the labels.
 
 After one or more messages are marked, you can then execute
 (@code{mu4e-mark-execute-all}, @key{x}) these actions. This two-step
-mark-execute sequence is similar to what e.g. @t{dired} does. It is how @code{mu4e}
+mark-execute sequence is similar to what e.g. @code{dired} does. It is how @code{mu4e}
 tries to be as quick as possible, while avoiding accidents.
 
 The mark/unmark commands support the @emph{region} (i.e., ``selection'')
@@ -1179,7 +1181,7 @@ If you want to automatically fold all threads after a query, you can use a hook:
 
 By default, single-child threads are @emph{not} collapsed, since it would result
 in replacing a single line with the collapsed one. However, if, for consistency,
-you also want to fold those, you can use @t{mu4e-thread-fold-single-children}.
+you also want to fold those, you can use @code{mu4e-thread-fold-single-children}.
 
 @node HV Custom headers
 @section Custom headers
@@ -1247,7 +1249,7 @@ actions.
 @section Buffer display
 
 By default, @code{mu4e} will attempt to manage the display of its own buffers. For
-headers and message views, the variable @code{mu4e-split-view} is @t{mu4e's}
+headers and message views, the variable @code{mu4e-split-view} is @code{mu4e's}
 built-in way to decide how and where they are shown.
 
 @subsection Split view
@@ -1256,13 +1258,13 @@ view} and the @ref{Message view}, by customizing @code{mu4e-split-view}. There
 are several options available:
 
 @itemize
-@item @t{horizontal} (this is the default): display the message view below the
+@item @code{horizontal} (this is the default): display the message view below the
 header view. Use @code{mu4e-headers-visible-lines} the set the number of
 lines shown (default: 8).
-@item @t{vertical}: display the message view on the
+@item @code{vertical}: display the message view on the
 right side of the header view. Use @code{mu4e-headers-visible-columns} to set
 the number of visible columns (default: 30).
-@item @t{single-window}: single window mode. Single-window mode tries to
+@item @code{single-window}: single window mode. Single-window mode tries to
 minimize mu4e window operations (opening, killing, resizing, etc) and buffer
 changes, while still retaining the view and headers buffers. In addition, it
 replaces @code{mu4e}'s main view with a minibuffer-prompt containing the same
@@ -1336,7 +1338,7 @@ This chapter discusses the message view, the view for reading e-mail messages.
 After selecting a message in the @ref{Headers view}, it appears in a
 message view window, which shows the message headers, followed by the
 message body. Its major mode is @code{mu4e-view-mode}, which derives
-from @t{gnus-article-mode}.
+from @code{gnus-article-mode}.
 
 @menu
 * Overview: MSGV Overview. What is the Message View
@@ -1481,7 +1483,7 @@ q            leave the message view
 Some keybindings are available through minor modes:
 @itemize
 @item Context; see @pxref{Contexts}
-@item Composition; see @pxref{Composer} and @t{mu4e-compose-minor-mode}
+@item Composition; see @pxref{Composer} and @code{mu4e-compose-minor-mode}
 @end itemize
 
 For the marking commands, please refer to @ref{Marking messages}.
@@ -1498,7 +1500,7 @@ By default, mu4e tries to display the 'richest' option, which is the
 last MIME-part of the alternatives. You can customize this to prefer
 the text version, if available, with something like the following in
 your configuration (and see the docstring for
-@t{mm-discouraged-alternatives} for details):
+@code{mm-discouraged-alternatives} for details):
 
 @lisp
 (with-eval-after-load "mm-decode"
@@ -1506,8 +1508,8 @@ your configuration (and see the docstring for
   (add-to-list 'mm-discouraged-alternatives "text/richtext"))
 @end lisp
 
-When displaying rich-text messages inline, @code{mu4e} (through @t{gnus})
-uses the @t{shr} built-in HTML-renderer. If you're using a dark color
+When displaying rich-text messages inline, @code{mu4e} (through @code{gnus})
+uses the @code{shr} built-in HTML-renderer. If you're using a dark color
 theme, and the messages are hard to read, it can help to change the
 luminosity, e.g.:
 @lisp
@@ -1530,7 +1532,7 @@ prefix-argument.
 When you run Emacs in graphical mode, by default images attached to
 messages are shown inline in the message view buffer.
 
-To disable this, set @code{gnus-inhibit-images} to @t{t}.  By default,
+To disable this, set @code{gnus-inhibit-images} to @code{t}.  By default,
 external images in HTML are not retrieved from external URLs because
 they can be used to track you.
 
@@ -1554,14 +1556,14 @@ the following:
         nil ".")))
 @end lisp
 
-@code{mu4e} inherits the default @t{gnus-blocked-images} from Gnus and
+@code{mu4e} inherits the default @code{gnus-blocked-images} from Gnus and
 ensures that it works with @code{mu4e} too. However, mu4e is not Gnus, so
-if you have Gnus-specific settings for @t{gnus-blocked-images}, you
+if you have Gnus-specific settings for @code{gnus-blocked-images}, you
 should verify that they have the desired effect in @code{mu4e} as
 well.
 
 Finally, for some message with big images it can be useful to enable buttons and
-full display, e.g. for saving inline images. For this you can try @code{M-x
+full display, e.g. for saving inline images. For this you can try @kbd{M-x
 mu4e-view-show-mime-parts}. This can be a little slow.
 
 @node MSGV Attachments and MIME-parts
@@ -1596,7 +1598,7 @@ comma-separated, with completion support. Press @key{RET} to save the chosen
 attachments as files to your computer.
 
 @code{mu4e} determines the target directory using the variable
-@t{mu4e-attachment-dir} (which can be either file-system path or a function; see
+@code{mu4e-attachment-dir} (which can be either file-system path or a function; see
 its docstring for details. However, you can manually set the target by calling
 @code{mu4e-view-save-attachments} with a prefix argument.
 
@@ -1610,7 +1612,7 @@ which is requirement of the underlying completion mechanism works. If there are
 duplicates, only one is recognized.
 
 Furthermore, file names that match @code{crm-separator} (by default, commas) are
-@emph{not} supported (see @t{completing-read-multiple} for further details). For
+@emph{not} supported (see @code{completing-read-multiple} for further details). For
 such corner-cases, it is recommended to use @code{mu4e-view-mime-part-action}
 instead, which does not have this limitation.
 
@@ -1707,9 +1709,9 @@ information for these commands.
 @chapter Composer
 
 Writing e-mail messages takes place in the Composer. @code{mu4e}'s re-uses much of
-Gnus' @t{message-mode}.
+Gnus' @code{message-mode}.
 
-Much of the @t{message-mode} functionality is available, as well some
+Much of the @code{message-mode} functionality is available, as well some
 @code{mu4e}-specifics. See @ref{(message) Top} for details; not every setting is
 necessarily also supported in @code{mu4e}.
 
@@ -1754,18 +1756,24 @@ There are a view different ways to @emph{enter} the composer; i.e., from other
 @code{mu4e} views or even completely outside.
 
 If you want the composer to start in a new frame or window, you can configure
-the variable @t{mu4e-compose-switch}; see its docstring for details.
+the variable @code{mu4e-compose-switch}; see its docstring for details.
 
 @subsection New message
 
+@cindex composing, new
 You can start composing a completely new message with @code{mu4e-compose-new}
 (with @kbd{N} from within @code{mu4e}.
 
 @subsection Reply
 
+@cindex composing,reply
 To compose a reply to an existing message, you can use @code{mu4e-compose-reply}
 (with @kbd{R}) from within the headers view or when looking at some specific
 message.
+
+@cindex composing, reply
+@cindex composing, wide reply
+@cindex composing, reply to all
 
 If you want to reply to @emph{all} recipients of a message, there is
 @code{mu4e-compose-wide-reply}, by default bound to @kbd{W}. This is often
@@ -1773,8 +1781,8 @@ called ``reply-to-all'', but @code{mu4e} follows the Gnus terminology ``wide
 reply''.
 
 By default, the reply will cite the message being replied to. If you do not want
-that, you can set (or @t{let}-bind) @t{message-cite-function} to
-@t{mu4e-message-cite-nothing}.
+that, you can set (or @code{let}-bind) @code{message-cite-function} to
+@code{mu4e-message-cite-nothing}.
 
 See @ref{(message) Reply} and @ref{(message) Wide Reply} for further details.
 
@@ -1793,6 +1801,7 @@ your configuration:
 @end lisp
 
 @subsection Forward
+@cindex composing, forward
 
 You can @emph{forward} some existing message with @code{mu4e-compose-forward}
 (bound to @kbd{F}) from within the headers view or when looking at some specific
@@ -1802,6 +1811,7 @@ To influence the way a message is forwarded, you can use the variables
 @code{message-forward-as-mime} and @code{message-forward-show-mml}.
 
 @subsection Supersede
+@cindex composing, supersede
 
 Occasionally, it can be useful to ``supersede'' a message you sent; for this,
 there is @code{mu4e-compose-supersede}.
@@ -1815,8 +1825,9 @@ Superseding is only possible for messages @emph{you} sent, as determined by
 This wraps @code{message-supersede}.
 
 @subsection Resend
+@cindex composing, resend
 
-You can re-send some existing message with @t{mu4e-compose-resend} from within
+You can re-send some existing message with @code{mu4e-compose-resend} from within
 the headers view or when looking at some specific message.
 
 This re-sends the message without letting you edit it, as per @ref{(message)
@@ -1849,15 +1860,15 @@ C-S-u        update mail & re-index
 @code{mu4e} supports autocompleting addresses when composing e-mail messages.
 @code{mu4e} uses the e-mail addresses from the messages you sent or received as the
 source for this. Address auto-completion is enabled by default; if you want to
-disable it for some reason, set @t{mu4e-compose-complete-addresses} to @t{nil}.
+disable it for some reason, set @code{mu4e-compose-complete-addresses} to @code{nil}.
 
 This uses the Emacs machinery for showing and cycling through the candidate
 addresses; it is active when looking at one of the contact fields in the message
 header area.
 
-It is also possible to use @code{mu4e}'s completion elsewhere in @t{emacs}. To
-enable that, a function @t{mu4e-complete-contact} exists, which you can add to
-@t{completion-at-point-functions}, see @ref{(elisp) Completion in Buffers}.
+It is also possible to use @code{mu4e}'s completion elsewhere in @code{emacs}. To
+enable that, a function @code{mu4e-complete-contact} exists, which you can add to
+@code{completion-at-point-functions}, see @ref{(elisp) Completion in Buffers}.
 @code{mu4e} must be running for any completions to be available.
 
 @subsection Limiting the number of addresses
@@ -1870,7 +1881,7 @@ not likely to be relevant. The following variables are available for tuning
 this:
 
 @itemize
-@item @code{mu4e-compose-complete-only-personal} --- when set to @t{t},
+@item @code{mu4e-compose-complete-only-personal} --- when set to @code{t},
 only consider addresses that were seen in @emph{personal} messages ---
 that is, messages in which one of my e-mail addresses was seen in one
 of the address fields. This is to exclude mailing list posts. You can
@@ -1981,7 +1992,7 @@ currently offline, you can @emph{queue} the mail, and send it when you
 have restored your internet connection. You can control this from the
 @ref{Main view}.
 
-To allow for queuing, you need to tell @t{smtpmail} where you want to store
+To allow for queuing, you need to tell @code{smtpmail} where you want to store
 the queued messages. For example:
 
 @lisp
@@ -2000,7 +2011,7 @@ $ touch ~/Maildir/queue/.noindex
 @end example
 
 The file created by the @command{touch} command tells @code{mu} to ignore this
-directory for indexing, which makes sense since it contains @t{smtpmail}
+directory for indexing, which makes sense since it contains @code{smtpmail}
 meta-data rather than normal messages; see the @t{mu-mkdir} and @t{mu-index}
 man-pages for details.
 
@@ -2012,8 +2023,10 @@ do this accidentally!
 @section Message signatures
 
 Message signatures are the standard footer blobs in e-mail messages where you
-can put in information you want to include in every message. The text to include
-is set with @code{message-signature} (older @code{mu4e} used
+can put information you want to append to every message.
+
+The text to include is
+set with @code{message-signature} (older @code{mu4e} used
 @code{mu4e-compose-signature}, but that has been obsoleted).
 
 @node Other settings
@@ -2028,11 +2041,16 @@ configuration:
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
-@item If you want to exclude your own e-mail addresses when ``replying to
-all'', set @code{message-dont-reply-to-names} to
-@code{mu4e-personal-or-alternative-address-p}. In order for this to work
-properly you need to pass your address to @command{mu init --personal-address=} at
-database initialization time, and/or use @t{message-alternative-emails}.
+@item If you want to exclude your own e-mail addresses when issueing
+``wide-replies'' (a.k.a., ``reply-to-all''), you can use
+@code{message-dont-reply-to-names}; i.e.,
+@lisp
+(setq message-dont-reply-to-names #'mu4e-personal-or-alternative-address-p)
+@end lisp
+
+In order for this to work properly, you need to pass your address to @command{mu
+init --personal-address=...} at database initialization time, and/or use
+the variable @code{message-alternative-emails}.
 @end itemize
 
 @node Searching
@@ -2515,17 +2533,19 @@ on the characteristics of the message; this is very powerful. See
 set or unset the corresponding Maildir flags
 @item @emph{label} lets you enter a label delta expression which gets applied; see below
 @item @emph{unlabel} lets you clear @emph{all} labels; see below
-@item @emph{action} lets you apply some pre-defined action on the message, as per @code{mu4e-headers-actions}
+@item @emph{action} lets you apply some pre-defined action on the message,
+as per @code{mu4e-headers-actions}
 @item @emph{'something'} marks the message for ``something'', and then decide
 later what this something should be; see below
-@item @emph{unmark} and @emph{unmark all} are ``meta'' marks, which remove the mark from the currently selected message(s) or all
+@item @emph{unmark} and @emph{unmark all} are ``meta'' marks,
+which remove the mark from the currently selected message(s) or all
 @end itemize
 
 @node Applying and clearing labels
 @subsection Applying and clearing labels
 @cindex labels
 
-The @t{label} mark lets you apply @emph{labels} to messages, which are short
+The @t{plabel} mark lets you apply @emph{labels} to messages, which are short
 strings to attach to this message which you can query using the @t{label:}
 field.
 
@@ -2573,7 +2593,7 @@ and re-indexing it; see the @command{mu-labels} man-page for further details.
 
 @t{something} is a special kind of mark; you can use it to mark messages for
 `something', and then decide later what the `something' should be@footnote{This
-kind of `deferred marking' is similar to the facility in @t{dired}, @t{midnight
+kind of `deferred marking' is similar to the facility in @code{dired}, @t{midnight
 commander} (@url{https://www.midnight-commander.org/}) and the like, and uses
 the same key binding (@key{insert}).} Later, you can set the actual mark using
 @kbd{M-x mu4e-mark-resolve-deferred-marks} (@key{#}). Alternatively, @code{mu4e}
@@ -2672,7 +2692,7 @@ than @emph{n} recipients --- we could do this with the following recipe:
 
 After evaluating this expression, you can use it by pressing @key{&} in
 the headers buffer to select a custom marker function, and then @key{M}
-to choose this particular one (@t{M} because it is the first character
+to choose this particular one (@code{M} because it is the first character
 of the description).
 
 As you can see, it's not very hard to define simple functions to match
@@ -2705,14 +2725,14 @@ elements:
 @item @code{:prompt} --- the prompt to use when asking for marks
 (used for example when marking a whole thread).
 @item @code{:ask-target} --- a function run once per bulk-operation, and thus suitable for
-querying the user about a target for move-like marks. If @t{nil}, the
-@t{TARGET} passed to @code{:dyn-target} is @t{nil}.
+querying the user about a target for move-like marks. If @code{nil}, the
+@t{TARGET} passed to @code{:dyn-target} is @code{nil}.
 @item @code{:dyn-target} --- a function run once per message
 (The message is passed as @t{MSG} to the function). This function allows
-to compute a per-message target, for refile-like marks. If @t{nil}, the
+to compute a per-message target, for refile-like marks. If @code{nil}, the
 @t{DYN-TARGET} passed to the @code{:action} is the @t{TARGET} obtained as above.
 @item @code{:show-target} --- how to display the target in the headers view.
-If @code{:show-target} is @t{nil} the @t{DYN-TARGET} is shown (and
+If @code{:show-target} is @code{nil} the @t{DYN-TARGET} is shown (and
 @t{DYN-TARGET} must be a string).
 @item @code{:action} --- the action to apply on the message when the mark is executed.
 @end itemize
@@ -2765,7 +2785,7 @@ an (optional) function that takes no parameter and is invoked when leaving
 the context. You can use this for clearing things up.
 @item @t{match-func}:
 an (optional) function that takes an @t{MSG} message plist as argument,
-and returns non-@t{nil} if this context matches the situation. @code{mu4e}
+and returns non-@code{nil} if this context matches the situation. @code{mu4e}
 uses the first context that matches, in a couple of situations:
 @itemize
 @item when starting @code{mu4e} to determine the
@@ -2773,9 +2793,9 @@ starting context; in this case, @t{MSG} is nil. You can use e.g. the
 host you're running or the time of day to determine which context
 matches.
 @item before replying to or forwarding a
-message with the given message plist as parameter, or @t{nil} when
+message with the given message plist as parameter, or @code{nil} when
 composing a brand new message. The function should return @t{t} when
-this context is the right one for this message, or @t{nil} otherwise.
+this context is the right one for this message, or @code{nil} otherwise.
 @item when determining the target folders for deleting, refiling etc;
 see @ref{Contexts and special folders}.
 @end itemize
@@ -2837,7 +2857,7 @@ the account it belongs to, which is not necessarily the current context.
 To make this easy to do, whenever @code{mu4e} needs to know the value for
 such a special folder for a given message, it tries to determine the
 appropriate context using @code{mu4e-context-determine} (and policy
-@t{nil}; see @ref{Context policies}). If it finds a matching context, it
+@code{nil}; see @ref{Context policies}). If it finds a matching context, it
 let-binds the @code{vars} for that account, and then determines the
 value for the folder. It does not, however, call the @code{enter-func}
 or @code{leave-func}, since we are not really switching contexts.
@@ -2919,10 +2939,10 @@ when starting; see the discussion in the previous section.
 
 A couple of notes about this example:
 @itemize
-@item You can manually switch the context use @code{M-x mu4e-context-switch},
+@item You can manually switch the context use @kbd{M-x mu4e-context-switch},
 by default bound to @kbd{;} in headers, view and main mode. The current context
 appears in the modeline by default; see @ref{Modeline} for details.
-@item Normally, @code{M-x mu4e-context-switch} does not call the enter or
+@item Normally, @kbd{M-x mu4e-context-switch} does not call the enter or
 leave functions if the 'new' context is the same as the old one.
 However, with a prefix-argument (@kbd{C-u}), you can force @code{mu4e} to
 invoke those function even in that case.
@@ -3039,7 +3059,7 @@ Using the same mechanism, you can create dynamic sent-, trash-, and
 drafts-folders. The message-parameter you receive for the sent and drafts
 folder is the @emph{original} message, that is, the message you reply to, or
 forward, or edit. If there is no such message (for example when composing a
-brand new message) the message parameter is @t{nil}.
+brand new message) the message parameter is @code{nil}.
 
 Let's look at an example. Suppose you want a different trash folder for
 work-email. You can achieve this with something like:
@@ -3349,7 +3369,7 @@ that @code{mu4e} provides, for example to fix spelling errors, or omit
 unwanted contacts.
 
 To handle this, @code{mu4e} provides @code{mu4e-contact-process-function},
-which, if defined, is applied to each contact. If the result is @t{nil},
+which, if defined, is applied to each contact. If the result is @code{nil},
 the contact is discarded, otherwise the (modified or not) contact
 information is used.
 
@@ -3509,7 +3529,7 @@ handled through a minor-mode @code{mu4e-modeline-mode}, which is enabled by
 default when @code{mu4e} is running.
 
 To completely turn off the modeline support, set @code{mu4e-modeline-support} to
-@t{nil} before starting @code{mu4e}.
+@code{nil} before starting @code{mu4e}.
 
 @code{mu4e} shares information on the modeline in two ways:
 @itemize
@@ -3522,7 +3542,7 @@ To completely turn off the modeline support, set @code{mu4e-modeline-support} to
 @end itemize
 
 The global indicators can be disabled by setting @code{mu4e-modeline-show-global}
-to @t{nil}.
+to @code{nil}.
 
 All of the bookmark items provide more details in their @code{help-echo},
 i.e., their tooltip.
@@ -3535,7 +3555,7 @@ some representation of @code{mu4e-search-threads}, @code{mu4e-search-full}; the
 The query parameters are followed by the query-string use for the headers-view.
 By default, if the query string matches some bookmark, the name of that bookmark
 is shown instead of the query it specifies. This can be changed by setting
-@code{mu4e-modeline-prefer-bookmark-name} to @t{nil}.
+@code{mu4e-modeline-prefer-bookmark-name} to @code{nil}.
 
 @cindex favorite bookmark
 @subsection Favorite bookmark modeline item
@@ -3559,9 +3579,9 @@ just like what we saw in @xref{Bookmarks and Maildirs}, e.g.,
 this means there are @emph{10 unread messages}, with @emph{5 new messages since
 the baseline}, and @emph{15 messages in total} matching the query.
 
-You can customize the icon; see @var{mu4e-modeline-all-clear},
-@var{mu4e-modeline-all-read}, @var{mu4e-modeline-unread-items} and
-@var{mu4e-modeline-new-items}.
+You can customize the icon; see @code{mu4e-modeline-all-clear},
+@code{mu4e-modeline-all-read}, @code{mu4e-modeline-unread-items} and
+@code{mu4e-modeline-new-items}.
 
 Due to the way queries work, the modeline is @emph{not} immediately updated when
 you read messages; but going back to the main view (with @kbd{M-x mu4e} resets
@@ -3611,7 +3631,7 @@ query. The message links are based on the message's message-id, and thus the
 bookmarks stay valid even if you move the message around.
 
 For deciding whether to link to message or query, you can customize
-@var{mu4e-emacs-bookmark-policy}.
+@code{mu4e-emacs-bookmark-policy}.
 
 Emacs bookmarks are not to be confused with mu4e's bookmarks; the former are a
 generic linking system across Emacs, while the latter are stored queries within
@@ -3622,7 +3642,7 @@ generic linking system across Emacs, while the latter are stored queries within
 @cindex eldoc
 
 It is possible to get information about the current header in the echo-area.
-You can enable this by setting @t{mu4e-eldoc-support} to non-@t{nil}.
+You can enable this by setting @t{mu4e-eldoc-support} to non-@code{nil}.
 
 @node Org-mode
 @section Org-mode
@@ -4498,14 +4518,14 @@ to (gracefully) terminate:
 seems to work quite well.
 
 @subsection How can I disable the @t{Indexing...} messages?
-Set the variable @code{mu4e-hide-index-messages} to non-@t{nil}.
+Set the variable @code{mu4e-hide-index-messages} to non-@code{nil}.
 
 @subsection IMAP-synchronization
 
 Some IMAP-synchronization programs such as @t{mbsync} (but not @t{offlineimap})
 don't like it when message files do not change their names when they are moved
 to different folders. @code{mu4e} can attempt to help with this - you can set the
-variable @code{mu4e-change-filenames-when-moving} to non-@t{nil}.
+variable @code{mu4e-change-filenames-when-moving} to non-@code{nil}.
 
 Also, some of these programs may interpret the ``trash'' flag differently; see
 @code{mu4e-trash-without-flag} for how to influence that.
@@ -4533,7 +4553,7 @@ sync'ing, the problem is with the sync-program, and it's most productive
 to complain there.
 
 Also, you may want to ensure that @t{mu4e-index-lazy-check} is kept at
-its default (@t{nil}) value, since it seems @command{mbsync} can make
+its default (@code{nil}) value, since it seems @command{mbsync} can make
 changes that escape a 'lazy' check.
 
 Furthermore, there have been quite a few related queries on the
@@ -4559,9 +4579,9 @@ especially when opening @code{mu4e} the first time and you have a
 that @code{mu4e} 1.3 and higher only get @emph{changed} contacts in
 subsequent updates (after and indexing operation), so this should be
 less of a concern. And you can tweak what contacts you get using
-@var{mu4e-compose-complete-only-personal},
-@var{mu4e-compose-complete-only-after} and
-@var{mu4e-compose-complete-max}.
+@code{mu4e-compose-complete-only-personal},
+@code{mu4e-compose-complete-only-after} and
+@code{mu4e-compose-complete-max}.
 @item decryption / sign verification:
 encrypted / signed messages sometimes require network access, and this
 may take a while; certainly if the needed servers cannot be found.
@@ -4699,9 +4719,9 @@ when setting up the database (@t{mu init}); @ref{Initializing the message
 store}.
 
 If you cannot find specific addresses you'd expect to find, inspect the
-values of @var{mu4e-compose-complete-only-personal},
-@var{mu4e-compose-complete-only-after} and
-@var{mu4e-compose-complete-max}.
+values of @code{mu4e-compose-complete-only-personal},
+@code{mu4e-compose-complete-only-after} and
+@code{mu4e-compose-complete-max}.
 
 @subsection How can I get rid of the message buffer after sending?
 @lisp
@@ -4811,10 +4831,10 @@ search in vain for things that are not there (yet), and the author can use it as
 a todo-list.
 
 @subsection UTF-8 language environment is required
-@code{mu4e} does not work well if the Emacs language environment is not UTF-8; so,
-if you encounter problems with encodings, be sure to have
-@code{(set-language-environment "UTF-8")} in your @file{~/.emacs} (or its moral
-equivalents in other places).
+@code{mu4e} does not work well if the Emacs language environment is not UTF-8;
+so, if you encounter problems with encodings, be sure to have
+@code{(set-language-environment "UTF-8")} in your @file{~/.emacs.d/init.el} (or
+its moral equivalent, such as @file{~/.emacs}.
 
 @subsection Headers-buffer can get mis-aligned
 Due to the way the headers buffer works, it can get misaligned.
@@ -5050,9 +5070,8 @@ wish.
 (add-hook 'message-send-hook #'confirm-empty-subject)
 @end lisp
 
-If you @emph{always} want to be asked for for confirmation, set
-@code{message-confirm-send} to non-@t{nil} so the question ``Send message?'' is
-asked for confirmation.
+If you @emph{always} want to be asked for confirmation before sending, you can
+set @code{message-confirm-send} to non-@code{nil}.
 
 @node How it works
 @appendix How it works
@@ -5097,8 +5116,8 @@ In words:
 @itemize
 @item Your e-mail messages are stored in a Maildir-directory
 (typically, @file{~/Maildir} and its subdirectories), and new mail comes in
-using tools like @t{fetchmail}, @t{offlineimap}, or through a local mail
-server.
+using tools like @command{fetchmail}, @command{offlineimap}, or through a local
+mail server.
 @item @command{mu} indexes these messages periodically, so you can quickly search for
 them. @command{mu} can run in a special @t{server}-mode, where it provides services
  to client software.
@@ -5111,7 +5130,7 @@ them. @command{mu} can run in a special @t{server}-mode, where it provides servi
 @end itemize
 
 @node mu server
-@section @t{mu server}
+@section @command{mu server}
 
 @code{mu4e} is based on the @command{mu} e-mail searching/indexer. The latter
 is a C++-program; there are different ways to communicate with a
@@ -5122,29 +5141,27 @@ tool with some parameters and then parse the output. In fact, that was
 the first approach --- @code{mu4e} would invoke e.g., @t{mu find} and
 process the output in Emacs.
 
-However, with this approach, we need to load the entire e-mail
-@emph{Xapian} database (in which the message is stored) for each
-invocation. Wouldn't it be nicer to keep a running @command{mu} instance
-around? Indeed, it would --- and thus, the @t{mu server} sub-command
-was born. Running @t{mu server} starts a simple shell, in which you
-can give commands to @command{mu}, which then spits out the
-results/errors. @command{mu server} is not meant for humans, but it
-can be used manually, which is great for debugging.
+However, with this approach, we need to load the entire e-mail @emph{Xapian}
+database (in which the message is stored) for each invocation. Wouldn't it be
+nicer to keep a running @command{mu} instance around? Indeed, it would --- and
+thus, the @command{mu server} sub-command was born. Running @t{mu server} starts
+a simple shell, in which you can give commands to @command{mu}, which then spits
+out the results/errors. @command{mu server} is not meant for humans, but it can
+be used manually, which is great for debugging.
 
 @node Reading from the server
 @section Reading from the server
 
 In the design, the next question was what format @command{mu} should use for its
-output for @code{mu4e} (Emacs) to process. Some other programs use
-@abbr{JSON} here, but it seemed easier (and possibly, more efficient) just to
-talk to Emacs in its native language: @emph{s-expressions}, and
-interpret those using the Emacs-function
-@code{read-from-string}. See @ref{The message s-expression} for details on the
-format.
+output for @code{mu4e} (Emacs) to process. Some other programs use @abbr{JSON}
+here, but it seemed easier (and possibly, more efficient) just to talk to Emacs
+in its native language: @emph{s-expressions}, and interpret those using the
+Emacs-function @code{read-from-string}. See @ref{The message s-expression} for
+details on the format.
 
-So, now let's look at how we process the data from @t{mu server} in
-Emacs. We'll leave out a lot of details, @code{mu4e}-specifics, and look
-at a bit more generic approach.
+So, now let's look at how we process the data from @t{mu server} in Emacs. We'll
+leave out a lot of details, @code{mu4e}-specifics, and look at a bit more
+generic approach.
 
 The first thing to do is to create a process (for example, with
 @code{start-process}), and then register a filter function for it, which is
@@ -5221,7 +5238,7 @@ convenience functions in @file{mu4e-message.el}.
 Some notes on the format:
 @itemize
 @item The address fields are @emph{lists} of @t{plists} of the form
-@code{(:name <name>   :email <email>)}, where @t{name} can be @t{nil}.
+@code{(:name <name>   :email <email>)}, where @t{name} can be @code{nil}.
 @item The date is in format Emacs uses (for example in
 @code{current-time}).@footnote{Emacs 32-bit integers have only 29 bits
 available for the actual number; the other bits are use by Emacs for
@@ -5273,8 +5290,7 @@ the time.
 @command{mu} itself keeps a log as well; depending on your system that could be in
 your @t{systemd} journal, @t{syslog} or in @t{<MUHOME>/mu.log}, on Unix
 typically @t{~/.cache/mu/mu.log}. To run the server in debug-mode, set
-@var{mu4e-mu-debug} to @t{t} (before starting the server).
-
+@code{mu4e-mu-debug} to @t{t} (before starting the server).
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
