@@ -63,11 +63,11 @@ fields; they have the word *phrase* in their *mu info fields* search column.
 ** Quoting queries for the shell
 
 Remember that you need to escape the quotes for a search query when using this
-from the command-line; otherwise, the shell (or most shells) process the queries
-and *mu* never sees them.
+from the command-line; otherwise, the shell (or most shells) processes the
+queries and *mu* never sees them.
 
-In this case, that means the difference between search for a subject "hi there"
-versus and subject "hi" and some word "there" that can appear in any of the
+In this case, that means the difference between searching for a subject "hi
+there" versus a subject "hi" and some word "there" that can appear in any of the
 combination fields for <empty> (combination fields are discussed below).
 
 We can use the mentioned *--analyze* option to show the difference:
@@ -111,14 +111,14 @@ You can also group things with *(* and *)*, so you can write:
 #+end_example
 
 If you do not explicitly specify an operator between terms, *and* is implied, so
-the queries
+these queries are equivalent:
 #+begin_example
 subject:chip subject:dale
 #+end_example
 #+begin_example
 subject:chip AND subject:dale
 #+end_example
-are equivalent. For readability, we recommend the second version.
+For readability, we recommend the second version.
 
 Note that a =pure not= - e.g. searching for *not apples* is quite a "heavy" query.
 
@@ -146,7 +146,7 @@ The query language supports matching basic PCRE regular expressions, as per
 Regular expressions are enclosed in *//*. For example:
 
 #+begin_example
-subject:/h.llo/		# match hallo, hello, ...
+subject:/h.llo/		# matches hallo, hello, ...
 #+end_example
 
 Note the difference between "maildir:/foo" and "maildir:/foo/"; the former
@@ -160,8 +160,9 @@ implementation details. See below for some of the caveats.
 
 ** Whitespace in regular expression literals
 
-To avoid ambiguities in the query parsing, regular express *must not* contain
-whitespace, so the search for a message with subject "hello world", you can write
+To avoid ambiguities in the query parsing, regular expressions *must not*
+contain whitespace, so to search for a message with subject "hello world", you
+can write
 #+begin_example
 mu find 'subject:/hello\\040world/'
 #+end_example
@@ -175,9 +176,9 @@ may be good enough, and easier to type.
 ** Anchors in regular expressions
 
 Since the underlying Xapian database does /not/ support regular expressions (it
-does support wildcards), *mu* implements the regular-expression search by matching
-the user's regular expression against all "terms" (words or phrases) that in the
-database for a given field.
+does support wildcards), *mu* implements the regular expression search by
+matching the user's regular expression against all "terms" (words or phrases)
+that exist in the database for a given field.
 
 That implementation detail explains why "anchored" regular expressions (with *^*
 and *$* to mark begin/end, respectively) can get unexpected results.

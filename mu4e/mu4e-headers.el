@@ -180,7 +180,7 @@ When it is showing, respectively, From: or To:. It is a cons cell
 
 ;; marks for headers of the form; each is a cons-cell (basic . fancy)
 ;; each of which is basic ascii char and something fancy, respectively
-;; by default, we some conservative marks, even when 'fancy'
+;; by default, we use some conservative marks, even when 'fancy'
 ;; so they're less likely to break if people don't have certain fonts.
 ;; However, if you want to be really 'fancy', you could use something like
 ;; the following; esp. with a newer Emacs with color-icon support.

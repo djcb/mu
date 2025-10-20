@@ -68,7 +68,7 @@ item must be unique among `mu4e-bookmarks' and
 - `:hide' - if t, the bookmark is hidden from the main-view and
 speedbar.
 - `:hide-if-no-unread' - if t, the shortcut is hidden from
-   the main-view if it contains are no unread messages.
+   the main-view if it contains no unread messages.
 
 You can also use:
 - `:hide-unread' - do not show the counts of
