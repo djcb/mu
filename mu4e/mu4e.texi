@@ -798,9 +798,9 @@ First, the @emph{Basics}:
 set in @ref{Basic configuration} and any of your own. If you choose
 @key{o} (``other'') or @key{/}, you can choose from all maildirs under
 the root-maildir. After choosing a maildir, the messages in that
-maildir are listed, in the @ref{Headers view}.
+maildir are listed, in @ref{Headers view}.
 @item @t{enter a [s]earch query}: after pressing @key{s}, @code{mu4e} asks
-you for a search query, and after entering one, shows the results in the
+you for a search query, and after entering one, shows the results in
 @ref{Headers view}.
 @item @t{[C]ompose a new message}: after pressing @key{C}, you are dropped in
 the @ref{Composer} to write a new message.
@@ -1253,8 +1253,8 @@ headers and message views, the variable @code{mu4e-split-view} is @code{mu4e's}
 built-in way to decide how and where they are shown.
 
 @subsection Split view
-You can control how @code{mu4e} displays its buffers, including the @ref{Headers
-view} and the @ref{Message view}, by customizing @code{mu4e-split-view}. There
+You can control how @code{mu4e} displays its buffers, including @ref{Headers
+view} and @ref{Message view}, by customizing @code{mu4e-split-view}. There
 are several options available:
 
 @itemize
@@ -1335,7 +1335,7 @@ to @code{nil} if you want to handle manually (through
 
 This chapter discusses the message view, the view for reading e-mail messages.
 
-After selecting a message in the @ref{Headers view}, it appears in a
+After selecting a message in @ref{Headers view}, it appears in a
 message view window, which shows the message headers, followed by the
 message body. Its major mode is @code{mu4e-view-mode}, which derives
 from @code{gnus-article-mode}.
@@ -1989,7 +1989,7 @@ obvious reasons.
 
 If you cannot send mail right now, for example because you are
 currently offline, you can @emph{queue} the mail, and send it when you
-have restored your internet connection. You can control this from the
+have restored your internet connection. You can control this from
 @ref{Main view}.
 
 To allow for queuing, you need to tell @code{smtpmail} where you want to store
@@ -2166,7 +2166,7 @@ date:2w.. and emacs
 list:mu-discuss.googlegroups.com
 @end example
 
-Note --- in the @ref{Headers view} you may see the `friendly name' for a
+Note --- in @ref{Headers view} you may see the `friendly name' for a
 list; however, when searching you need the real name. You can see the
 real name for a mailing list from the friendly name's tool-tip.
 
@@ -2341,7 +2341,7 @@ search query by itself}, which limits any result to today's messages.
 Maildir searches are quite similar to bookmark searches (see @ref{Bookmarks}),
 with the difference being that the target is always a maildir --- maildir
 queries provide a `traditional' folder-like interface to a search-based e-mail
-client. By default, maildir searches are available in the @ref{Main view},
+client. By default, maildir searches are available in @ref{Main view},
 @ref{Headers view}, and @ref{Message view}, with the key @key{j}
 (@code{mu4e-jump-to-maildir}). If a prefix argument is given, the maildir
 query can be refined before execution.
@@ -2462,7 +2462,7 @@ Note, messages are considered duplicates when they have the same
 In @code{mu4e}, the common way to do things with messages is a two-step process -
 first you @emph{mark} them for a certain action, then you @emph{execute}
 (@key{x}) those marks. This is similar to the way @t{dired} operates. Marking
-can happen from both the @ref{Headers view} and the @ref{Message view}.
+can happen from both @ref{Headers view} and @ref{Message view}.
 
 @menu
 * Marking messages::Selecting message do something with them
@@ -2481,10 +2481,10 @@ can happen from both the @ref{Headers view} and the @ref{Message view}.
 There are multiple ways to mark messages:
 @itemize
 @item @emph{message at point}: you can put a mark on the message-at-point in
-either the @ref{Headers view} or @ref{Message view}
+either @ref{Headers view} or @ref{Message view}
 @item @emph{region}: you can put a mark on all messages in the current region
-(selection) in the @ref{Headers view}
-@item @emph{pattern}: you can put a mark on all messages in the @ref{Headers
+(selection) in @ref{Headers view}
+@item @emph{pattern}: you can put a mark on all messages in @ref{Headers
 view} matching a certain pattern with @kbd{M-x mu4e-headers-mark-pattern}
 (@key{%})
 @item @emph{thread/subthread}: You can put a mark on all the messages in the
@@ -2661,7 +2661,7 @@ press @kbd{% s hello RET}.
 Sometimes, the built-in functions to mark messages may not be sufficient for
 your needs. For this, @code{mu4e} offers an easy way to define your own custom
 mark functions. You can choose one of the custom marker functions by pressing
-@key{&} in the @ref{Headers view} and @ref{Message view}.
+@key{&} in @ref{Headers view} and @ref{Message view}.
 
 Custom mark functions are to be appended to the list
 @code{mu4e-headers-custom-markers}. Each of the elements of this list
@@ -3091,7 +3091,7 @@ compose a totally new message, the @code{msg} parameter is @code{nil}.
 @chapter Actions
 
 @code{mu4e} lets you define custom actions for messages in @ref{Headers view} and
-for both messages and attachments in the @ref{Message view}. Custom actions
+for both messages and attachments in @ref{Message view}. Custom actions
 allow you to easily extend @code{mu4e} for specific needs --- for example, marking
 messages as spam in a spam filter or applying an attachment with a source code
 patch.
@@ -3153,7 +3153,7 @@ Let's look at some examples.
 @node Headers view actions
 @section Headers view actions
 
-Suppose we want to inspect the number of recipients for a message in the
+Suppose we want to inspect the number of recipients for a message in
 @ref{Headers view}. We add the following to our configuration:
 
 @lisp
@@ -3842,7 +3842,7 @@ folders and allows for one-click access to them.
 
 To enable this, add @t{(require 'mu4e-speedbar)} to your configuration;
 then, all you need to do to activate it is @kbd{M-x speedbar}. Then,
-when then switching to the @ref{Main view}, the speedbar-frame is
+when then switching to @ref{Main view}, the speedbar-frame is
 updated with your bookmarks and maildirs.
 
 For speed reasons, the list of maildirs is determined when @code{mu4e}
@@ -5282,7 +5282,7 @@ For debugging purposes, it can be very useful to see this data. For this reason,
 to some extent in the @t{mu-server} manpage.
 
 You can enable (and disable) logging with @kbd{M-x mu4e-toggle-logging}. The
-log-buffer is called @t{*mu4e-log*}, and in the @ref{Main view}, @ref{Headers
+log-buffer is called @t{*mu4e-log*}, and in @ref{Main view}, @ref{Headers
 view} and @ref{Message view}, there's a keybinding @key{$} that takes you there.
 You can quit it by pressing @key{q}.
 
