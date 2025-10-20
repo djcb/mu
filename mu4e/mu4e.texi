@@ -840,7 +840,7 @@ automatically when switching to the main view, or invoking @code{buffer-revert}
 same(explained below).
 
 Bookmarks are stored in the variable @code{mu4e-bookmarks}; you can add
-your own and/or replace the default ones; @xref{Bookmarks}. For
+your own and/or replace the default ones; see @ref{Bookmarks}. For
 instance:
 @lisp
 (add-to-list 'mu4e-bookmarks
@@ -862,8 +862,8 @@ would be disruptive in this case.
 
 There is also the optional @code{:favorite} property, which at most one bookmark
 should have; this bookmark is highlighted in the main view, and its
-unread-status is shown in the modeline; @xref{Modeline}, and you can enable
-desktop notifications; @xref{Desktop notifications}. We'd recommend creating
+unread-status is shown in the modeline; see @ref{Modeline}, and you can enable
+desktop notifications; see @ref{Desktop notifications}. We'd recommend creating
 such a ``favorite'', which should match message that require your quick
 attention:
 
@@ -2530,7 +2530,7 @@ unmark all   | U           | remove all marks
 @item @emph{move} moves the message to some different maildir
 @item @emph{refile} is similar @emph{move}, but determines the target maildir based
 on the characteristics of the message; this is very powerful. See
-@code{mu4e-refile-folder} and especially @xref{Smart refiling} for details.
+@code{mu4e-refile-folder} and especially see @ref{Smart refiling} for details.
 @item @emph{flag}/@emph{unflag}, @emph{read}/@emph{unread} and @emph{trash}/@emph{untrash}
 set or unset the corresponding Maildir flags
 @item @emph{label} lets you enter a label delta expression which gets applied; see below
@@ -3231,7 +3231,7 @@ viewing messages in an external web browser or tagging.
 It is easy to add such actions to your configuration; for instance, to enable
 @emph{tagging}@footnote{@code{mu4e} does not offer tagging by default since it
 mutates the message files, something that @code{mu}/@code{mu4e} generally try to
-avoid. An alternative to tagging is @emph{labeling}, @xref{Applying and clearing
+avoid. An alternative to tagging is @emph{labeling}, see @ref{Applying and clearing
 labels}}, you could add:
 @lisp
 (add-to-list 'mu4e-headers-actions
@@ -3485,7 +3485,7 @@ so please refer to @ref{(mu-scm) Top} for that.
 
 In this chapter, we discuss how you can integrate @code{mu4e} with Emacs in
 various ways. Here we focus on Emacs built-ins; for dealing with external tools,
-@xref{Other tools}.
+see @ref{Other tools}.
 
 @menu
 * Default email client::Making mu4e the default emacs e-mail program
@@ -3526,7 +3526,7 @@ mail, customize the variable @code{read-mail-command}.
 @cindex modeline
 
 One of the most visible ways in which @code{mu4e} integrates with Emacs is through
-the @emph{modeline} @xref{Mode Line,,,emacs}. The @code{mu4e} support for that is
+the @emph{modeline} see @ref{Mode Line,,,emacs}. The @code{mu4e} support for that is
 handled through a minor-mode @code{mu4e-modeline-mode}, which is enabled by
 default when @code{mu4e} is running.
 
@@ -3572,7 +3572,7 @@ particular query, e.g., as part of your @var{mu4e-bookmarks}:
 
 The results of this query (the last time it was updated) is shown as some
 character or emoji (depending on @var{mu4e-use-fancy-chars}) and 2 or 3 numbers,
-just like what we saw in @xref{Bookmarks and Maildirs}, e.g.,
+just like what we saw in @ref{Bookmarks and Maildirs}, e.g.,
 @example
  N:10(+5)/15
 @end example
@@ -3595,7 +3595,7 @@ the counts to latest known ones. When in the main-view, you can use
 @cindex transient
 
 @code{mu4e} has experimental support for the ``transient'' menus, as per
-@xref{(transient) Top}. Because ``transient'' is not automatically available in
+@ref{(transient) Top}. Because ``transient'' is not automatically available in
 all Emacs version that @code{mu4e} support, you need to manually enable it:
 @lisp
 (when (require 'mu4e-transient nil 'noerror)
@@ -3610,13 +3610,13 @@ Depending on your desktop environment, it is possible to get notification when
 there is new mail.
 
 The default implementation (which you can override) depends on the same system
-used for the @xref{Bookmarks and Maildirs}, in the main view and the
-@xref{Modeline}, and thus gives updates when there new messages compared to some
+used for the @ref{Bookmarks and Maildirs}, in the main view and the
+@ref{Modeline}, and thus gives updates when there new messages compared to some
 ``baseline'', as discussed earlier.
 
 For now, notifications are implemented for desktop environments that support
-DBus-based notifications, as per Emacs' notification sub-system @xref{(elisp)
-Desktop Notifications}.
+DBus-based notifications, as per Emacs' notification sub-system, see
+@ref{(elisp) Desktop Notifications}.
 
 You can enable mu4e's desktop notifications (provided that you are on a
 supported system) by setting @code{mu4e-notification-support} to @t{t}. If you
@@ -4399,8 +4399,8 @@ necessary.
 
 @subsection The counts in the main-screen differ from the 'real' numbers - why?
 For speed reasons, the counts do @emph{not} exclude messages that no longer
-exist in the file-system, nor do they exclude duplicate messages;
-@xref{mu-mu4e-differ}.
+exist in the file-system, nor do they exclude duplicate messages; see
+@ref{mu-mu4e-differ}.
 
 @subsection How can I quickly delete/move/trash a lot of messages?
 You can select ('mark' in Emacs-speak) messages, just like you would select text
