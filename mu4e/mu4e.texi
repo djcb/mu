@@ -309,9 +309,9 @@ $ sudo dnf install git meson gmime30-devel xapian-core-devel emacs
 
 The next step is to get the @code{mu} sources. There are two alternatives:
 @itemize
-@item @emph{Use a stable release} -- download a release from
+@item @emph{Use a stable release} --- download a release from
 @url{https://github.com/djcb/mu/releases}
-@item @emph{Use an experimental development version} -- get it from the repository,
+@item @emph{Use an experimental development version} --- get it from the repository,
 and @t{git clone https://github.com/djcb/mu.git}
 @end itemize
 
@@ -655,7 +655,7 @@ Gnus uses, many settings for those also apply to @code{mu4e}.
 
 By default, @code{mu4e} puts a copy of messages you sent in the folder
 determined by @code{mu4e-sent-folder}. In some cases, this may not be
-what you want - for example, when using Gmail-over-@abbr{IMAP}, this
+what you want --- for example, when using Gmail-over-@abbr{IMAP}, this
 interferes with Gmail's handling of the sent messages folder, and you
 may end up with duplicate messages.
 
@@ -834,7 +834,7 @@ By comparing current results with the baseline, you can quickly see what new
 messages have arrived since the last time you looked.
 
 The baseline@footnote{For debugging, it can be useful to see the time for the
-baseline - for that, there is the @code{mu4e-baseline-time} command.} is reset
+baseline --- for that, there is the @code{mu4e-baseline-time} command.} is reset
 automatically when switching to the main view, or invoking @code{buffer-revert}
 (@kbd{g}) while in the main-view. Visiting the ``favorite'' bookmark does the
 same(explained below).
@@ -879,7 +879,7 @@ Note that @code{mu4e} resets the baseline when you are interacting with it (for
 instance, when you visit the urgent bookmark, or when you go to the main view);
 in such cases, there won't be any further notifications.
 
-The @emph{Maildirs} item is very similar to Bookmarks -- consider maildirs here
+The @emph{Maildirs} item is very similar to Bookmarks --- consider maildirs here
 as being a special kind of bookmark query that matches a Maildir. You can
 configure this using the variable @code{mu4e-maildir-shortcuts}; see its
 docstring and @ref{Maildir searches} for more details.
@@ -1159,7 +1159,7 @@ results.
 @node Folding threads
 @section Folding threads
 
-It is possible to fold threads - that is, visually collapse threads into a
+It is possible to fold threads --- that is, visually collapse threads into a
 single line (and the reverse), by default using the @key{TAB} and @key{S-TAB}
 bindings. Note that the collapsing is always for threads as a whole, not for
 sub-threads.
@@ -1289,8 +1289,8 @@ headers-view to the message-view and vice-versa with
 @subsection Further customization
 
 However, @code{mu4e}'s display rules are provisional; you can override them
-easily by customizing @code{display-buffer-alist}, which governs how Emacs --
-and thus @code{mu4e} -- must display your buffers.
+easily by customizing @code{display-buffer-alist}, which governs how Emacs ---
+and thus @code{mu4e} --- must display your buffers.
 
 Let's look at some examples.
 
@@ -1655,7 +1655,7 @@ on the current message. You can specify these actions using the variable
 @code{mu4e-view-actions}; @code{mu4e} defines a number of example actions.
 
 @subsection MIME-part actions
-MIME-part actions allow you to act upon MIME-parts in a message - such as
+MIME-part actions allow you to act upon MIME-parts in a message --- such as
 attachments. These actions are defined and documented in
 @code{mu4e-view-mime-part-actions}.
 
@@ -1680,8 +1680,8 @@ and no headers buffer will use a detached buffer to display its
 messages. You can reattach a buffer to an live headers buffer by
 typing @key{Z}.
 
-You can freely rename a message view buffer -- such as with @key{C-x x
-r} -- if you want a custom, non-randomized name.
+You can freely rename a message view buffer --- such as with @key{C-x x
+r} --- if you want a custom, non-randomized name.
 
 Detached messages are often useful for workflows involving lots of
 simultaneous messages.
@@ -1893,7 +1893,7 @@ addresses last seen after some date. Parameter is a string, parseable by
 @code{org-parse-time-string}. This excludes old e-mail addresses. The
 default is @t{"2010-01-01"}, i.e., only consider e-mail addresses seen
 since the start of 2010.
-@item @code{mu4e-compose-complete-max} -- the maximum number of contacts to use.
+@item @code{mu4e-compose-complete-max} --- the maximum number of contacts to use.
 This adds a hard limit to the 2000 (default) contacts; those are sorted by
 recency / frequency etc. so should include the ones you most likely need.
 @item @code{mu4e-contact-process-function} --- a function to rewrite or
@@ -2459,7 +2459,7 @@ Note, messages are considered duplicates when they have the same
 @node Marking
 @chapter Marking
 
-In @code{mu4e}, the common way to do things with messages is a two-step process -
+In @code{mu4e}, the common way to do things with messages is a two-step process ---
 first you @emph{mark} them for a certain action, then you @emph{execute}
 (@key{x}) those marks. This is similar to the way @t{dired} operates. Marking
 can happen from both @ref{Headers view} and @ref{Message view}.
@@ -3266,12 +3266,12 @@ functions:
 refiling, based on a function --- see @ref{Dynamic folders}
 @item Using an attachment-specific download-directory --- see the
 variable @code{mu4e-attachment-dir}.
-@item Apply a function to a message in the headers view -
+@item Apply a function to a message in the headers view ---
 see @ref{Headers view actions}
 @item Apply a function to a message in the message view ---
 see @ref{Message view actions}
 @item Add a new kind of mark for use in the headers view
-- see @ref{Adding a new kind of mark}
+--- see @ref{Adding a new kind of mark}
 @item Apply a function to a MIME-part --- see @ref{MIME-part actions}
 @item Custom function to mark certain messages ---
 see @ref{Custom mark functions}
@@ -4371,7 +4371,7 @@ answers.
 @node General
 @section General
 
-@subsection Results from @command{mu} and @code{mu4e} differ - why?
+@subsection Results from @command{mu} and @code{mu4e} differ --- why?
 @anchor{mu-mu4e-differ} In general, the same queries for @command{mu}
 and @code{mu4e} should yield the same results. If they differ, this is
 usually because one of the following reasons:
@@ -4397,7 +4397,7 @@ sees them, and the query may not be what you think it is. Quoting is
 necessary.
 @end itemize
 
-@subsection The counts in the main-screen differ from the 'real' numbers - why?
+@subsection The counts in the main-screen differ from the 'real' numbers --- why?
 For speed reasons, the counts do @emph{not} exclude messages that no longer
 exist in the file-system, nor do they exclude duplicate messages; see
 @ref{mu-mu4e-differ}.
@@ -4526,7 +4526,7 @@ Set the variable @code{mu4e-hide-index-messages} to non-@code{nil}.
 
 Some IMAP-synchronization programs such as @t{mbsync} (but not @t{offlineimap})
 don't like it when message files do not change their names when they are moved
-to different folders. @code{mu4e} can attempt to help with this - you can set the
+to different folders. @code{mu4e} can attempt to help with this --- you can set the
 variable @code{mu4e-change-filenames-when-moving} to non-@code{nil}.
 
 Also, some of these programs may interpret the ``trash'' flag differently; see
@@ -4564,7 +4564,7 @@ mailing-list; worthwhile to check out.
 @node Reading messages
 @section Reading messages
 
-@subsection Opening messages is slower than expected - why?
+@subsection Opening messages is slower than expected --- why?
 @code{mu4e} is designed to be very fast, even with large amounts of mail.
 However, if you experience slowdowns, here are some things to consider:
 @itemize
@@ -4716,7 +4716,7 @@ and encrypting}.
 
 @subsection Address auto-completion misses some addresses
 If you have set @code{mu4e-compose-complete-only-personal} to non-nil, @code{mu4e}
-only completes 'personal' addresses - so you tell it about your e-mail addresses
+only completes 'personal' addresses --- so you tell it about your e-mail addresses
 when setting up the database (@t{mu init}); @ref{Initializing the message
 store}.
 
