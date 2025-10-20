@@ -501,6 +501,13 @@ This includes expanding e.g. 3-5 into 3,4,5. If the letter
          (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
      list)))
 
+(defun mu4e-get-time-date (prompt)
+  "Determine the Emacs time value for time/date entered by user.
+Basically, a command around `parse-time-string' to read a user
+string after PROMPT."
+  (let ((timestr (read-string (mu4e-format "%s" prompt))))
+    (apply 'encode-time (parse-time-string timestr))))
+
 (defun mu4e-make-temp-file (ext)
   "Create a self-destructing temporary file with extension EXT.
 The file will self-destruct in a short while, enough to open it

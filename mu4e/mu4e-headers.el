@@ -268,7 +268,7 @@ The first character of NAME is used as the shortcut."
      (lambda () (mu4e-get-time-date "Match messages after: ")))
     ("Bigger than"
      (lambda (msg bytes) (> (mu4e-msg-field msg :size) (* 1024 bytes)))
-     (lambda () (read-number "Match messages bigger than (Kbytes): "))))
+     (lambda () (read-number "Match messages bigger than (KB): "))))
   "List of custom markers-functions.
 
 The functions are to mark message that match some custom
@@ -281,7 +281,11 @@ and (optionally) PARAM, and should return non-nil when there's a
 match.
 * PARAM-FUNC is function that is evaluated once, and its value is
 then passed to PREDICATE-FUNC as PARAM. This is useful for
-getting user-input.")
+getting user-input.
+
+The default functions that take dates, use `mu4e-get-time-date'
+which wraps `parse-time-string' and hence requires the format to
+be compatible with that.")
 ;;; Internal variables/constants
 
 ;; docid cookies
