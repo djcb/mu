@@ -1786,10 +1786,12 @@ that, you can set (or @code{let}-bind) @code{message-cite-function} to
 
 See @ref{(message) Reply} and @ref{(message) Wide Reply} for further details.
 
-Note: in older versions, @code{mu4e-compose-reply} would @emph{ask} whether you
-want to reply-to-all or not (there was no separate ``wide'' reply); if you are
-nostalgic for that old behavior, you could add something like the following to
-your configuration:
+@subsubsection Interactively deciding whom to reply to
+
+In older @t{mu4e} versions, @code{mu4e-compose-reply} would @emph{ask} whether
+you want to reply-to-all or not (there was no separate ``wide'' reply); if you
+are nostalgic for that old behavior, you could add something like the following
+to your configuration:
 @lisp
 (defun compose-reply-wide-or-not-please-ask ()
   "Ask whether to reply-to-all or not."
@@ -1799,6 +1801,19 @@ your configuration:
 (define-key mu4e-compose-minor-mode-map (kbd "R")
   #'compose-reply-wide-or-not-please-ask)
 @end lisp
+
+@subsubsection Avoiding replying to self
+
+If you want to exclude your own e-mail addresses when issueing ``wide-replies''
+(a.k.a., ``reply-to-all''), you can use @code{message-dont-reply-to-names};
+i.e.,
+@lisp
+(setq message-dont-reply-to-names #'mu4e-personal-or-alternative-address-p)
+@end lisp
+
+In order for this to work properly, you need to pass your address to @command{mu
+init --personal-address=...} at database initialization time, and/or use
+the variable @code{message-alternative-emails}.
 
 @subsection Forward
 @cindex composing, forward
@@ -2041,16 +2056,6 @@ configuration:
 @lisp
 (setq message-kill-buffer-on-exit t)
 @end lisp
-@item If you want to exclude your own e-mail addresses when issueing
-``wide-replies'' (a.k.a., ``reply-to-all''), you can use
-@code{message-dont-reply-to-names}; i.e.,
-@lisp
-(setq message-dont-reply-to-names #'mu4e-personal-or-alternative-address-p)
-@end lisp
-
-In order for this to work properly, you need to pass your address to @command{mu
-init --personal-address=...} at database initialization time, and/or use
-the variable @code{message-alternative-emails}.
 @end itemize
 
 @node Searching
