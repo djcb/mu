@@ -140,7 +140,7 @@ There are some internal fields as well, e.g. ; subject to change:
          (seq-sort (lambda (p1 p2) (< (plist-get p1 :part-index)
                                       (plist-get p2 :part-index))) parts)))))
 
-;; https://emacs.stackexchange.com/questions/74547/completing-read-search-also-in-annotationsxc
+;; https://emacs.stackexchange.com/questions/74547/completing-read-search-also-in-annotations
 
 (defun mu4e--uniquify-file-name (fname)
   "Return a not-yet-existing filename based on FNAME.

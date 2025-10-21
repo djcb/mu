@@ -3277,13 +3277,12 @@ see @ref{Custom mark functions}
 @end itemize
 
 @noindent
-You can also write your own functions without using the above. If you
-want to do so, key useful functions are @code{mu4e-message-at-point}
-(see below), @code{mu4e-headers-for-each} (to iterate over all
-headers, see its docstring) and @code{mu4e-view-for-each-part} (to
-iterate over all parts/attachments, see its docstring). There is also
-@code{mu4e-view-for-each-uri} to iterate of all the URIs in the
-current message.
+You can also write your own functions without using the above. If you want to do
+so, key useful functions are @code{mu4e-message-at-point} (see below),
+@code{mu4e-headers-for-each} (to iterate over all headers, see its docstring)
+and @code{mu4e-view-mime-parts} (a list of all parts/attachments, see its
+docstring). There is also @code{mu4e-view-for-each-uri} to iterate of all the
+URIs in the current message.
 
 Another useful function is
 @code{mu4e-headers-find-if} which searches for a message matching a
