@@ -53,9 +53,11 @@
 (defcustom mu4e-quit-hook nil
   "Hook run just before quitting mu4e.
 
-This hook runs just before mu4e performs its own cleanup.
+This hook runs just before mu4e performs its own cleanup. For
+that reason, you should not invoke any
+asynchronous (non-blocking) code that expects mu4e to be running.
 
-Note that it only fires when mu4e actually terminates; i.e.,
+The hook only fires when mu4e actually terminates -- i.e.,
 `mu4e-quit' _without_ the \"bury-only\" parameter."
   :type 'hook
   :package-version '(mu4e . "1.12.14")
@@ -90,7 +92,7 @@ is non-nil."
           (switch-to-buffer mu4e-main-buffer-name)
         (mu4e--main-view)))))
 
-(defun mu4e-quit(&optional bury)
+(defun mu4e-quit (&optional bury)
   "Quit the mu4e session or bury the buffer.
 
 If prefix-argument BURY is non-nil, merely bury the buffer.
@@ -106,7 +108,7 @@ Otherwise, completely quit mu4e, including automatic updating."
 
 (defun mu4e--check-requirements ()
   "Check for the settings required for running mu4e."
-  (unless (>= emacs-major-version 25)
+  (unless (>= emacs-major-version 26)
     (mu4e-error "Emacs >= 25.x is required for mu4e"))
   (when (mu4e-server-properties)
     (unless (string= (mu4e-server-version) mu4e-mu-version)
@@ -268,7 +270,7 @@ invoke FUNC (if available) afterwards."
      ((plist-get info :message)
       (mu4e-index-message "%s" (plist-get info :message))))))
 
-(defun mu4e--init-handlers()
+(defun mu4e--init-handlers ()
   "Initialize the server message handlers.
 Only set set them if they were nil before, so overriding has a
 chance."
