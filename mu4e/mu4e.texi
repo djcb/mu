@@ -144,14 +144,15 @@ basis.
 
 Under the hood, @code{mu4e} is fully search-based, similar to programs like
 @uref{https://notmuchmail.org/,notmuch} and
-@uref{https://sup-heliotrope.github.io/sup}.
+@uref{https://supmua.dev/,sup}.
 @cindex notmuch
 @cindex sup
 
 However, @code{mu4e}'s user-interface is quite different. @code{mu4e}'s mail
 handling (deleting, moving, etc.)@: is inspired by
-@uref{http://www.gohome.org/wl/Wanderlust} (another Emacs-based e-mail client),
-@uref{http://www.mutt.org/mutt} and the @code{dired} file-manager for emacs.
+@uref{https://github.com/wanderlust/wanderlust,wanderlust} (another Emacs-based
+e-mail client), @uref{http://www.mutt.org/,mutt} and the @code{dired}
+file-manager for emacs.
 @cindex wanderlust
 @cindex mutt
 
@@ -3887,7 +3888,7 @@ Note, @code{mu4e} supports built-in address autocompletion; @ref{Address
 autocompletion}, and that is the recommended way to do this.
 
 However, it is also possible to manage your addresses with @t{org-mode}, using
-@uref{https://julien.danjou.info/projects/emacs-packages#org-contacts,org-contacts}.
+@uref{https://orgmode.org/worg/org-contrib/org-contacts.html,org-contacts}.
 
 @t{mu4e-actions} define a useful action (@ref{Actions}) for adding a contact
 based on the @t{From:}-address in the message at point. To enable this, add to
