@@ -144,14 +144,15 @@ basis.
 
 Under the hood, @code{mu4e} is fully search-based, similar to programs like
 @uref{https://notmuchmail.org/,notmuch} and
-@uref{https://sup-heliotrope.github.io/sup}.
+@uref{https://supmua.dev/,sup}.
 @cindex notmuch
 @cindex sup
 
 However, @code{mu4e}'s user-interface is quite different. @code{mu4e}'s mail
 handling (deleting, moving, etc.)@: is inspired by
-@uref{http://www.gohome.org/wl/Wanderlust} (another Emacs-based e-mail client),
-@uref{http://www.mutt.org/mutt} and the @code{dired} file-manager for emacs.
+@uref{https://github.com/wanderlust/wanderlust,wanderlust} (another Emacs-based
+e-mail client), @uref{http://www.mutt.org/,mutt} and the @code{dired}
+file-manager for emacs.
 @cindex wanderlust
 @cindex mutt
 
@@ -3449,8 +3450,8 @@ With version 1.12.12, @command{mu} gained bindings for the SCM/Guile programming
 | scm-support      | yes     |
 @end example
 
-If you have the support, @code{mu4e} you can connect to this ``REPL'' directly,
-which uses the same database/store instance that @code{mu4e} uses.
+If you have the support, you can connect to this ``REPL'' directly, which uses
+the same database/store instance that @code{mu4e} uses.
 
 Assuming your @code{mu} supports @code{scm}, there are two steps:
 
@@ -3555,7 +3556,7 @@ The query parameters in the modeline start with the various query flags (such as
 some representation of @code{mu4e-search-threads}, @code{mu4e-search-full}; the
 @t{help-echo} (tool-tip) has the details.
 
-The query parameters are followed by the query-string use for the headers-view.
+The query parameters are followed by the query-string used for the headers-view.
 By default, if the query string matches some bookmark, the name of that bookmark
 is shown instead of the query it specifies. This can be changed by setting
 @code{mu4e-modeline-prefer-bookmark-name} to @code{nil}.
@@ -3612,8 +3613,8 @@ there is new mail.
 
 The default implementation (which you can override) depends on the same system
 used for the @ref{Bookmarks and Maildirs}, in the main view and the
-@ref{Modeline}, and thus gives updates when there new messages compared to some
-``baseline'', as discussed earlier.
+@ref{Modeline}, and thus gives updates when there are new messages compared to
+some ``baseline'', as discussed earlier.
 
 For now, notifications are implemented for desktop environments that support
 DBus-based notifications, as per Emacs' notification sub-system, see
@@ -3621,7 +3622,7 @@ DBus-based notifications, as per Emacs' notification sub-system, see
 
 You can enable mu4e's desktop notifications (provided that you are on a
 supported system) by setting @code{mu4e-notification-support} to @t{t}. If you
-want tweak the details, have a look at @code{mu4e-notification-filter} and
+want to tweak the details, have a look at @code{mu4e-notification-filter} and
 @code{mu4e-notification-function}.
 
 @node Emacs bookmarks
@@ -3629,7 +3630,7 @@ want tweak the details, have a look at @code{mu4e-notification-filter} and
 @cindex Emacs bookmarks
 
 @code{mu4e} integrates with the Emacs bookmarks system, and allows you to create
-bookmarks with with @code{bookmark-set} for either message-at-point or the last
+bookmarks with @code{bookmark-set} for either message-at-point or the last
 query. The message links are based on the message's message-id, and thus the
 bookmarks stay valid even if you move the message around.
 
@@ -3841,10 +3842,9 @@ information for an Emacs buffer in a separate frame. Using
 @code{mu4e-speedbar}, @code{mu4e} lists your bookmarks and maildir
 folders and allows for one-click access to them.
 
-To enable this, add @t{(require 'mu4e-speedbar)} to your configuration;
-then, all you need to do to activate it is @kbd{M-x speedbar}. Then,
-when then switching to @ref{Main view}, the speedbar-frame is
-updated with your bookmarks and maildirs.
+To enable this, add @t{(require 'mu4e-speedbar)} to your configuration; then,
+all you need to do to activate it is @kbd{M-x speedbar}. Then, when switching to
+@ref{Main view}, the speedbar-frame is updated with your bookmarks and maildirs.
 
 For speed reasons, the list of maildirs is determined when @code{mu4e}
 starts; if the list of maildirs changes while @code{mu4e} is running, you
@@ -3888,7 +3888,7 @@ Note, @code{mu4e} supports built-in address autocompletion; @ref{Address
 autocompletion}, and that is the recommended way to do this.
 
 However, it is also possible to manage your addresses with @t{org-mode}, using
-@uref{https://julien.danjou.info/projects/emacs-packages#org-contacts,org-contacts}.
+@uref{https://orgmode.org/worg/org-contrib/org-contacts.html,org-contacts}.
 
 @t{mu4e-actions} define a useful action (@ref{Actions}) for adding a contact
 based on the @t{From:}-address in the message at point. To enable this, add to
@@ -4078,7 +4078,7 @@ see, most of it is commented-out.
 ;; already exist
 
 ;; below are the defaults; if they do not exist yet, mu4e offers to
-;; create them. they can also functions; see their docstrings.
+;; create them. They can also be functions; see their docstrings.
 ;; (setq mu4e-sent-folder   "/sent")
 ;; (setq mu4e-drafts-folder "/drafts")
 ;; (setq mu4e-trash-folder  "/trash")
@@ -4387,7 +4387,8 @@ and @t{mu4e-update-index} have the side-effect of committing changed data to dis
 @t{mu4e-headers-results-limit} set to 500. However, the command-line @command{mu
 find}'s corresponding @t{--include-related} is false, and there's no limit
 (@t{--maxnum}). Furthermore, @t{mu find} by default includes duplicate messages,
-while @code{mu4e} does not (see @t{--skip-dups}/@t{mu4e-search-skip-duplicates}.
+while @code{mu4e} does not (see
+@t{--skip-dups}/@t{mu4e-search-skip-duplicates}).
 @item reverse sorting:
 The results may be different when @code{mu4e} and @command{mu find} do
 not both sort their results in the same direction.
@@ -4598,7 +4599,7 @@ ticket, but please be sure to mention the following:
 @itemize
 @item are all messages slow or only some messages?
 @item if it's only some messages, is there something specific about them?
-@item in addition, please a (sufficiently censored version of) a message that is slow
+@item in addition, please include a (sufficiently censored version of) a message that is slow
 @item is opening @emph{always} slow or only sometimes? When?
 @end itemize
 
@@ -4799,9 +4800,8 @@ Since version 0.9.17, @code{mu4e} sends emails with @t{format=flowed} by setting
 in your Emacs init file (@file{~/.emacs} or @file{~/.emacs.d/init.el}). The
 transformation of your message into the proper format is done at the time of
 sending. For this to happen properly, you should write each paragraph of your
-message of as a long line (i.e. without carriage return). If you introduce
-unwanted newlines in your paragraph, use @kbd{M-q} to reformat it as a single
-line.
+message as a long line (i.e. without carriage return). If you introduce unwanted
+newlines in your paragraph, use @kbd{M-q} to reformat it as a single line.
 
 If you want to send the message with paragraphs on single lines but without
 @t{format=flowed} (because, say, the receiver does not understand the latter as
@@ -4899,8 +4899,8 @@ try the @emph{unicode-fonts} package:
 @end lisp
 
 It's possible to customize various header marks as well, with a ``fancy'' and
-``non-fancy'' version (if you cannot see some the ``fancy'' characters, that is
-an indication that the font you are using does not support those characters.
+``non-fancy'' version (if you cannot see some of the ``fancy'' characters, that
+is an indication that the font you are using does not support those characters.
 
 @lisp
  (setq
