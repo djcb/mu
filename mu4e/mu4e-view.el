@@ -389,6 +389,13 @@ list."
       (mu4e-view-mark-for-unmark)
     (mu4e-message "Unmarking needs to be done in the header list view")))
 
+(defun mu4e-view-mark-and-next (mark)
+  "Set MARK on the current message.
+  Then, move to the next message."
+  (interactive)
+  (mu4e--view-in-headers-context
+   (mu4e-headers-mark-and-next mark)))
+
 (defmacro mu4e--view-defun-mark-for (mark)
   "Define a function mu4e-view-mark-for- MARK."
   (let ((funcname (intern (format "mu4e-view-mark-for-%s" mark)))
