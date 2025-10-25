@@ -374,10 +374,15 @@ get_mailing_list(const MimeMessage& mime_msg)
 static void
 append_text(Option<std::string>& str, Option<std::string>&& app)
 {
+	/*
+	 * it is not guaranteed that what we get here is valid utf8,
+	 * so we enforce it with utf8_clean
+	 */
+
 	if (!str && app)
-		str = std::move(*app);
+		str = utf8_clean(std::move(*app));
 	else if (str && app)
-		str.value() += app.value();
+		str.value() += utf8_clean(app.value());
 }
 
 static void
