@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2017-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2017-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -150,6 +150,22 @@ test_parse_size()
 }
 
 static void
+test_utf8_clean()
+{
+	assert_equal(utf8_clean("James Holden"), "James Holden");
+
+	const uint8_t invalid_bytes[] ={ 'a' , 0xff, 'c', '\0'};
+	std::string invalid{reinterpret_cast<const char*>(invalid_bytes),
+		sizeof(invalid_bytes) - 1};
+
+	g_assert_false(g_utf8_validate(invalid.c_str(), invalid.length(), nullptr));
+
+	const auto valid = utf8_clean(std::move(invalid));
+	g_assert_true(g_utf8_validate(valid.c_str(), valid.length(), {}));
+	assert_equal(valid, "a\357\277\275c"); // replacement char
+}
+
+static void
 test_flatten()
 {
 	CaseVec cases = {
@@ -159,7 +175,7 @@ test_flatten()
 	    {"đodø",		true, "dodo"},
 
 	    // don't touch combining characters in CJK etc.
-	    {"スポンサーシップ募集",true, "スポンサーシップ募集"}
+	    {"スポンサーシップ募集", true, "スポンサーシップ募集"}
 	};
 
 	test_cases(cases, [](auto s, auto f) { return utf8_flatten(s); });
@@ -192,7 +208,6 @@ test_clean()
 	test_cases(cases, [](auto s, auto f) { return utf8_clean(s); });
 }
 
-
 static void
 test_word_break()
 {
@@ -205,7 +220,6 @@ test_word_break()
 
 	test_cases(cases, [](auto s, auto f) { return utf8_wordbreak(s); });
 }
-
 
 static void
 test_format()
@@ -327,6 +341,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/date-basic", test_date_basic);
 	g_test_add_func("/utils/date-ymwdhMs", test_date_ymwdhMs);
 	g_test_add_func("/utils/parse-size", test_parse_size);
+	g_test_add_func("/utils/utf8-clean", test_utf8_clean);
 	g_test_add_func("/utils/flatten", test_flatten);
 	g_test_add_func("/utils/remove-ctrl", test_remove_ctrl);
 	g_test_add_func("/utils/clean", test_clean);

@@ -165,6 +165,24 @@ static inline bool contains_unbroken_script(const std::string& str) {
 }
 
 /**
+ * If the string is already valid utf8, return it
+ * otherwise, return a valid utf8 version
+ *
+ * @param str some string
+ *
+ * @return a utf8-string
+ */
+static inline std::string utf8_clean(std::string&& str) {
+	if (!g_utf8_validate(str.c_str(), static_cast<gssize>(str.length()), {})) {
+		gchar* clean{g_utf8_make_valid(
+				str.c_str(), static_cast<gssize>(str.length()))};
+		str = clean;
+		g_free(clean);
+	}
+	return std::move(str);
+}
+
+/**
  * Flatten a string -- down-case and fold diacritics.
  *
  * @param str a string
@@ -172,7 +190,7 @@ static inline bool contains_unbroken_script(const std::string& str) {
  * @return a flattened string
  */
 std::string utf8_flatten(const char* str);
-inline std::string
+static inline std::string
 utf8_flatten(const std::string& s) {
 	return utf8_flatten(s.c_str());
 }
