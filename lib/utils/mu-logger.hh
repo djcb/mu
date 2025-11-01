@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,17 +30,17 @@ namespace Mu {
  * RAII object for handling logging (through g_(debug|warning|...))
  *
  */
-struct Logger {
-
+class Logger {
+public:
 	/**
 	 * Logging options
-	 *
 	 */
 	enum struct Options {
 		None      = 0,      /**< Nothing specific */
 		StdOutErr = 1 << 1, /**< Log to stdout/stderr */
 		File      = 1 << 2, /**< Force logging to file, even if journal available */
 		Debug     = 1 << 3, /**< Include debug-level logs */
+		Quiet     = 1 << 4, /**< Be more quiet */
 	};
 
 	/**

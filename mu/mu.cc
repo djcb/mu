@@ -112,8 +112,12 @@ main(int argc, char* argv[]) try
 	Logger::Options lopts{Logger::Options::None};
 	if (opts.log_stderr)
 		lopts |= Logger::Options::StdOutErr;
+
 	if (opts.debug)
 		lopts |= Logger::Options::Debug;
+	else if (opts.quiet) // ie. only consider when not in debug mode
+		lopts |= Logger::Options::Quiet;
+
 	if (!!g_getenv("MU_TEST"))
 		lopts |= Logger::Options::File;
 

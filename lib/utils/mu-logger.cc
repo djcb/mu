@@ -184,9 +184,10 @@ Mu::Logger::Logger(const std::string& path, Mu::Logger::Options opts)
 	    NULL,
 	    NULL);
 
-	g_message("logging initialized; debug: %s, stdout/stderr: %s",
-		  any_of(opts & Options::Debug) ? "yes" : "no",
-		  any_of(opts & Options::StdOutErr) ? "yes" : "no");
+	if (none_of(opts & Options::Quiet))
+		g_message("logging initialized; debug: %s, stdout/stderr: %s",
+			  any_of(opts & Options::Debug) ? "yes" : "no",
+			  any_of(opts & Options::StdOutErr) ? "yes" : "no");
 
 	MuLogInitialized = true;
 }
