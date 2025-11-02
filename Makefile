@@ -56,10 +56,12 @@ endif
 #   make clean all MESON_FLAGS="-Db_sanitize=thread" CXX=clang++ CC=clang
 all: $(BUILDDIR)
 	@$(MESON) compile -C $(BUILDDIR) $(VERBOSE)
+
+setup:
+	@$(MESON) setup $(MESON_FLAGS) $(BUILDDIR)
 	@ln -sf $(BUILDDIR)/compile_commands.json $(CURDIR) || /bin/true
 
-$(BUILDDIR):
-	@$(MESON) setup $(MESON_FLAGS) $(BUILDDIR)
+$(BUILDDIR): setup
 
 check: test
 
@@ -152,7 +154,6 @@ dist: $(BUILDDIR)
 	$(MESON) dist -C $(BUILDDIR) $(VERBOSE)
 
 distclean: clean
-
 
 #
 # documentation
