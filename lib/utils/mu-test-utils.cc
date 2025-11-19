@@ -137,10 +137,9 @@ Mu::TempDir::~TempDir()
 		return;
 	}
 
-	if (auto&& res{run_command0({RM_PROGRAM, "-fr", path_})}; !res) {
+	if (auto&& res{remove_directory(path_)}; !res) {
 		/* LCOV_EXCL_START*/
 		mu_warning("error removing {}: {}", path_, format_as(res.error()));
 		/* LCOV_EXCL_STOP*/
-	} else
-		mu_debug("removed '{}'", path_);
+	}
 }
