@@ -21,21 +21,20 @@
 #include <glib.h>
 
 #include <iostream>
-#include <sstream>
 #include <functional>
 #include <array>
 
 #include "mu-utils.hh"
+#include "mu-utils-file.hh"
+
 #include "mu-test-utils.hh"
-#include "mu-error.hh"
 
 using namespace Mu;
 
-
 struct Case {
-	const std::string expr;
-	bool              is_first{};
-	const std::string expected;
+	std::string expr;
+	bool        is_first{};
+	std::string expected;
 };
 using CaseVec  = std::vector<Case>;
 using ProcFunc = std::function<std::string(std::string, bool)>;
@@ -62,7 +61,7 @@ test_date_basic()
 	}
 
 	g_setenv("TZ", hki, TRUE);
-	std::vector<std::tuple<const char*, bool/*is_first*/, ::time_t>> cases = {{
+	const std::vector<std::tuple<const char*, bool/*is_first*/, ::time_t>> cases = {{
 			{"2015-09-18T09:10:23", true, 1442556623},
 			{"1972-12-14T09:10:23", true, 93165023},
 			{"1972-12-14T09:10", true,    93165000},
@@ -88,7 +87,7 @@ test_date_basic()
 
 	for (auto& test: cases) {
 		if (g_test_verbose())
-			g_debug("checking %s", std::get<0>(test));
+			mu_debug("checking {}", std::get<0>(test));
 		g_assert_cmpuint(parse_date_time(std::get<0>(test),
 						 std::get<1>(test)).value_or(-1),==,
 				 std::get<2>(test));
@@ -96,7 +95,7 @@ test_date_basic()
 }
 
 static void
-test_date_ymwdhMs(void)
+test_date_ymwdhMs()
 {
 	struct testcase {
 		std::string	expr;
@@ -104,7 +103,8 @@ test_date_ymwdhMs(void)
 		int		tolerance;
 	};
 
-	std::array<testcase, 7> cases = {{
+
+	const std::array<testcase, 7> cases = {{
 		{"7s", 7, 1},
 		{"3M", 3 * 60, 1},
 		{"3h", 3 * 60 * 60, 1},
@@ -154,9 +154,8 @@ test_utf8_clean()
 {
 	assert_equal(utf8_clean("James Holden"), "James Holden");
 
-	const uint8_t invalid_bytes[] ={ 'a' , 0xff, 'c', '\0'};
-	std::string invalid{reinterpret_cast<const char*>(invalid_bytes),
-		sizeof(invalid_bytes) - 1};
+	const std::array<char, 3> invalid_bytes ={ 'a' , static_cast<char>(0xff), 'c'};
+	std::string invalid{invalid_bytes.data(), invalid_bytes.size()};
 
 	g_assert_false(g_utf8_validate(invalid.c_str(), invalid.length(), nullptr));
 
@@ -311,9 +310,8 @@ test_locale_workaround()
 	g_assert_true(locale_workaround());
 }
 
-
 static void
-test_summarize(void)
+test_summarize()
 {
 	const char *txt =
 		"Khiron was fortified and made the seat of a pargana during "
