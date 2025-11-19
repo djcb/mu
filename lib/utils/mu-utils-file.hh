@@ -61,7 +61,6 @@ std::string canonicalize_filename(const std::string& path, const std::string& re
  */
 Result<std::string> expand_path(const std::string& str);
 
-
 /**
  * Get the basename for path, i.e. without leading directory component,
  * @see g_path_get_basename
@@ -72,7 +71,6 @@ Result<std::string> expand_path(const std::string& str);
  */
 std::string basename(const std::string& path);
 
-
 /**
  * Get the dirname for path, i.e. without leading directory component,
  * @see g_path_get_dirname
@@ -82,7 +80,6 @@ std::string basename(const std::string& path);
  * @return the dirname
  */
 std::string dirname(const std::string& path);
-
 
 /*
  * for OSs without support for direntry->d_type, like Solaris
@@ -121,7 +118,6 @@ enum {
  * currently)
  */
 uint8_t determine_dtype(const std::string& path, bool use_lstat=false);
-
 
 /**
  * Well-known runtime paths
@@ -189,7 +185,6 @@ std::string join_paths(S&& s, Args...args) {
 
 	return path;
 }
-
 
 /**
  * Like g_cancellable_new(), but automatically cancels itself

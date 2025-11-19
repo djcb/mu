@@ -118,17 +118,30 @@ Mu::make_temp_dir()
 }
 
 
-Result<void>
+Result<void> // ugly way to remove a directory.
 Mu::remove_directory(const std::string& path)
 {
-	/* ugly */
+	if (!check_dir(path, false, true))
+		return Err(Error::Code::File, "not a writable directory: {}", path);
+
+	// ugly: g_spawn wants gchar**
+	std::array<char*, 4> argv = { g_find_program_in_path("rm"),
+		g_strdup("-r"),	g_strdup(path.c_str()), {}};
+	if (!argv[0]) {
+		std::for_each(argv.begin(), argv.end(), g_free);
+		return Err(Error::Code::File, "cannot find 'rm' in path");
+	}
+
 	GError *err{};
-	const auto cmd{mu_format("/bin/rm -rf '{}'", path)};
-	if (!g_spawn_command_line_sync(cmd.c_str(), NULL,
-				       NULL, NULL, &err))
-		return Err(Error::Code::File, &err, "failed to remove {}", path);
-	else
-		return Ok();
+	int status{};
+	const auto res = g_spawn_sync({}, argv.data(), {}, {}, {}, {}, {}, {}, &status, &err);
+	std::for_each(argv.begin(), argv.end(), g_free);
+	if (!res)
+		return Err(Error::Code::File, &err, "failed to remove {}; exit-code={}", path, status);
+
+	mu_debug("removed directory '{}'", path);
+
+	return Ok();
 }
 
 std::string
@@ -403,7 +416,7 @@ Mu::expand_path(const std::string& str)
 #include "utils/mu-test-utils.hh"
 
 static void
-test_check_dir_01(void)
+test_check_dir_01()
 {
 	if (g_access("/usr/bin", F_OK) == 0) {
 		g_assert_cmpuint(
@@ -414,7 +427,7 @@ test_check_dir_01(void)
 }
 
 static void
-test_check_dir_02(void)
+test_check_dir_02()
 {
 	if (g_access("/tmp", F_OK) == 0) {
 		g_assert_cmpuint(
@@ -425,7 +438,7 @@ test_check_dir_02(void)
 }
 
 static void
-test_check_dir_03(void)
+test_check_dir_03()
 {
 	if (g_access(".", F_OK) == 0) {
 		g_assert_cmpuint(
@@ -436,7 +449,7 @@ test_check_dir_03(void)
 }
 
 static void
-test_check_dir_04(void)
+test_check_dir_04()
 {
 	/* not a dir, so it must be false */
 	g_assert_cmpuint(
@@ -446,7 +459,7 @@ test_check_dir_04(void)
 }
 
 static void
-test_determine_dtype_with_lstat(void)
+test_determine_dtype_with_lstat()
 {
 	g_assert_cmpuint(
 		determine_dtype(MU_TESTMAILDIR, true), ==, DT_DIR);
@@ -457,9 +470,8 @@ test_determine_dtype_with_lstat(void)
 		==, DT_REG);
 }
 
-
 static void
-test_program_in_path(void)
+test_program_in_path()
 {
 	g_assert_true(!!program_in_path("ls"));
 }
@@ -498,6 +510,23 @@ test_expand_path()
 	assert_equal(join_paths(homedir, "boo"), expand_path("~/boo").value());
 }
 
+
+static void
+test_make_remove_directory()
+{
+	const auto res {make_temp_dir()};
+	assert_valid_result(res);
+
+	g_assert_true(check_dir(*res));
+	g_assert_cmpint(::access(res->c_str(), R_OK), ==, 0);
+
+	const auto res2{remove_directory(*res)};
+	assert_valid_result(res2);
+
+	g_assert_false(check_dir(*res));
+	g_assert_cmpint(::access(res->c_str(), R_OK), !=, 0);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -514,6 +543,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/file/join-paths", test_join_paths);
 	g_test_add_func("/utils/file/runtime-paths", test_runtime_paths);
 	g_test_add_func("/utils/file/expand-path", test_expand_path);
+	g_test_add_func("/utils/file/make-remove-directory", test_make_remove_directory);
 
 	return g_test_run();
 }
