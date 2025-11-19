@@ -65,7 +65,8 @@ struct OutputStream {
 				  mu_format("mu-{}.eld", g_get_monotonic_time()))},
 		out_{std::ofstream{fname_}} {
 		if (!out().good())
-			throw Mu::Error{Error::Code::File, "failed to create temp-file"};
+			throw Mu::Error{Error::Code::File,
+				"failed to create temp-file '{}'", fname_};
 	}
 	/**
 	 * Construct an OutputStream for a stringstream
