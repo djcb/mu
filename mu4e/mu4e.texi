@@ -268,17 +268,17 @@ development packages for GTK+, Webkit and Guile.
 @node Versions
 @section Versions
 
-The stable (release) versions have even minor version numbers, while the
-development versions have odd ones. So, for example, 1.10.5 is a stable version,
-while the 1.11.9 is the development version.
+Over its lifetime, @t{mu} has experimented with different ways to deal with
+development and release versions, trying to find the balance between getting new
+functionality to users quickly, and minimizing the risk of introducing
+regressions.
 
-The stable versions only receive bug fixes after being released, while the
-development versions get new features, fixes, and, perhaps, bugs, and are meant
-for people with a tolerance for that.
+Currently (the 1.12.x series), all feature development happens on @t{master},
+with pre-releases having a version with a @t{-pre<n>} suffix, e.g.,
+@t{1.12.14-pre4}. Every few months this is wrapped up in a release (on Github)
+@emph{without} that suffix, e.g. @t{1.12.14}.
 
-There is support for one release branch; so, when the 1.10 release is available
-(and a new 1.11 development series start), no more changes are expected for the
-1.8 releases.
+The version strings are parseble through Emacs' @code{version-to-list}.
 
 @node Installation
 @section Installation
