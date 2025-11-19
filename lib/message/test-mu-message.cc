@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,6 +17,8 @@
 **
 */
 #include "utils/mu-test-utils.hh"
+#include "utils/mu-utils-file.hh"
+
 #include "mu-message.hh"
 #include "mu-mime-object.hh"
 #include <glib.h>
@@ -239,7 +241,7 @@ World!
 		assert_equal(part.mime_type().value(), "audio/ogg");
 		// file consistso of 4 bytes 4..7
 		assert_equal(part.to_string().value(), "\004\005\006\007");
-		const auto fpath{*cache_path + part.cooked_filename().value()};
+		const auto fpath{join_paths(*cache_path, part.cooked_filename().value())};
 		const auto res = part.to_file(fpath, true);
 
 		g_assert_cmpuint(*res,==,4);
