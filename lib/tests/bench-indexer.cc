@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -24,6 +24,8 @@
 #include <fstream>
 
 #include <utils/mu-utils.hh>
+#include <utils/mu-utils-file.hh>
+
 #include <utils/mu-regex.hh>
 #include <mu-store.hh>
 #include "mu-maildir.hh"
@@ -438,12 +440,9 @@ setup(const TestData& tdata)
 static void
 tear_down()
 {
-	/* ugly */
-	GError *err{};
-	const auto cmd{mu_format("/bin/rm -rf '{}' '{}'", BENCH_MAILDIRS, BENCH_STORE)};
-	if (!g_spawn_command_line_sync(cmd.c_str(), NULL, NULL, NULL, &err)) {
-		mu_warning("error: {}", err ? err->message : "?");
-		g_clear_error(&err);
+	for (auto&& dir : { BENCH_MAILDIRS, BENCH_STORE } ) {
+		if (const auto res = remove_directory(dir); !res)
+			mu_warning("failed to remove {}: {}", dir, res.error().what());
 	}
 }
 

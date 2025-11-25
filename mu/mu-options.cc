@@ -829,13 +829,14 @@ add_scripts(CLI::App& app, Options& opts)
 static Result<Options>
 show_manpage(Options& opts, const std::string& name)
 {
-	char *path = g_find_program_in_path("man");
-	if (!path)
+	const auto manprog{program_in_path("man")};
+	if (!manprog)
 		return Err(Error::Code::Command,
 			   "cannot find 'man' program");
 
 	GError* err{};
-	auto cmd{to_string_gchar(std::move(path)) + " " + name};
+	const auto cmd{mu_format("{} {}", *manprog, name)};
+	// run_command0 doesn't work here.
 	auto res = g_spawn_command_line_sync(cmd.c_str(), {}, {}, {}, &err);
 	if (!res)
 		return Err(Error::Code::Command, &err,

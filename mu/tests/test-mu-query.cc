@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -47,16 +47,20 @@ make_database(const std::string& dbdir, const std::string& testdir)
 {
 	/* use the env var rather than `--muhome` */
 	g_setenv("MUHOME", dbdir.c_str(), 1);
-	const auto cmdline{mu_format(
-			"/bin/sh -c '"
-			"{} --quiet init --maildir={} ; "
-			"{} --quiet index'",
-			MU_PROGRAM, testdir, MU_PROGRAM)};
+
+	{
+		const auto res = run_command0({MU_PROGRAM, "--quiet", "init", "--maildir", testdir});
+		assert_valid_result(res);
+	}
+
+	{
+		const auto res = run_command0({MU_PROGRAM, "--quiet", "index"});
+		assert_valid_result(res);
+	}
 
 	if (g_test_verbose())
-		mu_printerrln("\n{}", cmdline);
+		mu_info("\nindexed {} @ {}", testdir, dbdir);
 
-	g_assert(g_spawn_command_line_sync(cmdline.c_str(), NULL, NULL, NULL, NULL));
 	auto xpath = join_paths(dbdir, "xapian");
 	/* ensure MUHOME worked */
 	g_assert_cmpuint(::access(xpath.c_str(), F_OK), ==, 0);

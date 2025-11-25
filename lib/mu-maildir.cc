@@ -297,7 +297,11 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 G_GNUC_UNUSED static Mu::Result<void>
 msg_move_mv_file(const std::string& src, const std::string& dst)
 {
-	if (auto res{run_command0({"/bin/mv", src, dst})}; !res)
+	static const auto mv_path{program_in_path("mv")};
+	if (!mv_path)
+		return Err(Error::Code::File, "failed to find 'mv'");
+
+	if (auto res{run_command0({*mv_path, src, dst})}; !res)
 		return Err(Error::Code::File, "error moving {}->{}; err={}", src, dst, res.error());
 	else
 		return Ok();
