@@ -326,6 +326,11 @@
     - 1.12.13: ~mu scm~ also gained support for labels and logging; furthermore,
       ~mfind~ was made much faster.
 
+    - 1.12.14: some methods that returned lists would return ~#f~ when there were
+      no results (e.g., ~to~, ~from~, ~cc~, ~bcc~, ~references~, ~labels~); however, it's
+      nicer to return an empty list instead, which what we now do. Technically a
+      breaking change, but justified while we are still 'experimental'.
+
 *** Contributors
 
     Thanks to our contributors - code committers belows, but also to everyone

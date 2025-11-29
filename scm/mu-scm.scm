@@ -348,16 +348,16 @@ Return #f otherwise."
   (assoc-ref (message->alist message) 'size))
 
 (define-method (references (message <message>))
-  "Get the list of reference of MESSAGE or #f if not available.
+  "Get the list of reference of MESSAGE
  with the oldest first and the direct parent as the last one. Note, any
 reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
 #f."
-  (assoc-ref (message->alist message) 'references))
+  (or (assoc-ref (message->alist message) 'references) '()))
 
 (define-method (labels (message <message>))
-  "Get the list of labels for MESSAGE or #f if not available."
-  (assoc-ref (message->alist message) 'labels))
+  "Get the list of labels for MESSAGE."
+  (or (assoc-ref (message->alist message) 'labels) '()))
 
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
@@ -376,14 +376,11 @@ This is method is useful to determine the thread a message is in."
 
 (define-method (flags (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
-  (assoc-ref (message->alist message) 'flags))
+  (or (assoc-ref (message->alist message) 'flags) '()))
 
 (define-method (flag? (message <message>) flag)
   "Does MESSAGE have some FLAG?"
-  (let ((flgs (flags message)))
-    (if flgs
-	(if (member flag flgs) #t #f)
-	#f)))
+  (if (member flag (flags message)) #t #f))
 
 (define-method (draft? (message <message>))
   "Is MESSAGE a draft message?"
@@ -442,22 +439,21 @@ This is method is useful to determine the thread a message is in."
   (flag? message 'calendar))
 
 (define-method (from (message <message>))
-  "Get the sender (the From: field) for MESSAGE or #f if not found."
-  (assoc-ref (message->alist message) 'from))
+  "Get the list  of sender (the From: field) for MESSAGE."
+  (or (assoc-ref (message->alist message) 'from) '()))
 
 (define-method (to (message <message>))
-  "Get the (intended) recipient for MESSAGE (the To: field) or #f if not found."
-  (assoc-ref (message->alist message) 'to))
+  "Get the list of (intended) recipients for MESSAGE (the To: field)."
+  (or (assoc-ref (message->alist message) 'to) '()))
 
 (define-method (cc (message <message>))
-  "Get the (intended) carbon-copy recipient for MESSAGE (the Cc: field) or #f if
-not found."
-  (assoc-ref (message->alist message) 'cc))
+  "Get the list of (intended) carbon-copy recipient for MESSAGE (the Cc: field)."
+  (or (assoc-ref (message->alist message) 'cc) '()))
 
 (define-method (bcc (message <message>))
-  "Get the (intended) blind carbon-copy recipient for MESSAGE (the Bcc: field) or
-#f if not found."
-  (assoc-ref (message->alist message) 'bcc))
+  "Get the list of (intended) blind carbon-copy recipient for MESSAGE (the Bcc:
+field)."
+  (or (assoc-ref (message->alist message) 'bcc) '()))
 
 (define* (body message #:key (html? #f))
   "Get the MESSAGE body or #f if not found

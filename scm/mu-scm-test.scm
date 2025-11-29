@@ -40,6 +40,11 @@
     (let ((recip (car (to msg))))
       (test-equal "Bilbo Baggins" (assoc-ref recip 'name))
       (test-equal "bilbo@anotherexample.com" (assoc-ref recip 'email)))
+
+    ;; cc, bc
+    (test-equal '() (cc msg))
+    (test-equal '() (bcc msg))
+
     ;; no date
     (test-assert (not (date msg)))
     ;; flags
@@ -90,7 +95,7 @@
     (test-equal "gcc include search order" (subject msg))
     (test-equal "klub" (header msg "precedence"))
     (test-equal "gcc-help.gcc.gnu.org" (mailing-list msg))
-    (test-equal #f (references msg))
+    (test-equal '() (references msg))
     (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (message-id msg))
     (test-equal "3BE9E6535E3029448670913581E7A1A20D852173@emss35m06.us.lmco.com" (thread-id msg))
 
@@ -98,10 +103,14 @@
     (test-equal "gcc include search order" (assoc-ref alist 'subject))
     (test-equal 'normal (assoc-ref alist 'priority))
     (test-equal '((email . "anon@example.com") (name . "Mickey Mouse"))
-      (car  (assoc-ref alist 'from))))
+      (car  (assoc-ref alist 'from)))
+
+    ;; cc, bc, labels
+    (test-equal '() (cc msg))
+    (test-equal '() (bcc msg))
+    (test-equal '() (labels msg)))
 
   (test-end "test-message-more"))
-
 
 (define (test-message-parts)
   (test-begin "test-message-parts")

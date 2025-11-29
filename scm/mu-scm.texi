@@ -455,7 +455,7 @@ Example usage:
 @deffn {Scheme Procedure} mcount
 @end deffn
 
-Returns the number of messages in the store.
+Return the number of messages in the store.
 
 Example usage:
 @lisp
@@ -475,9 +475,35 @@ Example:
      (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
+More fields may be added.
+
+@deffn {Scheme Procedure} root-maildir
+@end deffn
+
+Get the root maildir directory, that is, the root of under the directory under
+which all messages reside.
+
+This is equivalent to @code{(assoc-ref (store->alist) 'root-maildir)}.
+
+@deffn {Scheme Procedure} personal-addresses
+@end deffn
+
+Get the list of personal-addresses as defined in the @code{mu} database, which
+may be empty.
+
+This is equivalent to @code{(assoc-ref (store->alist) 'personal-addresses)}. Any
+element in this list is either a plain e-mail address, or a PCRE-compatible
+regular expression when the first and last characters are @t{/} (forward-slash);
+see @t{pcre(3)} for further details.
+
 @deffn {Scheme Procedure} labels
 @end deffn
-Get the list of all labels present in the store, or @code{#f} if there are none.
+Get the list of all labels present in the store, which may be empty. Not to be
+confused with @code{labels} procedure for a @code{message} object.
+
+@deffn {Scheme Procedure} labels
+@end deffn
+Get the list of all labels present in the store, which may empty.
 Not to be confused with @code{labels} procedure for a @code{message} object.
 
 @node Message
@@ -682,23 +708,19 @@ Each contact is an alist with at least an @code{email} and optionally a
 
 @deffn {Scheme Procedure} from message
 @end deffn
-Get the list of message senders (usually only one). Returns either a list
-of contacts or @t{#f}.
+Get the list of message senders (usually a single one).
 
 @deffn {Scheme Procedure} to message
 @end deffn
-Get the message's intended @t{To:} recipients. Returns either
-a list of contacts or @t{#f} if not found.
+Get the message's intended @t{To:} recipients list.
 
 @deffn {Scheme Procedure} cc message
 @end deffn
-Get the message's intended carbon-copy @t{Cc:} recipients. Returns either a list
-of contacts or @t{#f} if not found.
+Get the message's intended carbon-copy @t{Cc:} recipients list.
 
 @deffn {Scheme Procedure} bcc message
 @end deffn
-Get the message's intended blind carbon-copy @t{Bcc:} recipients. Returns either
-a list of contacts or @t{#f} if not found.
+Get the message's intended blind carbon-copy @t{Bcc:} recipients list.
 
 @subsection Flags
 
@@ -824,8 +846,8 @@ For example:
 
 @deffn {Scheme Procedure} labels message
 @end deffn
-Get the list of labels for this message, or @code{#f} if there are none.
-Not to be confused with the @code{labels} procedure for a Store.
+Get the list of labels for this message. Not to be confused with the
+@code{labels} procedure for a store.
 
 For example:
 @lisp
