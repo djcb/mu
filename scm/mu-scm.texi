@@ -115,8 +115,10 @@ This chapter walks you through the installation and basic setup.
 @node Using distributions
 @section Using distributions
 
-At the time of writing, no distributions ship with an SCM-enabled @t{mu} yet, so
-for now you need to build it yourself. Of course, this is fully optional.
+At the time of writing, few distributions ship with an SCM-enabled @t{mu}, but
+we know at least Guix@footnote{@url{https://guix.gnu.org/}}. For other
+distributions, you need to build it yourself for now. Of course, this is fully
+optional.
 
 @node Building it yourself
 @section Building it yourself
