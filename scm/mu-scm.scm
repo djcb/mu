@@ -93,8 +93,9 @@
 	    cfind
 	    labels
 	    personal?
+	    root-maildir
+	    personal-addresses
 	    store->alist
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	    ;; Other
 
@@ -563,8 +564,24 @@ The pattern is mandatory; the other (keyword) arguments are optional.
     #:max-results max. number of matches. Default: false (unlimited))."
   (cc-store-cfind (cc-store store) pattern personal? after max-results))
 
+(define-method (root-maildir (store <store>))
+  ;; "Get the root-maildir for the messages in STORE."
+  (assoc-ref (store->alist store) 'root-maildir))
+
+(define-method (root-maildir)
+  "Get the root-maildir for the messages in the default-store."
+  (root-maildir %default-store))
+
+(define-method (personal-addresses (store <store>))
+  ;; "Get the list of personal addresses in STORE."
+  (or (assoc-ref (store->alist store) 'personal-addresses) '()))
+
+(define-method (personal-addresses)
+  "Get the list of personal addresses in the default-store."
+  (personal-addresses %default-store))
+
 (define-method (mcount (store <store>))
- ;; "Get the number of messages in STORE."
+  ;; "Get the number of messages in STORE."
   (cc-store-mcount (cc-store store)))
 
 (define-method (mcount)

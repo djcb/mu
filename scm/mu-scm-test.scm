@@ -13,6 +13,9 @@
   (test-assert (personal? "user@example.com"))
   (test-assert (not (personal? "user@anotherexample.com")))
 
+  (test-equal (root-maildir) (string-append (getenv "MU_TESTDATADIR") "/testdir"))
+  (test-equal (personal-addresses) '("user@example.com"))
+
   (let ((info (store->alist)))
     (test-equal 50000 (assoc-ref info 'batch-size))
     (test-equal 100000000 (assoc-ref info 'max-message-size)))

@@ -393,7 +393,8 @@ implicit.
 
 The store currently only exposes a few methods, described below.
 
-@deffn {Scheme Procedure} mfind query [#:related? #f] [#:skip-dups? #f] [#:sort-field 'date]
+@deffn {Scheme Procedure} mfind query [#:related? #f] [#:skip-dups? #f]
+       [#:sort-field 'date]
        [#:reverse? #f] [#:max-results #f]
 @end deffn
 
@@ -491,8 +492,9 @@ This is equivalent to @code{(assoc-ref (store->alist) 'root-maildir)}.
 Get the list of personal-addresses as defined in the @code{mu} database, which
 may be empty.
 
-This is equivalent to @code{(assoc-ref (store->alist) 'personal-addresses)}. Any
-element in this list is either a plain e-mail address, or a PCRE-compatible
+This is equivalent to @code{(or (assoc-ref (store->alist) 'personal-addresses) '())},
+
+Any element in this list is either a plain e-mail address, or a PCRE-compatible
 regular expression when the first and last characters are @t{/} (forward-slash);
 see @t{pcre(3)} for further details.
 

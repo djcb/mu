@@ -331,6 +331,9 @@
       nicer to return an empty list instead, which what we now do. Technically a
       breaking change, but justified while we are still 'experimental'.
 
+   - 1.12.14: new convenience methods ~root-maildir~ and ~personal-addresses~ for
+     store objects. See the reference manual for details.
+
 *** Contributors
 
     Thanks to our contributors - code committers belows, but also to everyone
