@@ -26,7 +26,7 @@
 
   (test-begin "test-basic-mfind")
 
-  (let ((msg (car (mfind ""))))
+  (let ((msg (car (mfind "from:Frodo"))))
     ;; size
     (test-equal 490 (size msg))
     ;; message-id
@@ -60,7 +60,7 @@
 
 (define (test-mfind)
   (test-begin "test-mfind")
-  (let ((msg (car (mfind "" #:sort-field 'date #:reverse? #t))))
+  (let ((msg (car (mfind "to:a@example.com" #:sort-field 'date #:reverse? #t))))
     (test-equal "test with multi to and cc" (subject msg) )
     (test-equal "2016-05-15 16:57:25"
       (time->string (date msg) #:format "%F %T" #:utc? #t)))
@@ -69,7 +69,7 @@
 (define (test-message-full)
   (test-begin "test-message-full")
 
-  (let ((msg (cadr (mfind ""))))
+  (let ((msg (car (mfind "from:testmu@testmu.xx"))))
     (test-equal "Motörhead" (header msg "Subject"))
     (test-equal "Mü <testmu@testmu.xx>" (header msg "From"))
     (test-equal #f (header msg "Bla"))
