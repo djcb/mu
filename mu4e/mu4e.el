@@ -49,6 +49,8 @@
   (require 'mu4e-speedbar)) ;; support for speedbar
 (when mu4e-org-support
   (require 'mu4e-org))      ;; support for org-mode links
+(when (featurep 'dbusbind)
+  (require 'mu4e-dbus))
 
 (defcustom mu4e-quit-hook nil
   "Hook run just before quitting mu4e.

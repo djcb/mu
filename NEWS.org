@@ -312,6 +312,11 @@
     - 1.12.14: add ~mu4e-quit-hook~, a hook is just before quitting mu4e. See its
       docstring for details.
 
+    - 1.12.14: add ~mu4e-dbus-mode~, an experimental minor mode which, if enabled on an Emacs
+      with DBus-support, exposes some of Mu4e's state (such as the the
+      read/unread counts of bookmarked queries) on the DBus session bus.
+      See [[info:mu4e#DBus
+       service][DBus service]] in the mu4e manual for further details.
 *** scm
 
     - 1.12.12: add new guile/scheme binding in ~scm/~. These are to replace the

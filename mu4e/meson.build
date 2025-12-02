@@ -48,7 +48,6 @@ mu4e_srcs=[
   'mu4e-contrib.el',
   'mu4e-draft.el',
   'mu4e-folders.el',
-  'mu4e.el',
   'mu4e-headers.el',
   'mu4e-helpers.el',
   'mu4e-icalendar.el',
@@ -70,7 +69,8 @@ mu4e_srcs=[
   'mu4e-update.el',
   'mu4e-vars.el',
   'mu4e-view.el',
-  'mu4e-window.el'
+  'mu4e-window.el',
+  'mu4e.el'
 ]
 
 # emacs 28 is guaranteed to have transient
@@ -78,6 +78,13 @@ mu4e_srcs=[
 # https://stackoverflow.com/questions/49221792/byte-compile-file-only-when-library-is-found
 if emacs28.found()
   mu4e_srcs += 'mu4e-transient.el'
+endif
+
+# do have we have dbus support?
+emacs_dbus = run_command(emacs, '--batch', '--eval', '(kill-emacs (if (featurep \'dbusbind) 0 1))',
+                         check: false)
+if emacs_dbus.returncode() == 0
+  mu4e_srcs += 'mu4e-dbus.el'
 endif
 
 # note, we cannot compile mu4e-config.el without incurring

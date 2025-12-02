@@ -3494,6 +3494,7 @@ see @ref{Other tools}.
 * Modeline::Showing mu4e's status in the modeline
 * Transient::Transient menus for mu4e
 * Desktop notifications::Get desktop notifications for new mail
+* DBus service::Accessing Mu4e through DBus
 * Emacs bookmarks::Using Emacs' bookmark system
 * Eldoc::Information about the current header in the echo area
 * Org-mode::Adding mu4e to your organized life
@@ -3624,6 +3625,74 @@ You can enable mu4e's desktop notifications (provided that you are on a
 supported system) by setting @code{mu4e-notification-support} to @t{t}. If you
 want to tweak the details, have a look at @code{mu4e-notification-filter} and
 @code{mu4e-notification-function}.
+
+@node DBus service
+@section DBus service
+@cindex DBus
+
+DBus is a message-bus system for GNU/Linux and some other systems, which allows
+for communications between programs using a binary protocol; see @ref{(dbus)
+Top} for further details.
+
+@code{mu4e} uses Emacs' DBus-support to implements a service for making some of
+its information visible to external programs. This information includes the
+current context (@code{mu4e-context-name}) and the read/unread counts for
+various bookmarked queries (@code{mu4e-query-items})- the same information that
+is used for the new mail notifications and the read/unread counts,
+@pxref{Bookmarks and Maildirs}.
+
+An external program could use this information display such status information.
+
+@subsection @code{mu4e-dbus-mode}
+@cindex mu4e-dbus-mode
+
+Enabling and disabling the service is through a minor-mode
+@code{mu4e-dbus-mode}. @code{M-x mu4e-dbus-mode}.
+
+This starts a DBus service with the name @t{nl.djcbsoftware.nl} on the
+session-bus, and at object-path @t{nl.djcbsoftware.Mu4e}, exposes the interface
+@t{/nl/djcbsoftware/Mu4e}.
+
+The interface is described as an XML string, in a constant
+@code{mu4e-dbus-intrspection-xml}. This currently looks like:
+
+@verbatim
+  <node>
+  <interface name='org.freedesktop.DBus.Introspectable'>
+    <method name='Introspect'>
+      <arg name='xml_data' type='s' direction='out'/>
+    </method>
+  </interface>
+  <interface name='org.freedesktop.DBus.Properties'>
+    <method name='Get'>
+      <arg type='s' name='interface_name' direction='in'/>
+      <arg type='s' name='property_name' direction='in'/>
+      <arg type='v' name='value' direction='out'/>
+    </method>
+    <method name='GetAll'>
+      <arg type='s' name='interface_name' direction='in'/>
+      <arg type='a{sv}' name='properties' direction='out'/>
+    </method>
+    <method name='Set'>
+      <arg type='s' name='interface_name' direction='in'/>
+      <arg type='s' name='property_name' direction='in'/>
+      <arg type='v' name='value' direction='in'/>
+    </method>
+    <signal name='PropertiesChanged'>
+      <arg type='s' name='interface_name'/>
+      <arg type='a{sv}' name='changed_properties'/>
+      <arg type='as' name='invalidated_properties'/>
+    </signal>
+  </interface>
+  <interface name='nl.djcbsoftware.Mu4e'>
+    <property name='Version' type='s' access='read'/>
+    <property name='DatabasePath' type='s' access='read'/>
+    <property name='RootMaildir' type='s' access='read'/>
+    <property name='Context' type='s' access='readwrite'/>
+    <property name='QueryInfo' type='aa{sv}' access='readwrite'/>
+  </interface>
+</node>
+@end verbatim
 
 @node Emacs bookmarks
 @section Emacs bookmarks
