@@ -232,7 +232,7 @@ Connect to mu's scm (guile) interface through Geiser."
    :name "*mu-scm-repl*"
    :command `("sh" "-c"  ,mu-scm-listen-command)
    :filter (lambda (_proc chunk)
-             (when (stringng-match "^\\(mu-scm.*\\.sock\\)$" chunk)
+             (when (string-match "^\\(mu-scm.*\\.sock\\)$" chunk)
                (geiser-connect-local 'guile (match-string 1 chunk))))))
 @end lisp
 
@@ -337,7 +337,7 @@ Thus, an example script might look like:
   (for-each
    (lambda (msg)
      (format #t "~a ~a\n"
-             (time-t->iso-date (date msg))
+             (time->string (date msg))
              (or (subject msg) "No subject")))
    (mfind "hello AND date:2015.." #:max-results 5)))
 @end lisp
