@@ -56,6 +56,15 @@ constexpr const auto SepaChar2 = '\xff';
  * system. We wrap so perhaps at some point (C++23?) we can use std:: instead.
  */
 
+
+/*
+ * Fprmatting
+ */
+template<typename...T>
+std::string mu_format(fmt::format_string<T...> frm, T&&... args) noexcept {
+	return fmt::format(frm, std::forward<T>(args)...);
+}
+
 /*
  * Debug/error/warning logging
  *
@@ -64,36 +73,40 @@ constexpr const auto SepaChar2 = '\xff';
  */
 
 template<typename...T>
+void mu_log(GLogLevelFlags level, fmt::format_string<T...> frm, T&&... args) noexcept {
+	g_log("mu", level, "%s", mu_format(frm, std::forward<T>(args)...).c_str());
+}
+
+template<typename...T>
+void mu_none(fmt::format_string<T...>, T&&...) noexcept {
+	// ignore
+}
+
+template<typename...T>
 void mu_debug(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_DEBUG, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_DEBUG, frm, std::forward<T>(args)...);
 }
 template<typename...T>
 void mu_info(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_INFO, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_INFO, frm, std::forward<T>(args)...);
 }
 template<typename...T>
 void mu_message(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_MESSAGE, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_MESSAGE, frm, std::forward<T>(args)...);
 }
 template<typename...T>
 void mu_warning(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_WARNING, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_WARNING, frm, std::forward<T>(args)...);
 }
-/* LCOV_EXCL_START*/
 template<typename...T>
 void mu_critical(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_CRITICAL, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_CRITICAL, frm, std::forward<T>(args)...);
 }
 template<typename...T>
 void mu_error(fmt::format_string<T...> frm, T&&... args) noexcept {
-	g_log("mu", G_LOG_LEVEL_ERROR, "%s",
-	      fmt::format(frm, std::forward<T>(args)...).c_str());
+	mu_log(G_LOG_LEVEL_ERROR, frm, std::forward<T>(args)...);
 }
+
 /* LCOV_EXCL_STOP*/
 
 /*
@@ -118,8 +131,18 @@ void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(stderr, frm, std::forward<T>(args)...);
 }
 
+// null-stream
+class NullStream : public std::ostream {
+public:
+    NullStream() : std::ostream(&buf_) {}
+private:
+	struct NullBuffer : public std::streambuf {
+		int overflow(int c) override { return c; }
+	};
+	NullBuffer buf_;
+};
 
-/* stream */
+/* stream print */
 template<typename...T>
 void mu_print(std::ostream& os, fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::print(os, frm, std::forward<T>(args)...);
@@ -127,14 +150,6 @@ void mu_print(std::ostream& os, fmt::format_string<T...> frm, T&&... args) noexc
 template<typename...T>
 void mu_println(std::ostream& os, fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(os, frm, std::forward<T>(args)...);
-}
-
-/*
- * Fprmatting
- */
-template<typename...T>
-std::string mu_format(fmt::format_string<T...> frm, T&&... args) noexcept {
-	return fmt::format(frm, std::forward<T>(args)...);
 }
 
 template<typename Range>
