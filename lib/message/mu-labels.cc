@@ -30,7 +30,8 @@ Mu::Labels::validate_label(const std::string &label)
 	if (label.empty())
 		return Err(Error{Error::Code::InvalidArgument,
 				 "labels cannot be empty"});
-	else if (!g_utf8_validate(label.c_str(), label.size(), {})) // perhaps put hex in err str?
+	else if (!g_utf8_validate(label.c_str(), label.size(), {}))
+		// perhaps put hex in err str?
 		return Err(Error{Error::Code::InvalidArgument,
 				"labels must be valid UTF-8"});
 
@@ -43,7 +44,7 @@ Mu::Labels::validate_label(const std::string &label)
 		return Err(Error{Error::Code::InvalidArgument,
 				 "labels cannot start with '+' or '-' ({})", label});
 
-	for (auto cur = cstr; cur && *cur; cur = g_utf8_next_char(cur)) {
+	for (auto cur = cstr; cur && *cur; cur = g_utf8_next_char(cur)) { // NOLINT
 
 		const gunichar uc = g_utf8_get_char(cur);
 		if (g_unichar_isalnum(uc))
@@ -117,7 +118,7 @@ Mu::Labels::updated_labels(const LabelVec& labels, const DeltaLabelVec& deltas)
 
 	// First, the delta; put in a set for uniqueness; and use a special
 	// comparison operator so "add" and "remove" deltas are considered "the same"
-	// for the set; then fill the set from the end of the deltas vec to the begining,
+	// for the set; then fill the set from the end of the deltas vec to the beginning,
 	// so "the last one wins", as we want.
 
 	// only one change per label, last one wins

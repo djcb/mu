@@ -76,6 +76,7 @@ Mu::export_labels(const Store& store, const std::string& query, Option<std::stri
 
 	auto output_res = export_output(path);
 	if (!output_res)
+
 		return Err(std::move(output_res.error()));
 
 	auto&[output, output_path] = *output_res;
@@ -97,43 +98,45 @@ Mu::export_labels(const Store& store, const std::string& query, Option<std::stri
 	return Ok(std::move(output_path));
 }
 
-static void
-log_import(bool quiet, bool verbose, const std::string& msg, bool is_err=false)
-{
-	if (is_err)
-		mu_debug("{}", msg);
-	else
-		mu_warning("{}", msg);
-
-	if (is_err && !quiet)
-		mu_printerrln("{}", msg);
-	else if (verbose)
-		mu_println("{}", msg);
+namespace Levels {
+using Level = size_t;
+constexpr Level quiet = 1 << 0;
+constexpr Level verbose = 1 << 1;
+constexpr Level error = 1 << 0;
 }
 
-static void
-log_import_err(bool quiet, bool verbose, const std::string& msg)
-{
-	log_import(quiet, verbose, msg, true);
-}
+using Level = Levels::Level;
 
+template<typename...T>
+static void output(Level level,
+		   fmt::format_string<T...> frm, T&&... args) noexcept {
+
+	GLogLevelFlags lflags = level & Levels::error ?
+		G_LOG_LEVEL_WARNING : G_LOG_LEVEL_DEBUG;
+	mu_log(lflags, frm, std::forward<T>(args)...);
+
+	if ((level & Levels::error))
+		mu_printerrln(frm, std::forward<T>(args)... );
+	else if ((level & Levels::verbose))
+		mu_println(frm, std::forward<T>(args)... );
+
+}
 
 static Result<QueryResults>
-log_import_get_matching(Mu::Store& store, const std::string& query, int max=1)
+import_get_matching(Mu::Store& store, const std::string& query, int max=1)
 {
 	if (auto qres = store.run_query(query, {}, {}, max); !qres)
 		return Err(std::move(qres.error()));
 	else if (qres->empty())
 		return Err(Error{Error::Code::Query,
-				"no matching messages for {}", query});
+				"no match for or '{}'", query});
 	else
 		return Ok(std::move(*qres));
 }
 
 
 static void
-import_labels_for_message(Mu::Store& store,
-			  bool dry_run, bool quiet, bool verbose,
+import_labels_for_message(Mu::Store& store, bool dry_run, Level level,
 			  const std::string& path, const std::string& msgid,
 			  const std::vector<std::string> labels)
 {
@@ -147,33 +150,38 @@ import_labels_for_message(Mu::Store& store,
 
 	const auto qres = [&]()->Result<QueryResults>{
 		// plan A: match by path
-		if (auto qres_a{log_import_get_matching(store, "path:" + path)}; !qres_a) {
-			log_import_err(quiet, verbose, mu_format("failed to find by path: {}; try with message-id",
-				       qres_a.error().what()));
+		if (auto qres_a{import_get_matching(store, "path:" + path)}; !qres_a) {
+			output(level, "path '{}' does not match; try message-id",
+			       qres_a.error().what());
 			// plan B: try the message-id
-			return log_import_get_matching(store, "msgid:" + msgid, -1/*all matching*/);
+			auto qres_b{import_get_matching(store, "msgid:" + msgid, -1/*all matching*/)};
+			if (!qres_b) { // plan-B failed too?
+				output(level | Levels::error,
+				       "import failed: cannot find message by path '{}' or message-id '{}'",
+				       path, msgid);
+			}
+			return qres_b;
 		} else
 			return qres_a;
 	}();
 
 	// neither plan a or b worked? we have to give up...
 	if (!qres) {
-		log_import_err(quiet, verbose, qres.error().what());
 		return;
 	}
+
+	mu_println("{} matches", qres->size());
 
 	// we have match(es)!
 	for (auto&& item: *qres) {
 		auto msg{*item.message()};
 		if (dry_run )
-			mu_println("labels: would apply label '{}' to {}", join(labels, ","), path);
+			output(level, "{}: would have applied labels {}", msg.path(), join(labels, ","));
 		else if (const auto res = store.update_labels(msg, delta_labels); !res)
-			log_import_err(quiet, verbose,
-				       mu_format("failed to update labels for {}: {}",
-						 msg.path(), res.error().what()));
+			output(level | Levels::error, "failed to update labels for {}: {}",
+			       msg.path(), res.error().what());
 		else
-			log_import(quiet, verbose,
-				   mu_format("applied labels {} to {}", join(labels, ","), path));
+			output(level, "{}: applied labels {}", msg.path(), join(labels, ","));
 	}
 }
 
@@ -190,6 +198,8 @@ Mu::import_labels(Mu::Store& store, const std::string& path, bool dry_run, bool 
 	std::string current_path, current_msgid;
 	std::vector<std::string> current_labels;
 
+	const Level level{(quiet ? Levels::quiet : 0) | (verbose ? Levels::verbose : 0)};
+
 	while (std::getline(input, line)) {
 
 		if (line.find(path_key) ==  0)
@@ -199,7 +209,7 @@ Mu::import_labels(Mu::Store& store, const std::string& path, bool dry_run, bool 
 		else if (line.find(labels_key) == 0) {
 			current_labels = split(line.substr(labels_key.length()), ',');
 			if (!current_labels.empty())
-				import_labels_for_message(store, dry_run, quiet, verbose,
+				import_labels_for_message(store, dry_run, level,
 							current_path, current_msgid,
 							current_labels);
 			current_path.clear();

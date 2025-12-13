@@ -43,6 +43,7 @@ class Store; // fwd declaration
 Result<std::string> export_labels(const Store& store,
 				  const std::string& query="",
 				  Option<std::string> path={});
+
 /**
  * Import labels from a file
  *
