@@ -129,8 +129,8 @@ ones are: ~holiday plan~ and ~+fancy$/dinner~.
 
 * EXPORT FORMAT
 
-The formats for import/export are UTF8-encoded text. The first line starts with
-~;;~ and some internal data. Empty lines are ignored.
+The formats for import/export are text encoded as UTF-8. The first line starts
+with ~;;~ and some internal data. Empty lines are ignored.
 
 Each entry represents the labels for a message. Messages without labels are not
 included.
@@ -140,8 +140,8 @@ An entry consists of three lines:
    message.
 2. The second line starts with ~message-id:~ followed by the message-id for the
    message.
-3. Finally, the third line starts with ~labels:~ followed by the space-separated
-   labels for the message
+3. Finally, the third line starts with ~labels:~ followed by a comma-separated
+   list of labels for the message
 
 #+begin_example
 path:/home/user/Maildir/inbox/cur/1720645394.99f64f5d81f42ba4.hyperion:2,S
@@ -149,12 +149,17 @@ message-id:669338009127192q7821feh1t826d0c4c90bd8fdf@mail.gmail.com
 labels:foo,bar,cuux
 #+end_example
 
-The ~message-id:~ is only used if the message cannot be found using ~path:~.
+** Import using message-id
 
-This adds some fault-tolerance for the case where the precise file-system
-positions have changed since the labels were exported. The upshot of that is
-that if there are _duplicate_ messages (messages with the same message-id), the
-tags are applied to all of them.
+The ~message-id:~ line is only used if the message cannot be found using ~path:~.
+
+This helps for the case where the precise file-system are not precisely the same
+as those used when exporting. This happens, for instance, when changes were made
+to the message flags since the export. Or when trying to import on a different
+machine with different paths.
+
+In any case, when using the message-id for importing, any _duplicate_ messages
+(messages with the same message-id), all get the same labels.
 
 #+include: "exit-code.inc" :minlevel 1
 
