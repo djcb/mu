@@ -220,7 +220,7 @@ struct Options {
 			Export, // export labels
 			Import, // import labels
 		};
-		Sub sub;
+		Option<Sub> sub; // the chosen sub-command
 	} labels;
 
 	/*

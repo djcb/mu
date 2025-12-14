@@ -496,9 +496,8 @@ sub_init(CLI::App& sub, Options& opts)
 static void
 sub_labels(CLI::App& sub, Options& opts)
 {
-	sub.require_subcommand(0);
+	sub.require_subcommand(0, 1);
 
-	// update
 	auto update{sub.add_subcommand("update", "update labels")};
 	update->add_option("--labels", opts.labels.delta_labels,
 		       "One or more comma-separated +label,-label")
@@ -506,12 +505,11 @@ sub_labels(CLI::App& sub, Options& opts)
 		->type_name("<delta-label>")
 		->required();
 	update->add_flag("-n,--dry-run", opts.labels.dry_run,
-		     "Output what would change without changing anything");
+			 "Output what would change without changing anything");
 	update->add_option("query", opts.labels.query, "Query for messages to update")
 		->required();
 	add_muhome_option(*update, opts);
 
-	// clear
 	auto clear = sub.add_subcommand("clear", "clear all labels from matched messages");
 	clear ->add_option("query", opts.labels.query, "Query for messages to clear of labels")
 		->required();
@@ -519,22 +517,18 @@ sub_labels(CLI::App& sub, Options& opts)
 		     "Output what would change without changing anything");
 	add_muhome_option(*clear, opts);
 
-	// list
 	[[maybe_unused]] auto list = sub.add_subcommand("list", "list labels in the store");
 	add_muhome_option(*list, opts);
 
-	// restore-list
 	[[maybe_unused]] auto restore_list = sub.add_subcommand(
 		"restore-list", "restore the labels cache");
 	add_muhome_option(*restore_list, opts);
 
-	// export
 	[[maybe_unused]] auto exportsub = sub.add_subcommand("export", "export labels to a file");
 	add_muhome_option(*exportsub, opts);
 	exportsub->add_option("output", opts.labels.file, "File to export labels to")
 		->type_name("<file>");
 
-	// import
 	auto importsub = sub.add_subcommand("import", "import labels from a file");
 	importsub->add_flag("-n,--dry-run", opts.labels.dry_run,
 			    "Output what would change without changing anything");
@@ -542,12 +536,6 @@ sub_labels(CLI::App& sub, Options& opts)
 		->required()
 		->type_name("<file>");
 	add_muhome_option(*importsub, opts);
-
-	// XXX: it'd be nice to make "update" the default command, such that
-	//   mu label foo --labels +a,-b
-	// would be interpreted as
-	//   mu label update foo --labels +a,-b
-	// but no succeeded yet; CLI11 treats 'foo' as unknown sub-command
 
 	sub.final_callback([&](){
 		if (sub.got_subcommand("list")) {
@@ -568,6 +556,9 @@ sub_labels(CLI::App& sub, Options& opts)
 		} else if (sub.got_subcommand("import")){
 			opts.labels.sub = Options::Labels::Sub::Import;
 			opts.labels.read_only = opts.labels.dry_run;
+		} else {
+			mu_println("{}", sub.help());
+			opts.labels.read_only = true;
 		}
 	});
 }
@@ -905,8 +896,8 @@ Copyright (C) 2008-2025 Dirk-Jan C. Binnema
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-)");
+There is NO WARRANTY, to the extent permitted by law.)");
+
 	app.set_version_flag("-V,--version", PACKAGE_VERSION);
 	app.set_help_flag("-h,--help", "Show help information");
 	app.set_help_all_flag("--help-all");

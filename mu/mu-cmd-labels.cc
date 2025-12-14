@@ -168,7 +168,10 @@ label_import(Mu::Store& store, const Options& opts)
 Result<void>
 Mu::mu_cmd_labels(Mu::Store &store, const Options &opts)
 {
-	switch (opts.labels.sub) {
+	if (!opts.labels.sub)
+		return Ok(); // nothing to do.
+
+	switch (*opts.labels.sub) {
 	case Options::Labels::Sub::List:
 		return label_list(store, opts);
 	case Options::Labels::Sub::RestoreList:
@@ -181,7 +184,6 @@ Mu::mu_cmd_labels(Mu::Store &store, const Options &opts)
 		return label_export(store, opts);
 	case Options::Labels::Sub::Import:
 		return label_import(store, opts);
-
 	default:
 		return Err(Error{Error::Code::Internal,
 				"invalid sub-command"});
@@ -191,7 +193,7 @@ Mu::mu_cmd_labels(Mu::Store &store, const Options &opts)
 #ifdef BUILD_TESTS
 
 /*
- * Tests.
+ * Tests...
  *
  */
 #include <config.h>
