@@ -26,23 +26,24 @@ mu-labels - attach labels to messages. Export labels to file, and import them.
 
 A label is a string associated with a message.
 
-*mu labels* has five sub-commands (i.e., 'sub-sub-commands'):
+*mu labels* has six sub-commands (i.e., 'sub-sub-commands'):
 
 - *update* for changing the labels for the messages matching some query
 - *clear* for clearing all labels from messages matching some query
 - *list* to list all labels that are used in the store
-- *list-restore* to restore the list of labels from the store
+- *list-restore* to restore the list of labels from the database (store)
 - *export* to write the label information to a file
 - *import* the read label information from a file
 
-Important: unlike other message metadata stored by *mu*, labels _cannot_ be restored
-by merely re-indexing messages. Hence, to avoid loosing label information, you
-must *export* it before re-indexing, and *import* afterwards.
+*Important*: unlike other message metadata stored by *mu*, labels _cannot_ be restored
+by merely re-indexing messages, since the information is not part of the message
+files. Hence, to avoid loosing label information, you must *export* it before
+re-indexing, and *import* afterwards.
 
 * UPDATE OPTIONS
 
 The *update* command changes the labels for messages that match some query. The
-query must be recognized as a single parameter; hence, it must be quoted when
+query must be recognized as a _single_ parameter; hence, it must be quoted when
 using from a shell.
 
 ** --labels
