@@ -290,8 +290,10 @@ Optionally,
 (defun mu4e-view-save-attachments (&optional ask-dir)
   "Save files from the current view buffer.
 
-This applies to all MIME-parts that are \"attachment-like\" (have
-a filename), regardless of their disposition.
+Save the specific files selected, if no files are explicitly
+selected then all attachments will be saved.  Note all MIME-parts
+that are \"attachment-like\" (have a filename) will be considered
+a file regardless of their disposition.
 
 With ASK-DIR is non-nil, user can specify the target-directory; otherwise
 one is determined using `mu4e-attachment-dir'.
@@ -321,8 +323,9 @@ files."
                         parts)))
          (candidates (or candidates
                          (mu4e-warn "No attachments for this message")))
-         (files (mu4e--completing-read "Save file(s): " candidates
-                                       'attachment 'multi))
+         (files (or (mu4e--completing-read "Save files (default ALL): " candidates
+                                            'attachment 'multi)
+                    (mapcar #'car-safe candidates)))
          (custom-dir (when ask-dir (read-directory-name
                                     "Save to directory: "))))
     ;; we have determined what files to save, and where.
