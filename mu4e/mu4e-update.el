@@ -36,13 +36,14 @@
   "Shell command for retrieving new mail or a function.
 
 Common values are \"offlineimap\", \"fetchmail\" or \"mbsync\", but
-arbitrary shell-commands can be used. If it is a function, it should
-return a string specifying the same.
+arbitrary shell commands can be used. If it is a function, it should
+return a string specifying a shell command.
 
-When set to the literal string \"true\" (the default), the
-command simply finishes successfully (running the \"true\"
-command) without retrieving any mail. This can be useful when
-mail is already retrieved in another way, such as a local MDA."
+The default is the string \"true\", which refers to the
+`man:true(1)' shell command, which does nothing but return
+success. This default is all you need if mail is already
+retrieved in some other way outside mu4e, such as through a local
+MDA, but otherwise you need to customize it as described."
   :type '(choice
           (string :tag "Shell command")
           (function :tag "Function that returns a string (shell command)"))

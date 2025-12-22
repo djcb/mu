@@ -571,12 +571,37 @@ indicate `no mail'; we can handle that with:
 A similar approach can be used with other mail retrieval programs,
 although not all of them have their exit codes documented.
 
+@subsection Conditional mail retrieval
+
+The value of @code{mu4e-get-mail-command} can also be a @emph{function} that
+returns a shell command. This allows for more sophistication. For
+instance, you may want to attempt to retrieve mail only when online.
+
+Let us look at an example.
+
+On many GNU/Linux systems the online-status an be checked using @emph{Network
+Manager}'s @command{nm-online}, which returns non-zero when you are online.
+
+Thus, we could use something like:
+@lisp
+(setq mu4e-get-mail-command
+  (lambda ()
+    (if (zerop (shell-command "nm-online -q"))
+		"mbsync -a"
+                "true")))
+@end lisp
+
+Of course, the can be customized to the particulars of your system.
+
 @subsection Implicit mail retrieval
 
-If you don't have a specific command for getting mail, for example
-because you are running your own mail-server, you can leave
-@code{mu4e-get-mail-command} at @t{"true"} (the default), in which case
-@code{mu4e} won't try to get new mail, but still re-index your messages.
+Not everyone needs to run a shell command for getting mail. For example, you may
+be running your own mail-server, or you already have some other way to
+periodically retrieve messages.
+
+In that case, you can leave @code{mu4e-get-mail-command} at @t{"true"} (the
+default), in which case @code{mu4e} does not attempt to retrieve new mail, but
+still re-indexes your messages as per @code{mu4e-update-interval}.
 
 @subsection Speeding up indexing
 @anchor{Speeding up indexing}
