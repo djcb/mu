@@ -73,18 +73,27 @@ mu4e_srcs=[
   'mu4e.el'
 ]
 
+# 'bc'->byte-compile. The above should always be byte-compiled.
+mu4e_bc_srcs = mu4e_srcs
+
 # emacs 28 is guaranteed to have transient
 # not very elegant, but
 # https://stackoverflow.com/questions/49221792/byte-compile-file-only-when-library-is-found
+mu4e_srcs += 'mu4e-transient.el'
 if emacs28.found()
-  mu4e_srcs += 'mu4e-transient.el'
+  mu4e_bc_srcs += 'mu4e-transient.el'
+else
+  message('mu4e-transient.el cannot be byte-compiled')
 endif
 
 # do have we have dbus support?
+mu4e_srcs += 'mu4e-dbus.el'
 emacs_dbus = run_command(emacs, '--batch', '--eval', '(kill-emacs (if (featurep \'dbusbind) 0 1))',
                          check: false)
 if emacs_dbus.returncode() == 0
-  mu4e_srcs += 'mu4e-dbus.el'
+  mu4e_bc_srcs += 'mu4e-dbus.el'
+else
+  message('mu4e-dbus.el cannot be byte-compiled')
 endif
 
 # note, we cannot compile mu4e-config.el without incurring
@@ -94,16 +103,12 @@ endif
 #
 #... so let's not do that!
 
-foreach src : mu4e_srcs
+# byte compile the sources that can be byte-compiled. This may exclude mu4e-transient.el and
+# mu4e-dbus.el
+foreach src : mu4e_bc_srcs
   target_name= '@BASENAME@.elc'
   target_path = join_paths(meson.current_build_dir(), target_name)
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
-
-  # hack-around for native compile issue: copy sources to builddir.
-  # see: https://debbugs.gnu.org/db/47/47987.html
-  configure_file(input: src, output:'@BASENAME@.el', copy:true,
-                 install_mode: 'r--r--r--')
-  # seems meson ignores 'install_mode' for copy (1.5.1, 1.6.1)
 
   custom_target(src.underscorify() + '_el',
                 build_by_default: true,
@@ -123,6 +128,14 @@ foreach src : mu4e_srcs
                           '--eval', '(setq byte-compile-warnings \'(not obsolete))',
                           '--eval', target_func,
                           '--funcall', 'batch-byte-compile', '@INPUT@'])
+endforeach
+
+# hack-around for native compile issue: copy sources to builddir.
+# see: https://debbugs.gnu.org/db/47/47987.html
+foreach src : mu4e_srcs
+  configure_file(input: src, output:'@BASENAME@.el', copy:true,
+                 install_mode: 'r--r--r--')
+  # seems meson ignores 'install_mode' for copy (1.5.1, 1.6.1)
 endforeach
 
 # this depends on the above hack: all mu4e elisp files needs to be in builddir
