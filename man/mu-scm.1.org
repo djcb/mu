@@ -4,7 +4,7 @@
 
 * NAME
 
-*mu scm* - bindings and shell for the GNU Guile programming language.
+mu-scm - bindings and shell for the GNU Guile programming language.
 
 * SYNOPSIS
 
