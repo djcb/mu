@@ -91,7 +91,7 @@ the actual labels as seen in the store.
 The *export* command takes the labels in the store and the messages they apply to,
 and writes this information to a file. You can *import* this file later, to
 restore the labels. The command takes a path to a file or a directory (ending in
-'/') as its argument.
+`/') as its argument.
 
 If a file is specified, *mu* writes the export to it.
 

@@ -166,7 +166,7 @@ can write
 #+begin_example
 mu find 'subject:/hello\\040world/'
 #+end_example
-(with the \\040 specifying a space in the regular expression, and and extra `\\'
+(with the \\040 specifying a space in the regular expression, and an extra `\\'
 to escape it). In many cases,
 #+begin_example
 mu find 'subject:/hello.world/'
