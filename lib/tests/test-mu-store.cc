@@ -635,11 +635,12 @@ test_store_fail()
 		g_assert_false(!!store);
 	}
 
-	{
-		const auto store = Store::make_new("/../../root/non-existent-path/12345",
-						   "/../../root/non-existent-path/54321");
-		g_assert_false(!!store);
-	}
+	// Note: below works if you are have root-perms.
+	// {
+	// 	const auto store = Store::make_new("/../../root/non-existent-path/12345",
+	// 					   "/../../root/non-existent-path/54321");
+	// 	g_assert_false(!!store);
+	// }
 }
 
 
