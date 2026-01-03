@@ -160,7 +160,8 @@ Otherwise, return a file with a unique number appended to the base-name."
 (defvar mu4e--completions-table nil)
 
 (defun mu4e-view-complete-all ()
-  "Pick all current candidates."
+  "Pick all current candidates.
+Note: this is not compatible with `helm-mode'."
   (interactive)
   (if (bound-and-true-p helm-mode)
       (mu4e-warn "Not supported with helm")
@@ -290,10 +291,13 @@ Optionally,
 (defun mu4e-view-save-attachments (&optional ask-dir)
   "Save files from the current view buffer.
 
-Save the specific files selected, if no files are explicitly
-selected then all attachments will be saved.  Note all MIME-parts
-that are \"attachment-like\" (have a filename) will be considered
-a file regardless of their disposition.
+Save the attachments that are selected. If none are explicitly
+selected then *all* attachments will be saved. For using subset,
+there is \\[mu4e-view-complete-all] to select all attachments.
+
+Note all MIME-parts that are \"attachment-like\" (have a
+filename) will be considered a file, regardless of their
+disposition.
 
 With ASK-DIR is non-nil, user can specify the target-directory; otherwise
 one is determined using `mu4e-attachment-dir'.
@@ -313,9 +317,12 @@ files."
          (candidates  (seq-map
                        (lambda (fpart)
                          (let ((fname (plist-get fpart :filename)))
-                           (when (and crm-separator (string-match-p crm-separator fname))
-                             (mu4e-warn (concat  "File(s) match `crm-separator'; "
-                                                 "use mu4e-view-mime-part-action instead")))
+                           (when (and crm-separator
+                                      (string-match-p crm-separator fname))
+                             (mu4e-warn
+                              (concat
+                               "File(s) match `crm-separator'; "
+                               "use mu4e-view-mime-part-action instead")))
                            ;; (filename . annotation)
                            (cons fname fpart)))
                        (seq-filter
@@ -323,8 +330,9 @@ files."
                         parts)))
          (candidates (or candidates
                          (mu4e-warn "No attachments for this message")))
-         (files (or (mu4e--completing-read "Save files (default ALL): " candidates
-                                            'attachment 'multi)
+         (files (or (mu4e--completing-read
+                     "Save attachments (default: save all): " candidates
+                     'attachment 'multi)
                     (mapcar #'car-safe candidates)))
          (custom-dir (when ask-dir (read-directory-name
                                     "Save to directory: "))))
@@ -336,7 +344,7 @@ files."
                              (or custom-dir (plist-get part :target-dir))
                              (plist-get part :filename))))
                      (handle (plist-get part :handle)))
-                (when handle ;; completion may fail, and then there's no handle.
+                (when handle ;; completion may fail, and no handle.
                   (mm-save-part-to-file handle path))))
             files)))
 

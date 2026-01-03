@@ -1579,29 +1579,31 @@ parts is the 'body', which is the main text of the message your are readings.
 Other MIME-parts in the messages include @emph{attachments}.
 
 @subsection Attachments
+@cindex attachments
 
-Many e-mail messages also contain @emph{attachments}, which are MIME-parts that
-contain files@footnote{Attachments come in two flavors: @t{inline} and
+Many e-mail messages contain @emph{attachments}, which are MIME-parts that
+encode files@footnote{Attachments come in two flavors: @t{inline} and
 @t{attachment}. @code{mu4e} does not distinguish between the two when operating on
 them: everything that specifies a filename is considered an attachment}.
 
-To save such attachments as files on your computer, @code{mu4e}'s message-view
+To save attachments as files on your computer, @code{mu4e}'s message-view
 offers the command @code{mu4e-view-save-attachments}; its default keybinding is
 @key{e} (think @emph{extract}).
 
-Note that when point is on the attachment label in the message, e.g., on
-something that looks like @t{[4. application/pdf; Some Document.pdf]...}, Gnus'
-binding for @kbd{e} prevails, which is @code{gnus-mime-view-part-externally}.
-You can of course customize this in the usual (Emacs) way.
+When point is on the attachment label in the message, e.g., on something that
+looks like @t{[4. application/pdf; Some Document.pdf]...}, the Gnus' binding for
+@kbd{e} prevails, which is @code{gnus-mime-view-part-externally}. You can of
+course customize this in the usual (Emacs) way.
 
 After invoking the command, you can enter the file names to save,
 comma-separated, with completion support. Press @key{RET} to save the chosen
-attachments as files to your computer.
+attachments as files to your computer. If you do not specify any attachments,
+@emph{all} are saved.
 
-@code{mu4e} determines the target directory using the variable
-@code{mu4e-attachment-dir} (which can be either file-system path or a function; see
-its docstring for details. However, you can manually set the target by calling
-@code{mu4e-view-save-attachments} with a prefix argument.
+@code{mu4e} determines the target directory, using the variable
+@code{mu4e-attachment-dir} (which can be either file-system path or a function;
+see its docstring for details. However, you can manually set the target by
+calling @code{mu4e-view-save-attachments} with a prefix argument.
 
 When completing the file names, @code{mu4e-view-completion-minor-mode} is
 active, which offers @code{mu4e-view-complete-all} (bound to @key{C-c C-a} to
