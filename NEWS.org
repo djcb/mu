@@ -271,8 +271,8 @@
       use it e.g., with something like:
 
       #+begin_src elisp
-	(require 'mu4e-transient)
-	(global-set-key (kbd "C-c m") #'mu4e-transient-menu)
+        (require 'mu4e-transient)
+        (global-set-key (kbd "C-c m") #'mu4e-transient-menu)
       #+end_src
       This will change/improve, but is already quite useful.
 
@@ -316,6 +316,8 @@
       enabled on an Emacs with DBus-support, exposes some of Mu4e's state (such
       as the read/unread counts of bookmarked queries) on the DBus session bus.
       See [[info:mu4e#DBus service][DBus service]] in the mu4e manual for further details.
+
+    - 1.12.15: in ~mu4e-view-save-attachments~, by default save /all/.
 
 *** scm
 
@@ -441,7 +443,7 @@
       may have been enhanced by various completion frameworks), use:
     #+begin_src elisp
        (setq mu4e-read-option-use-builtin nil
-	 mu4e-completing-read-function 'completing-read)
+         mu4e-completing-read-function 'completing-read)
     #+end_src
 
     - when moving messages (which includes changing flags), file-flags changes
@@ -687,22 +689,22 @@
      - the remaining common functionality has ended up in =mu4e-helpers.el=
 
      - =mu4e-search.el= takes the search-specific code from =mu4e-headers.el=,
-	and adds a minor-mode for the keybindings.
+        and adds a minor-mode for the keybindings.
 
      - =mu4e-context.el= and =mu4e-update.el= also define minor modes with
-	keybindings, which saves a lot of code in the various views, since they
-	don't need explicitly bind all those function.
+        keybindings, which saves a lot of code in the various views, since they
+        don't need explicitly bind all those function.
 
      - also =mu4e-vars.el= had become very big, we're refactoring the =defvar= /
-	=defcustom= declarations to the topic-specific files.
+        =defcustom= declarations to the topic-specific files.
 
      - =mu4e-proc.el= has been renamed =mu4e-server.el=.
 
      - Between =mu= and =mu4e=, contact cells are now represented as a plist ~(:name
-	"Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
-	Bar" . "foobar@example.com").~
+        "Foo Bar" :email "foobar@example.com")~ rather than a cons-cell ~("Foo
+        Bar" . "foobar@example.com").~
 
-	If you have scripts depending on the old format, there's the
+        If you have scripts depending on the old format, there's the
        ~mu4e-contact-cons~ function which takes a news-style contact and yields
        the old form.
 
@@ -729,7 +731,7 @@
       the following in the mu top source directory:
 
 #+BEGIN_SRC sh
-	$ meson build && ninja -C build
+        $ meson build && ninja -C build
 #+END_SRC
 
     - However, note that =autogen.sh= has been updated, and there's a
@@ -1031,7 +1033,7 @@
 
       For now this is experimental ("tech preview"), but might replace the
       current message-view in a future release. Enable it with:
-	       (setq mu4e-view-use-gnus t)
+               (setq mu4e-view-use-gnus t)
 
       Thanks to Christophe Troestler for his work on fixing various encoding
       issues.
