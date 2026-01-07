@@ -887,9 +887,9 @@ COUNT is the number of messages found."
         (mu4e~headers-highlight (mu4e~headers-docid-at-point)))
       ;; maybe enable thread folding
       (when mu4e-search-threads
-        (mu4e-thread-mode)))
-    ;; might need updating
-    (setq header-line-format (mu4e~header-line-format)))
+        (mu4e-thread-mode))
+      ;; might need updating
+      (setq header-line-format (mu4e~header-line-format))))
   ;; run-hooks
   (run-hooks 'mu4e-headers-found-hook))
 
