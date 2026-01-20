@@ -17,18 +17,18 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.12.15',
-        meson_version: '>= 0.56.0',
+        version: '1.14.0-pre1',
+        meson_version: '>= 1.5.1',
         license: 'GPL-3.0-or-later',
         default_options : [
           'buildtype=debugoptimized',
           'warning_level=3',
           'c_std=c11',
-          'cpp_std=c++17'])
+          'cpp_std=c++20'])
 
 # hard-code the date here (for reproducibility); we derive the dates used in
 # e.g. documentation from this.
-mu_date='2026-01-15'
+mu_date='2026-01-20'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -200,11 +200,14 @@ endif
 ################################################################################
 # hard dependencies
 #
-glib_dep       = dependency('glib-2.0', version: '>= 2.60')
-gobject_dep    = dependency('gobject-2.0', version: '>= 2.60')
-gio_dep        = dependency('gio-2.0', version: '>= 2.60')
-gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.60')
-gmime_dep       = dependency('gmime-3.0', version: '>= 3.2')
+# glib & friends
+glib_dep       = dependency('glib-2.0', version: '>= 2.80')
+gobject_dep    = dependency('gobject-2.0', version: '>= 2.80')
+gio_dep        = dependency('gio-2.0', version: '>= 2.80')
+gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.80')
+
+# gmime
+gmime_dep       = dependency('gmime-3.0', version: '>= 3.2.13')
 
 # note: g_mime_object_write_content_to_stream is not available
 # in the gmime we still support for normal mu build.; we only need
@@ -215,13 +218,9 @@ gmime_scm_ok = cc.has_function('g_mime_object_write_content_to_stream',
 
 thread_dep     = dependency('threads')
 
-# we need Xapian 1.4
-xapian_dep = dependency('xapian-core', version:'>= 1.4', required:true)
+# we need Xapian 1.4.22 or higher
+xapian_dep = dependency('xapian-core', version:'>= 1.4.22', required:true)
 xapver = xapian_dep.version()
-if xapver.version_compare('>= 1.4.6')
-  message('xapian ' + xapver + ' supports c++ move-semantics')
-  config_h_data.set('HAVE_XAPIAN_MOVE_SEMANTICS', 1)
-endif
 if xapver.version_compare('>= 1.4.23')
   message('xapian ' + xapver + ' supports ngrams')
   config_h_data.set('HAVE_XAPIAN_FLAG_NGRAMS', 1)
@@ -363,10 +362,9 @@ subdir('mu')
 
 # emacs -- needed for mu4e compilation
 emacs_name=get_option('emacs')
-emacs_min_version='26.3'
+emacs_min_version='28.1'
 emacs=find_program([emacs_name], version: '>=' + emacs_min_version, required:false)
 if emacs.found()
-  emacs28 = find_program([emacs_name], version: '>=28', required:false)
   subdir('man')
   subdir('mu4e')
 else

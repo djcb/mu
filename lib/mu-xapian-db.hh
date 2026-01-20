@@ -33,8 +33,10 @@
 #include <utils/mu-result.hh>
 #include <utils/mu-utils.hh>
 
-/* starting with 1.4.6, Xapian supports C++ move semantics,
- * but only with XAPIAN_MOVE_SEMANTICS defined
+/*
+ * starting with 1.4.6, Xapian supports C++ move semantics,
+ * but only with XAPIAN_MOVE_SEMANTICS defined. We require
+ * at lest 1.4.22 so we can define it.
  */
 #ifndef XAPIAN_MOVE_SEMANTICS
 #define XAPIAN_MOVE_SEMANTICS

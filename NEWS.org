@@ -1,16 +1,18 @@
 #+STARTUP:showall
 * NEWS (user visible changes & bigger non-visible ones)
 
+* 1.4 (released on January 24, 2026)
+
+  The 1.14 series continues where the 1.12 series left off, with just some
+  version updates & depreciations.
+
+
 * 1.12 (released on February 24, 2024)
 
-  The 1.12 series has been "stable" for a fairly long time, and gained some
+  The 1.12 series has been "stable" for a fairly long time, and gained many
   changes in the mean-time. Most of the changes are for bug fixes and
   documentation improvements, but some new features are available as well. Those
   are listed below, with the version in which they first appeared.
-
-  We decided to put off a new development series (1.13 -> 1.14) until
-  incompatible changes are required; for now working in the 1.12 series seems a
-  good way to get improvements to users more quickly.
 
 ** Some highlights
 

@@ -45,14 +45,22 @@ version 3]] (or higher).
 
 * Versions
 
-*mu* attempts to balance development speed and stability. For this, every few
-months there is a stable version (e.g. ~1.12.12~); development then continues in
-in ~master~, with ~-pre<n>~ (e.g. ~1.12.14-pre3~): ~-pre~-suffixed versions refer to the
-current _development_ code, until it is released (and then looses its ~-pre~ suffix,
-i.e., becomes the ~1.12.14~ release).
+*mu* attempts to balance development speed and stability.
 
-So if you want stability, grab the [[https://github.com/djcb/mu/releases/][release]]; if you are more
-adventurous/impatient, git ~master~ is there as well.
+Active development takes place on ~master~ (the 1.14 series), and we maintain
+~release/1.12~ as well. When possible, fixes (but not features) from ~master~ are
+back-ported to ~release/1.12~.
+
+Every few months, we release a stable version (e.g. ~1.14.0~); development then
+continues in ~master~, with ~-pre<n>~ (e.g. ~1.14.1-pre1~): ~-pre~-suffixed versions
+refer to the current _development_ code, until it is released (and then looses its
+~-pre~ suffix, i.e., becomes the ~1.14.1~ release).
+
+Hence, if you want to track active development, use ~master~; if you want to avoid
+any changes except bug-fixes, use a 1.12 [[https://github.com/djcb/mu/releases/][release]]; otherwise, track ~master~.
+
+Overall, we try to avoid incompatible changes, but sometimes this is necessary,
+for example to update the versions of required libraries
 
 * Installation
 
@@ -66,13 +74,13 @@ as a Linux distribution. Many have packages available.
 
 To be able to build ~mu~, ensure you have:
 
-- a C++17 compiler (~gcc~ and ~clang~ are known to work)
+- a C++20 compiler (~gcc~ and ~clang~ are known to work)
 - development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
   versions)
 - basic tools such as ~make~, ~sed~, ~grep~
 - ~meson~
 
-For ~mu4e~, you also need ~emacs~.
+For ~mu4e~, you also need ~emacs~, version 28 or later.
 
 Note, support for Windows is very much _experimental_, that is, it works for some
 people, but we can't really support it due to lack of the specific expertise.

@@ -66,6 +66,7 @@ mu4e_srcs=[
   'mu4e-server.el',
   'mu4e-speedbar.el',
   'mu4e-thread.el',
+  'mu4e-transient.el',
   'mu4e-update.el',
   'mu4e-vars.el',
   'mu4e-view.el',
@@ -75,16 +76,6 @@ mu4e_srcs=[
 
 # 'bc'->byte-compile. The above should always be byte-compiled.
 mu4e_bc_srcs = mu4e_srcs
-
-# emacs 28 is guaranteed to have transient
-# not very elegant, but
-# https://stackoverflow.com/questions/49221792/byte-compile-file-only-when-library-is-found
-mu4e_srcs += 'mu4e-transient.el'
-if emacs28.found()
-  mu4e_bc_srcs += 'mu4e-transient.el'
-else
-  message('mu4e-transient.el cannot be byte-compiled')
-endif
 
 # do have we have dbus support?
 mu4e_srcs += 'mu4e-dbus.el'
