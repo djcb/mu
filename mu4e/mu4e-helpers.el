@@ -583,12 +583,6 @@ COMPONENTS."
    (mapconcat (lambda (part) (if (stringp part) part ""))
               (cons directory components) "/")))
 
-(defun mu4e-string-replace (from-string to-string in-string)
-  "Replace FROM-STRING with TO-STRING in IN-STRING each time it occurs.
-Mu4e's version of Emacs 28's `string-replace'."
-  (replace-regexp-in-string (regexp-quote from-string)
-                            to-string in-string nil 'literal))
-
 (defun mu4e-plistp (object)
   "Non-nil if and only if OBJECT is a valid plist.
 This is mu4e's version of Emacs 29's `plistp'."

@@ -1,6 +1,6 @@
 ;;; mu4e-obsolete.el --- Obsolete things -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2022-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -282,6 +282,8 @@
                         "1.12.5")
 ;; mu4e.
 (define-obsolete-function-alias 'mu4e-clear-caches #'ignore "1.11.15")
+
+(define-obsolete-function-alias 'mu4e-string-replace #'string-replace "1.14.0")
 
 (provide 'mu4e-obsolete)
 ;;; mu4e-obsolete.el ends here

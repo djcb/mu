@@ -203,10 +203,10 @@ binding representation, remove that first letter."
          (bindstr
           (if (and alt (> (length bindstr) 1)) alt bindstr))
          (title ;; remove first letter afrer [] if it equal last of binding
-          (mu4e-string-replace
+          (string-replace
            (concat "[@]" (substring bindstr -1)) "[@]" title))
          (title ;; insert binding in [@]
-          (mu4e-string-replace
+          (string-replace
            "[@]" (format "[%s]" (propertize bindstr 'face 'mu4e-highlight-face))
            title))
          (map (make-sparse-keymap)))
