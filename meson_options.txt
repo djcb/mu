@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -54,23 +54,26 @@ option('lispdir',
 
 
 #
-# guile & scm
+# scm & guile (both use GNU Guile)
 #
-
-option('guile',
+option('scm',
        type : 'feature',
        value: 'auto',
+       description: 'build the guile scripting support (requires guile-3.x)')
+
+
+# old-style guile has been deprecated for years, and is now
+# disabled by default. It will be removed in some future release.
+option('guile',
+       type : 'feature',
+       value: 'disabled',
+       deprecated: true,
        description: 'build the guile scripting support (requires guile-3.x)')
 
 # by default, this uses guile_dep.get_variable(pkgconfig: 'extensiondir')
 option('guile-extension-dir',
        type: 'string',
        description: 'custom install path for the guile extension module')
-
-option('scm',
-       type : 'feature',
-       value: 'auto',
-       description: 'build the guile scripting support (requires guile-3.x)')
 
 #
 # misc

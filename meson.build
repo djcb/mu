@@ -208,13 +208,7 @@ gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.80')
 
 # gmime
 gmime_dep       = dependency('gmime-3.0', version: '>= 3.2.13')
-
-# note: g_mime_object_write_content_to_stream is not available
-# in the gmime we still support for normal mu build.; we only need
-# for scm (see beloww)
-gmime_scm_ok = cc.has_function('g_mime_object_write_content_to_stream',
-                               prefix : '#include <gmime/gmime.h>',
-                               dependencies: gmime_dep)
+# 3.2.13 version has  g_mime_object_write_content_to_stream
 
 thread_dep     = dependency('threads')
 
@@ -278,9 +272,11 @@ endif
 #
 # guile
 
-guile_dep = dependency('guile-3.0', required: get_option('guile'))
-# allow for a custom guile-extension-dir
-if guile_dep.found()
+guile_required=get_option('guile').enabled() or get_option('scm').enabled()
+guile_dep = dependency('guile-3.0', required: guile_required)
+
+# allow for a custom guile-extension-dir (for old-style guile-support)
+if guile_dep.found() and get_option('guile').enabled()
   custom_guile_xd=get_option('guile-extension-dir')
   if custom_guile_xd == ''
     guile_extension_dir = guile_dep.get_variable(pkgconfig: 'extensiondir')
@@ -341,21 +337,27 @@ install_data('NEWS.org', 'IDEAS.org',
 subdir('lib')
 
 # this must happen _after_ subdir('lib')
-if not get_option('guile').disabled() and guile_dep.found()
-  config_h_data.set('BUILD_GUILE', 1)
-  config_h_data.set_quoted('GUILE_BINARY',
+if guile_dep.found()
+
+  # modern guile support
+  if not get_option('scm').disabled() and guile_dep.found()
+    config_h_data.set('BUILD_SCM', 1)
+    subdir('scm')
+  else
+    # dummy-dep.
+    mu_scm_dep = declare_dependency()
+  endif
+
+  # old-style guile-support (deprecated)
+  if not get_option('guile').disabled()
+    message('old-style gulie support is deprecated')
+    config_h_data.set('BUILD_GUILE', 1)
+    config_h_data.set_quoted('GUILE_BINARY',
                            guile_dep.get_variable(pkgconfig: 'guile'))
-  subdir('guile')
-endif
+    subdir('guile')
+  endif
 
-# this must happen _after_ subdir('lib')
 
-if not get_option('scm').disabled() and guile_dep.found() and gmime_scm_ok
-  config_h_data.set('BUILD_SCM', 1)
-  subdir('scm')
-else
-  # dummy-dep.
-  mu_scm_dep = declare_dependency()
 endif
 
 subdir('mu')

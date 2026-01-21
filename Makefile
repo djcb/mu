@@ -1,4 +1,4 @@
-## Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -33,13 +33,13 @@ ifneq ($(V),0)
   VERBOSE=--verbose
 endif
 
-# when MU_HACKER is set, do a debug build
-# MU_HACKER is for djcb & compatible developers
-# note that mu uses C++17, we only pass C++23 here
-# for the better error messages (esp. for fmt).
+# when MU_HACKER is set, do a debug build MU_HACKER is for djcb & compatible
+# developers note that mu requires C++20, we only pass C++23 here for the better
+# error messages (esp. for fmt).
 ifneq (${MU_HACKER},)
 MESON_FLAGS:=$(MESON_FLAGS) '-Dbuildtype=debug'    \
 			    '-Dreadline=enabled'   \
+			    '-Dguile=enabled'      \
 			    '-Dcpp_std=c++23'
 endif
 
