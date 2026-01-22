@@ -18,7 +18,7 @@
 # project setup
 project('mu', ['c', 'cpp'],
         version: '1.14.0-pre1',
-        meson_version: '>= 1.5.1',
+        meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
         default_options : [
           'buildtype=debugoptimized',
