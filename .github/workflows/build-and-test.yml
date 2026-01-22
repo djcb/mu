@@ -27,10 +27,7 @@ jobs:
       - if: contains(matrix.os, 'macos')
         name: macos-deps
         run: |
-          brew install meson ninja libgpg-error libtool pkg-config glib gmime xapian guile emacs texinfo
-
-      - name: configure
-        run: ./autogen.sh # '-Db_sanitize=address'
+          brew install meson ninja libgpg-error pkg-config glib gmime xapian guile emacs texinfo
 
       - name: build
         run: make
