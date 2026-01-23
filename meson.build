@@ -336,6 +336,9 @@ install_data('NEWS.org', 'IDEAS.org',
 # subdirs
 subdir('lib')
 
+# dummy-dep.
+mu_scm_dep = declare_dependency()
+
 # this must happen _after_ subdir('lib')
 if guile_dep.found()
 
@@ -343,9 +346,6 @@ if guile_dep.found()
   if not get_option('scm').disabled() and guile_dep.found()
     config_h_data.set('BUILD_SCM', 1)
     subdir('scm')
-  else
-    # dummy-dep.
-    mu_scm_dep = declare_dependency()
   endif
 
   # old-style guile-support (deprecated)
