@@ -109,10 +109,13 @@ struct Sexp {
 
 	template<typename S, typename T, typename... Args>
 	Sexp(S&& s, T&& t, Args&&... args): value{List()} {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		auto& l{std::get<List>(value)};
 		l.emplace_back(Sexp(std::forward<S>(s)));
 		l.emplace_back(Sexp(std::forward<T>(t)));
 		(l.emplace_back(Sexp(std::forward<Args>(args))), ...);
+#pragma GCC diagnostic pop
 	}
 
 	/**
@@ -205,9 +208,12 @@ struct Sexp {
 
 	template <typename V1, typename V2, typename... Args>
 	Sexp& add(V1&& v1, V2&& v2, Args... args) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		return add(std::forward<V1>(v1))
 			.add(std::forward<V2>(v2))
 			.add(std::forward<Args>(args)...);
+#pragma GCC diagnostic pop
 	}
 
 	/// Adding list elements
