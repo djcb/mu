@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2020-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -31,6 +31,7 @@
 #include <ostream>
 #include <iostream>
 #include <type_traits>
+#include <concepts>
 #include <algorithm>
 #include <numeric>
 
@@ -673,23 +674,48 @@ private:
 #define MU_COLOR_DEFAULT	"\x1b[0m"
 
 
-/// Allow using enum structs as bitflags
-#define MU_TO_NUM(ET, ELM)  std::underlying_type_t<ET>(ELM)
-#define MU_TO_ENUM(ET, NUM) static_cast<ET>(NUM)
-#define MU_ENABLE_BITOPS(ET)                                                                    \
-	constexpr ET operator&(ET e1, ET e2) {                                                  \
-		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) & MU_TO_NUM(ET, e2));                   \
-	}                                                                                       \
-	constexpr ET operator|(ET e1, ET e2) {							\
-		return MU_TO_ENUM(ET, MU_TO_NUM(ET, e1) | MU_TO_NUM(ET, e2));                   \
-	}                                                                                       \
-	constexpr ET      operator~(ET e) { return MU_TO_ENUM(ET, ~(MU_TO_NUM(ET, e))); }       \
-	constexpr bool    any_of(ET e) { return MU_TO_NUM(ET, e) != 0; }                        \
-	constexpr bool    none_of(ET e) { return MU_TO_NUM(ET, e) == 0; }                       \
-	constexpr bool    one_of(ET e1, ET e2) { return (e1 & e2) == e2; }			\
-	constexpr ET& operator&=(ET& e1, ET e2) { return e1 = e1 & e2; }                        \
-	constexpr ET& operator|=(ET& e1, ET e2) { return e1 = e1 | e2; }                        \
-	static_assert(1==1) // require a semicolon
+template<class Enum> // like C++23 std::to_underlying
+constexpr std::underlying_type_t<Enum> to_ut( Enum e ) noexcept {
+	return static_cast<std::underlying_type_t<Enum>>(e);
+}
+
+// C++20 way to make enum-class bitmaps usable
+
+template<typename Enum>
+requires std::is_enum_v<Enum>
+struct enable_bitops {
+	static constexpr bool enable = false;
+};
+// add a concept EnumBitmap which work for enum-classes that specialize enable_bitmups
+template<typename Enum> concept EnumBitmap = enable_bitops<Enum>::enable;
+
+template<EnumBitmap Enum> constexpr Enum operator|(Enum e1, Enum e2) {
+	return static_cast<Enum>(to_ut(e1) | to_ut(e2));
+}
+template<EnumBitmap Enum> constexpr Enum operator|=(Enum& e1, Enum e2) {
+	return e1 = static_cast<Enum>(e1 | e2);
+}
+template<EnumBitmap Enum> constexpr Enum operator&=(Enum& e1, Enum e2) {
+	return e1 = static_cast<Enum>(e1 & e2);
+}
+template<EnumBitmap Enum> constexpr Enum operator&(Enum e1, Enum e2) {
+	return static_cast<Enum>(to_ut(e1) & to_ut(e2));
+}
+template<EnumBitmap Enum> constexpr Enum operator~(Enum e) {
+	return static_cast<Enum>(~to_ut(e));
+}
+template<EnumBitmap Enum> constexpr bool any_of(Enum e) {
+	return to_ut(e) != 0;
+}
+template<EnumBitmap Enum> constexpr bool none_of(Enum e) {
+	return to_ut(e) == 0;
+}
+
+#define MU_ENABLE_BITOPS(Enum)			\
+    template<>					\c
+    struct enable_bitops<Enum> {		\
+        static constexpr bool enable = true;	\
+    }
 
 } // namespace Mu
 

@@ -260,12 +260,16 @@ test_join()
 }
 
 
+namespace Mu {
 enum struct Bits { None = 0, Bit1 = 1 << 0, Bit2 = 1 << 1 };
 MU_ENABLE_BITOPS(Bits);
+}
 
 static void
 test_define_bitmap()
 {
+	using namespace Mu;
+
 	g_assert_cmpuint((guint)Bits::None, ==, (guint)0);
 	g_assert_cmpuint((guint)Bits::Bit1, ==, (guint)1);
 	g_assert_cmpuint((guint)Bits::Bit2, ==, (guint)2);
