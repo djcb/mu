@@ -112,6 +112,22 @@ $ meson compile -C build
 $ meson install -C build
 #+end_example
 
+** Windows
+
+It is possible to make ~mu4e~ on Windows communicate with ~mu~ running in WSL,
+side-stepping the issue of compiling ~mu~ on windows. Assuming you have installed
+~mu~ in WSL and added to ~$PATH~, here's a sample configuration.
+
+#+begin_src emacs-lisp
+(use-package mu4e
+  :load-path "//wsl.localhost/Ubuntu/path/to/mu4e"
+  :config
+  (setq mu4e-mu-binary "wsl mu"))
+#+end_src
+
+Launching ~mu4e~ from any buffer under ~//wsl.localhost/Ubuntu~ should work then.
+For more information on why this works, look at [[https://github.com/djcb/mu/pull/2624][this PR]].
+
 ** Contributing
 
 Contributions are welcome! See the Github issue list and [[IDEAS.org]].
