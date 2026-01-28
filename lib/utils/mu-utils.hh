@@ -710,9 +710,9 @@ template<EnumBitmap Enum> constexpr bool any_of(Enum e) {
 template<EnumBitmap Enum> constexpr bool none_of(Enum e) {
 	return to_ut(e) == 0;
 }
-
+// macro to enable bitops for the enum-class enums
 #define MU_ENABLE_BITOPS(Enum)			\
-    template<>					\c
+    template<>					\
     struct enable_bitops<Enum> {		\
         static constexpr bool enable = true;	\
     }
