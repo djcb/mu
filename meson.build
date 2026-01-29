@@ -276,7 +276,7 @@ guile_required=get_option('guile').enabled() or get_option('scm').enabled()
 guile_dep = dependency('guile-3.0', required: guile_required)
 
 # allow for a custom guile-extension-dir (for old-style guile-support)
-if guile_dep.found() and get_option('guile').enabled()
+if guile_dep.found() and get_option('guile').allowed()
   custom_guile_xd=get_option('guile-extension-dir')
   if custom_guile_xd == ''
     guile_extension_dir = guile_dep.get_variable(pkgconfig: 'extensiondir')
@@ -350,7 +350,7 @@ if guile_dep.found()
 
   # old-style guile-support (deprecated)
   if not get_option('guile').disabled()
-    message('old-style gulie support is deprecated')
+    message('old-style guile support is deprecated')
     config_h_data.set('BUILD_GUILE', 1)
     config_h_data.set_quoted('GUILE_BINARY',
                            guile_dep.get_variable(pkgconfig: 'guile'))
