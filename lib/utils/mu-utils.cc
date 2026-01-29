@@ -675,8 +675,6 @@ Mu::summarize(const std::string& str, size_t max_lines)
 }
 
 
-
-
 static bool
 locale_is_utf8 (void)
 {

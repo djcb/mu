@@ -665,14 +665,13 @@ private:
 	const bool color_;
 };
 
-#define MU_COLOR_RED		"\x1b[31m"
-#define MU_COLOR_GREEN		"\x1b[32m"
-#define MU_COLOR_YELLOW		"\x1b[33m"
-#define MU_COLOR_BLUE		"\x1b[34m"
-#define MU_COLOR_MAGENTA	"\x1b[35m"
-#define MU_COLOR_CYAN		"\x1b[36m"
-#define MU_COLOR_DEFAULT	"\x1b[0m"
-
+constexpr auto	MU_COLOR_RED	 = "\x1b[31m";
+constexpr auto	MU_COLOR_GREEN	 = "\x1b[32m";
+constexpr auto	MU_COLOR_YELLOW	 = "\x1b[33m";
+constexpr auto	MU_COLOR_BLUE	 = "\x1b[34m";
+constexpr auto	MU_COLOR_MAGENTA = "\x1b[35m";
+constexpr auto	MU_COLOR_CYAN	 = "\x1b[36m";
+constexpr auto	MU_COLOR_DEFAULT = "\x1b[0m";
 
 template<class Enum> // like C++23 std::to_underlying
 constexpr std::underlying_type_t<Enum> to_ut( Enum e ) noexcept {
