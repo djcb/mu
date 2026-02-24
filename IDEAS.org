@@ -83,6 +83,10 @@ future.
 - Allow for watching notifications externally, perhaps using alert.el
   https://github.com/djcb/mu/issues/2825
 
+- Allow for filling the personal e-mail addresses in the main view,
+  https://github.com/djcb/mu/issues/2901 Note that you can already limit the
+  number of addresses or hide them completely.
+
 * Done
 
 ** DONE Support mu4e-mark-handle-when also for when leaving emacs
