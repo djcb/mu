@@ -72,6 +72,7 @@ if (cxx.get_id() == 'clang')
     '-Wc11-extensions',
     '-Wno-keyword-macro',
     '-Wno-deprecated-volatile',
+    '-Wno-unknown-warning-option',
     '-Wno-#warnings']
 endif
 
