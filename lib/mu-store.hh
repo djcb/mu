@@ -266,14 +266,15 @@ public:
 	 * Remove a number if messages from the store. It will _not_ remove the
 	 * message from the file system.
 	 *
-	 * It's more efficient to use this function than to translate the terms to docids and then
-	 * call remove_messages() with the ids: this way, we can fuse the ID lookup and the
-	 * deletion, skip post-translation existence steps, and do far fewer Xapian
-	 * B-tree traversals.
+	 * It's more efficient to use this function than to translate the terms
+	 * to docids and then call remove_messages() with the ids: this way, we
+	 * can fuse the ID lookup and the deletion, skip post-translation
+	 * existence steps, and do far fewer Xapian B-tree traversals.
 	 *
-	 * @param ids vector with terms for the message
+	 * @param terms the terms for the message
 	 * @param progress_fn called occasionally to update number of removed messages;
 	 * called occasionally with cumulative number of messages removed so far
+	 *
 	 * @return number of messages removed overall
 	 */
 	size_t remove_messages_by_term(std::span<const std::string> terms,

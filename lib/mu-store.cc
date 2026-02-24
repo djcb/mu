@@ -485,6 +485,12 @@ Store::remove_messages_by_term(std::span<const std::string> terms,
 	}
 
 	// Sort the IDs to remove to make Xapian tree traversal easier
+	//
+	// Note: Xapian contractually iterates over terms in ascending
+	// byte-lexicographic order, so it's only natural to suppose that its
+	// storage engines in general will get the best locality accessing terms
+	// in this order. We're allowed to delete in any order we want, so if we
+	// have to choose an order, this one seems reasonable.
 	std::ranges::sort(ids_to_remove);
 	for (Id id : ids_to_remove) {
 		nr_removed += priv_->remove_message_by_id_unlocked(id);
