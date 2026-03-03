@@ -88,12 +88,6 @@ if get_option('buildtype') == 'debug'
 endif
 
 # extra arguments, if available
-foreach extra_arg : extra_flags
-  if cc.has_argument (extra_arg)
-    add_project_arguments([extra_arg], language: 'c')
-  endif
-endforeach
-
 foreach extra_arg : extra_flags + extra_cpp_flags
   if cxx.has_argument (extra_arg)
     add_project_arguments([extra_arg], language: 'cpp')
@@ -104,12 +98,11 @@ endforeach
 # https://github.com/djcb/mu/issues/2347
 cxx.check_header('charconv', required:true)
 
-
-build_aux = join_paths(meson.current_source_dir(), 'build-aux')
+build_aux =  meson.project_source_root() / 'build-aux'
 ################################################################################
 # derived date values (based on 'mu-date'); used in docs
 # we can't use the 'date' because MacOS 'date' is incompatible with GNU's.
-pdate=find_program(join_paths(build_aux, 'date.py'))
+pdate=find_program(build_aux / 'date.py')
 env = environment()
 env.set('LANG', 'C')
 mu_day_month_year = run_command(pdate, mu_date, '%d %B %Y',
@@ -132,8 +125,7 @@ config_h_data.set_quoted('PACKAGE_STRING', meson.project_name() + ' ' +
 config_h_data.set_quoted('VERSION', meson.project_version())
 config_h_data.set_quoted('PACKAGE_NAME', meson.project_name())
 
-add_project_arguments(['-DHAVE_CONFIG_H'], language: 'c')
-add_project_arguments(['-DHAVE_CONFIG_H'], language: 'cpp')
+add_project_arguments(['-DHAVE_CONFIG_H'], language: ['c', 'cpp'])
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
 
@@ -189,12 +181,12 @@ if not get_option('tests').disabled()
   config_h_data.set_quoted('RM_PROGRAM',   rm.full_path())
   config_h_data.set_quoted('LN_PROGRAM',   ln.full_path())
 
-  testmaildir=join_paths(meson.current_source_dir(), 'testdata')
+  testmaildir= meson.project_source_root() / 'testdata'
   config_h_data.set_quoted('MU_TESTDATADIR',  testmaildir)
-  config_h_data.set_quoted('MU_TESTMAILDIR',  join_paths(testmaildir, 'testdir'))
-  config_h_data.set_quoted('MU_TESTMAILDIR2',  join_paths(testmaildir, 'testdir2'))
-  config_h_data.set_quoted('MU_TESTMAILDIR4',  join_paths(testmaildir, 'testdir4'))
-  config_h_data.set_quoted('MU_TESTMAILDIR_CJK',  join_paths(testmaildir, 'cjk'))
+  config_h_data.set_quoted('MU_TESTMAILDIR',   testmaildir / 'testdir')
+  config_h_data.set_quoted('MU_TESTMAILDIR2',  testmaildir / 'testdir2')
+  config_h_data.set_quoted('MU_TESTMAILDIR4',   testmaildir / 'testdir4')
+  config_h_data.set_quoted('MU_TESTMAILDIR_CJK', testmaildir / 'cjk')
 endif
 
 
@@ -221,7 +213,6 @@ if xapver.version_compare('>= 1.4.23')
   config_h_data.set('HAVE_XAPIAN_FLAG_NGRAMS', 1)
 endif
 
-host_system = host_machine.system()
 #
 # soft dependencies
 #
@@ -233,7 +224,7 @@ fmt_dep = dependency('fmt', version: '>=11.1', required:false)
 if not fmt_dep.found() or get_option('use-embedded-fmt')
   message('using embedded fmt')
   fmt_dep = declare_dependency(
-    include_directories : join_paths('.', 'thirdparty/fmt'),
+    include_directories : meson.project_source_root() / 'thirdparty/fmt',
     compile_args: '-DFMT_HEADER_ONLY')
 endif
 
@@ -245,7 +236,7 @@ if not cli11_dep.found() or get_option('use-embedded-cli11')
   message('using embedded CLI11')
   cli11_dep = declare_dependency(
     compile_args: '-DUSE_EMBEDDED_CLI11',
-    include_directories : join_paths('.', 'thirdparty/cli11'))
+    include_directories : meson.project_source_root() / 'thirdparty/cli11')
 endif
 
 #
@@ -302,13 +293,14 @@ endif
 
 # readline. annoyingly, macos has an incompatible libedit claiming to be
 # readline. this is only a dev/debug convenience for the mu4e repl.
-readline_dep=[]
 if get_option('readline').enabled()
   readline_dep = dependency('readline', version:'>= 8.0')
   config_h_data.set('HAVE_LIBREADLINE', 1)
   config_h_data.set('HAVE_READLINE_READLINE_H', 1)
   config_h_data.set('HAVE_READLINE_HISTORY', 1)
   config_h_data.set('HAVE_READLINE_HISTORY_H', 1)
+else
+  readline_dep=declare_dependency() # dummy
 endif
 
 ################################################################################
@@ -322,10 +314,10 @@ version_texi_data.set('UPDATED', mu_day_month_year)
 version_texi_data.set('UPDATEDMONTH', mu_month_year)
 version_texi_data.set('UPDATEDYEAR', mu_year)
 
-configure_file(input: join_paths(build_aux, 'version.texi.in'),
+configure_file(input:  build_aux / 'version.texi.in',
                output: 'version.texi',
                configuration: version_texi_data)
-configure_file(input: join_paths(build_aux, 'fdl.texi'),
+configure_file(input: build_aux / 'fdl.texi',
                output: 'fdl.texi', copy:true)
 
 ################################################################################
@@ -344,7 +336,7 @@ mu_scm_dep = declare_dependency()
 if guile_dep.found()
 
   # modern guile support
-  if not get_option('scm').disabled() and guile_dep.found()
+  if not get_option('scm').disabled()
     config_h_data.set('BUILD_SCM', 1)
     subdir('scm')
   endif
@@ -357,7 +349,6 @@ if guile_dep.found()
                            guile_dep.get_variable(pkgconfig: 'guile'))
     subdir('guile')
   endif
-
 
 endif
 
