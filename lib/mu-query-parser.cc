@@ -148,11 +148,15 @@ matcher(Sexp& tokens, ParseContext& ctx)
 		if (!fields.empty()) {
 			Sexp vals{};
 			vals.add(or_sym);
-			for (auto&& field: fields)
+			for (auto&& field: fields) {
+				if (!second(val))
+					continue;
 				if (auto&& phrase{phrasify(field, *second(val))}; phrase)
 					vals.add(std::move(*phrase));
 				else
-					vals.add(Sexp{Sexp::Symbol{field.name}, Sexp{*second(val)}});
+					vals.add(Sexp{Sexp::Symbol{field.name},
+							Sexp{*second(val)}});
+			}
 			val = std::move(vals);
 		}
 

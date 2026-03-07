@@ -101,7 +101,8 @@ create_noindex(const std::string& path)
 	const auto noindexpath{join_paths(path, MU_MAILDIR_NOINDEX_FILE)};
 
 	/* note, if the 'close' failed, creation may still have succeeded...*/
-	int fd = ::creat(noindexpath.c_str(), 0644);
+	// NO O_EXCL it's fine if it already exists
+	int fd = ::open(noindexpath.c_str(), O_WRONLY | O_CREAT, 0644);
 	if (fd < 0 || ::close(fd) != 0)
 		return Err(Error{Error::Code::File,
 				"error creating .noindex: {}", g_strerror(errno)});
@@ -217,6 +218,7 @@ clear_links(const std::string& path, DIR* dir)
 			if (!subdir) {
 				mu_warning("error opening dir {}: {}", fullpath, g_strerror(errno));
 				res = false;
+				break;
 			}
 			if (!clear_links(fullpath, subdir))
 				res = false;
@@ -321,7 +323,6 @@ Mu::maildir_move_message(const std::string&	oldpath,
 		return Ok(); // nothing to do.
 
 	if (!assume_remote) { /* for testing */
-
 		if (::rename(oldpath.c_str(), newpath.c_str()) == 0) /* seems it worked; double-check */
 			return msg_move_verify(oldpath, newpath);
 		/* LCOV_EXCL_START*/
