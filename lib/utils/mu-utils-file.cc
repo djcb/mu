@@ -370,7 +370,7 @@ expand_path_real(const std::string& str)
 	int res;
 	wordexp_t result{};
 
-	res = wordexp(str.c_str(), &result, 0);
+	res = wordexp(str.c_str(), &result, WRDE_NOCMD);
 	if (res != 0)
 		return Err(Error::Code::File, "cannot expand {}; err={}", str, res);
 	else if (auto&n = result.we_wordc; n != 1) {
@@ -395,8 +395,7 @@ Mu::expand_path(const std::string& str)
 		return res;
 
 	// failed... try quoting.
-	auto qstr{to_string_gchar(g_shell_quote(str.c_str()))};
-	return expand_path_real(qstr);
+	return expand_path_real(shell_quote(str));
 }
 
 
