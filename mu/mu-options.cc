@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -140,8 +140,7 @@ to_enum(const IE& ie, std::string_view name) {
 	for(auto&& item: ie)
 		if (item.second.first == name)
 			return item.first;
-		else
-			return Nothing;
+	return Nothing;
 }
 
 /**
@@ -828,7 +827,7 @@ show_manpage(Options& opts, const std::string& name)
 			   "cannot find 'man' program");
 
 	GError* err{};
-	const auto cmd{mu_format("{} {}", *manprog, name)};
+	const auto cmd{mu_format("{} {}", *manprog, shell_quote(name))};
 	// run_command0 doesn't work here.
 	auto res = g_spawn_command_line_sync(cmd.c_str(), {}, {}, {}, &err);
 	if (!res)

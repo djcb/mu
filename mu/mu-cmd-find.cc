@@ -116,8 +116,7 @@ exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts
 
 	int wait_status{};
 	GError *err{};
-	auto cmdline{mu_format("{} {}", opts.find.exec,
-			       to_string_gchar(g_shell_quote(msg->path().c_str())))};
+	auto cmdline{mu_format("{} {}", opts.find.exec, shell_quote(msg->path()))};
 
 	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
 		return Err(Error::Code::File, &err/*consumed*/,

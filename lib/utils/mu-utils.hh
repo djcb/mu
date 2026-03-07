@@ -498,7 +498,7 @@ to_string(const T& val)
  *
  * @return a string_view
  */
-static inline std::string_view
+inline std::string_view
 to_string_view(const std::string& s)
 {
 	return std::string_view{s.data(), s.size()};
@@ -511,7 +511,7 @@ to_string_view(const std::string& s)
  *
  * @return a std::string, empty if gchar was {}
  */
-static inline std::string
+inline std::string
 to_string_gchar(gchar*&& str)
 {
 	std::string s(str?str:"");
@@ -525,13 +525,25 @@ to_string_gchar(gchar*&& str)
  *
  * @return a std::string, empty if gchar was {}
  */
-static inline std::string
+inline std::string
 to_string_char(char*&& str)
 {
 	std::string s(str?str:"");
 	::free(str);
 	return s;
 }
+
+/**
+ * Shell-quote the given string (as per g_shell_quote())
+ *
+ * @param str some string
+ *
+ * @return quoted string
+ */
+inline std::string shell_quote(const std::string& str) {
+	return to_string_gchar(g_shell_quote(str.c_str()));
+}
+
 
 /*
  * Lexnums are lexicographically sortable string representations of non-negative
