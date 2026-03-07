@@ -6,12 +6,24 @@
   The 1.14 series continues where the 1.12 series left off, with just some
   version updates & depreciations.
 
+*** mu
+
+   - significant speed-ups in the cleanup process after ~mu index~ (1.14.0)
+
 *** mu4e
 
-    - ~mu4e-main-hide-personal-addresses~ can now also be a number, which is the
-      maximum number of addresses to show. This can be useful if you have
-      some many personal addresses that the clutter up the main view. (1.14.0)
+   - ~mu4e-main-hide-personal-addresses~ can now also be a number, which
+     is the maximum number of addresses to show. This can be useful if you have
+     some many personal addresses that the clutter up the main view. (1.14.0)
 
+*** scm
+
+   - added new ~--eval~ command-line option, so you can do e.g.
+   #+begin_example
+   $ mu scm --eval '(format #t "found ~d matche(s)\n" (length (mfind "hello")))'
+   found 7173 match(es)
+   #+end_example
+   (1.14.0)
 
 * 1.12 (released on February 24, 2024)
 
