@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -443,6 +443,9 @@ MimeMessage::references() const noexcept
 			continue;
 
 		GMimeReferences *mime_refs{g_mime_references_parse({}, hdr->c_str())};
+		if (!mime_refs)
+			break;
+
 		refs.reserve(refs.size() + g_mime_references_length(mime_refs));
 
 		for (auto i = 0; i != g_mime_references_length(mime_refs); ++i) {
@@ -560,12 +563,11 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 			GMIME_DATA_WRAPPER(wrapper.object()),
 			GMIME_STREAM(stream.object()))};
 
-	if (written < 0) {
+	if (written < 0)
 		return Err(Error::Code::File, &err,
 			   "failed to write to '{}'", path);
-	}
-
-	return Ok(static_cast<size_t>(written));
+	else
+		return Ok(static_cast<size_t>(written));
 }
 
 void

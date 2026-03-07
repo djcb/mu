@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -659,8 +659,8 @@ doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
 	/* some mailing lists do not set the reply-to; see pull #1278. So for
 	 * those cases, check the List-Post address and use that instead */
 
-	GMatchInfo* minfo;
-	GRegex*     rx;
+	GMatchInfo* minfo{};
+	GRegex*     rx{};
 	const auto list_post{mime_msg.header("List-Post")};
 	if (!list_post)
 		return;
@@ -676,7 +676,9 @@ doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
 		g_free(address);
 	}
 
-	g_match_info_free(minfo);
+	if (minfo)
+		g_match_info_free(minfo);
+
 	g_regex_unref(rx);
 
 	doc.add_extra_contacts(":list-post", contacts);
