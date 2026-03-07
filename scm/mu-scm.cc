@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -271,6 +271,23 @@ Mu::Scm::run_script(const Mu::Store& store, const Mu::Options& opts,
 
 	return Ok();
 }
+
+Result<void>
+Mu::Scm::run_eval(const Mu::Store& store, const Mu::Options& opts, const std::string& expr)
+{
+	if (const auto res = prepare_run(opts, scm_args); !res)
+		return Err(res.error());
+
+	scm_args.emplace_back("-c");
+	// a little hacky...
+	scm_args.emplace_back("(use-modules ((mu))) " + expr);
+
+	run_scm(store, opts);
+
+	return Ok();
+}
+
+
 
 #ifdef BUILD_TESTS
 

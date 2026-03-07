@@ -38,6 +38,15 @@ prefixed by *UNIX_CONNECT:* and ending with a newline. For instance:
 UNIX-CONNECT:/run/user/1000/mu-scm-socket-4eb5db40
 #+end_example
 
+** --eval
+
+With the ~--eval~ option you can evaluate an expression in mu/scm environment. For
+example:
+#+begin_example
+$ mu scm --eval '(format #t "found ~d match(es)\n" (length (mfind "hello")))'
+found 7173 match(es)
+#+end_example
+
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "common-options.inc" :minlevel 1

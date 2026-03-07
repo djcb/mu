@@ -63,13 +63,30 @@ namespace Mu::Scm {
 	 * based on the configuration.
 	 *
 	 * @param store a Store object
-	 * @param opts options; opts.scm.script_path must set
+	 * @param opts options
+	 * @param a path to the script
 	 *
 	 * @return Ok() or some error
 	 */
 	Result<void> run_script(const Store& store, const Options& opts,
 				const std::string& script_path);
 
+
+
+	/**
+	 * Evaluate a Guile/SCM expression
+	 *
+	 * Initialize the Scm sub-system, then start evaluate some expression
+	 * based on the configuration.
+	 *
+	 * @param store a Store object
+	 * @param opts options
+	 * @param expr some expression to evaluate
+	 *
+	 * @return Ok() or some error
+	 */
+	Result<void> run_eval(const Mu::Store& store, const Mu::Options& opts,
+			      const std::string& expr);
 
 	/**
 	 * Helpers

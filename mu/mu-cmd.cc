@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -75,7 +75,9 @@ cmd_scm(const Store& store, const Options& opts)
 #else
 	if (opts.scm.script_path)
 		return Mu::Scm::run_script(store, opts, *opts.scm.script_path);
-	else
+	else if (opts.scm.eval)
+		return Mu::Scm::run_eval(store, opts, *opts.scm.eval);
+		else
 		return Mu::Scm::run_repl(store, opts, opts.scm.socket_path.value_or(""));
 #endif /*BUILD_SCM*/
 }

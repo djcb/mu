@@ -650,7 +650,9 @@ sub_scm(CLI::App& sub, Options& opts)
 		->excludes("--listen");
 	sub.add_option("script-args", opts.scm.params, "Parameters for script")
 		->type_name("<parameters>");
-
+	sub.add_option("--eval", opts.scm.eval, "Expression to evaluate")
+		->excludes("--listen")
+		->excludes("script-path");
 }
 
 static void
