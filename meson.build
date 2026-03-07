@@ -224,7 +224,7 @@ fmt_dep = dependency('fmt', version: '>=11.1', required:false)
 if not fmt_dep.found() or get_option('use-embedded-fmt')
   message('using embedded fmt')
   fmt_dep = declare_dependency(
-    include_directories : meson.project_source_root() / 'thirdparty/fmt',
+    include_directories : include_directories('thirdparty/fmt'),
     compile_args: '-DFMT_HEADER_ONLY')
 endif
 
@@ -236,7 +236,7 @@ if not cli11_dep.found() or get_option('use-embedded-cli11')
   message('using embedded CLI11')
   cli11_dep = declare_dependency(
     compile_args: '-DUSE_EMBEDDED_CLI11',
-    include_directories : meson.project_source_root() / 'thirdparty/cli11')
+    include_directories : include_directories('thirdparty/cli11'))
 endif
 
 #
