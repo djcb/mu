@@ -322,6 +322,12 @@ With HEADERS-ONLY non-nil, only include the headers part."
       (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
     (mu4e--delimit-headers 'undelimit)
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
+    ;; If the buffer is still unibyte after decoding (e.g., message has raw
+    ;; UTF-8 headers that are not RFC-2047-enxcoded), decode remaining bytes as
+    ;; UTF-8 so they don't show as octal escapes (\303\251 etc.) in reply
+    ;; buffers. #2722.
+    (unless enable-multibyte-characters
+      (decode-coding-region (point-min) (point-max) 'utf-8))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defvar mu4e--draft-buffer-max-name-length 48)
