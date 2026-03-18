@@ -820,9 +820,11 @@ Switch to the output buffer for the results."
             list-buffers-directory expr)
       (mu4e--modeline-update))
 
-    ;; when the buffer is already visible, select it; otherwise,
-    ;; switch to it.
-    (unless (get-buffer-window buf (if mu4e--search-background 0 nil))
+    ;; For interactive searches, display the buffer if not already visible; for
+    ;; background (auto-update) searches, never switch buffers as that can pop
+    ;; up the headers buffer in the wrong frame. #2766.
+    (when (and (not mu4e--search-background)
+               (not (get-buffer-window buf)))
       (mu4e-display-buffer buf t))
     (run-hook-with-args 'mu4e-search-hook expr)
     (mu4e~headers-clear mu4e~search-message)
