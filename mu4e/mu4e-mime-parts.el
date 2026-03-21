@@ -355,9 +355,9 @@ files."
     ;;
 
     ;; save MIME-part to a file
-    (:name "save"  :handler gnus-article-save-part :receives index)
+    (:name "save"  :handler mm-save-part :receives handle)
     ;; pipe MIME-part to some arbitrary shell command
-    (:name "|pipe" :handler gnus-article-pipe-part :receives index)
+    (:name "|pipe" :handler mm-pipe-part :receives handle)
     ;; open with the default handler, if any
     (:name "open" :handler mu4e--view-open-file :receives temp)
     ;; open with some custom file.
@@ -393,6 +393,7 @@ Each of the actions is a plist with keys
                        ;; - a string, which is taken as a shell command
 
   :receives            ;;  a symbol specifying what the handler receives
+                       ;; - handle: the Gnus MIME handle for the part
                        ;; - index: the index number of the mime part (default)
                        ;; - temp: the full path to the mime part in a
                        ;;         temporary file, which is deleted immediately
@@ -477,6 +478,7 @@ the third MIME-part."
                   (cond
                    ((functionp handler)
                     (cond
+                     ((eq receives 'handle) (funcall handler handle))
                      ((eq receives 'index) (funcall handler id))
                      ((eq receives 'pipe)
                       (funcall handler (mm-with-unibyte-buffer
