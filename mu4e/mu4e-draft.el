@@ -321,13 +321,17 @@ With HEADERS-ONLY non-nil, only include the headers part."
       (goto-char (point-min))
       (insert (format "Message-Id: <%s>\n" (plist-get msg :message-id))))
     (mu4e--delimit-headers 'undelimit)
+    ;; Decode raw UTF-8 bytes in headers before running decode hooks. Without
+    ;; this, hooks may switch the buffer to multibyte (via body decoding) while
+    ;; raw UTF-8 header bytes remain as individual eight-bit characters, causing
+    ;; garbled subjects like t\303\251st in replies. Only decode headers to
+    ;; avoid interfering with body charset handling by article-decode-charset.
+    ;; #2722.
+    (save-excursion
+      (rfc822-goto-eoh)
+      (decode-coding-region (point-min) (point) 'utf-8))
+    (mm-enable-multibyte)
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
-    ;; If the buffer is still unibyte after decoding (e.g., message has raw
-    ;; UTF-8 headers that are not RFC-2047-enxcoded), decode remaining bytes as
-    ;; UTF-8 so they don't show as octal escapes (\303\251 etc.) in reply
-    ;; buffers. #2722.
-    (unless enable-multibyte-characters
-      (decode-coding-region (point-min) (point-max) 'utf-8))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defvar mu4e--draft-buffer-max-name-length 48)
