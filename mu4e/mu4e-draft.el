@@ -1,6 +1,6 @@
 ;;; mu4e-draft.el --- Helpers for m4e-compose -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024-2025 Dirk-Jan C. Binnema
+;; Copyright (C) 2024-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -682,8 +682,8 @@ Used internally for mu4e-compose-post-kill-frame.")
   "Function that might kill the composition frame.
 This is for use in `mu4e-compose-post-hook'."
   (let ((msgframe (selected-frame)))
-    ;;(message "kill frame? %s %s" mu4e--draft-activation-frame msgframe)
-    (when (and (frame-live-p msgframe)
+    (when (and mu4e--draft-activation-frame
+               (frame-live-p msgframe)
                (not (eq mu4e--draft-activation-frame msgframe)))
       (delete-frame msgframe))))
 
@@ -710,9 +710,11 @@ Set up some message actions. In particular, handle closing frames
 when we created it. OLDFRAME is the frame from which the
 message-composition was triggered. OLDWINDCONF is the current
 window configuration."
-    ;; remember current frame & window conf
-    (setq mu4e--draft-activation-frame oldframe
-          mu4e--before-draft-window-config oldwindconf)
+    ;; remember current frame & window configuration; make these buffer-local so
+    ;; each composition buffer tracks its *own* activation context, which is
+    ;; needed when multiple compositions exist simultaneously.
+    (setq-local mu4e--draft-activation-frame oldframe
+                mu4e--before-draft-window-config oldwindconf)
 
     ;; make message's "post" hooks local, and multiplex them
     (make-local-variable 'message-send-actions)
