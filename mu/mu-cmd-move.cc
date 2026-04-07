@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -61,7 +61,7 @@ Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 	if (!old_flags)
 		return Err(Error::Code::InvalidArgument, "failed to determine old flags");
 
-	Flags new_flags{};
+	Flags new_flags{*old_flags};
 	if (!opts.move.flags.empty()) {
 		if (auto&& nflags{flags_from_expr(to_string_view(opts.move.flags),
 						  *old_flags)}; !nflags)
@@ -164,9 +164,21 @@ test_move_dry_run()
 		assert_equal(res->standard_out, dst + '\n');
 	}
 
-	// change maildir
+	// move to different maildir without flags; should retain old flags
 	for (auto& o : {"o1", "o2"})
 		assert_valid_result(maildir_mkdir(join_paths(tdir.path(), "testdir", o)));
+
+	{
+		auto res = run_command0({MU_PROGRAM, "move", "--muhome", tdir.path(), src,
+				"/o1", "--dry-run"});
+		assert_valid_command(res);
+		// src has ,S flag; moving without --flags should retain it
+		assert_equal(res->standard_out,
+			     join_paths(testpath,
+					"o1/cur", "1220863042.12663_1.mindcrime!2,S") + "\n");
+	}
+
+	// change maildir
 
 	{
 		auto res = run_command0({MU_PROGRAM, "move", "--muhome", tdir.path(), src,
