@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -34,7 +34,6 @@ using namespace std::chrono_literals;
 #include "mu-store.hh"
 
 #include "mu-scanner.hh"
-#include "utils/mu-async-queue.hh"
 #include "utils/mu-error.hh"
 
 #include "utils/mu-utils-file.hh"
