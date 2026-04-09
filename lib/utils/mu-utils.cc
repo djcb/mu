@@ -552,9 +552,8 @@ Mu::parse_size(const std::string& val, bool is_first)
 	minfo = NULL;
 	if (g_regex_match(rx, val.c_str(), (GRegexMatchFlags)0, &minfo)) {
 
-		char*  s;
-		s    = g_match_info_fetch(minfo, 1);
-		size = atoll(s);
+		char*  s = g_match_info_fetch(minfo, 1);
+		size = atoll(s); // check overflow?
 		g_free(s);
 
 		s = g_match_info_fetch(minfo, 2);
@@ -678,14 +677,10 @@ Mu::summarize(const std::string& str, size_t max_lines)
 
 
 static bool
-locale_is_utf8 (void)
+locale_is_utf8 ()
 {
-	const gchar *dummy;
-	static int is_utf8 = -1;
-	if (G_UNLIKELY(is_utf8 == -1))
-		is_utf8 = g_get_charset(&dummy) ? 1 : 0;
-
-	return !!is_utf8;
+	static const bool is_utf8{g_get_charset({}) ? true : false};
+	return is_utf8;
 }
 
 bool

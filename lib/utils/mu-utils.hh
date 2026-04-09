@@ -217,7 +217,7 @@ utf8_flatten(const std::string& s) {
  *
  * @return a cleaned-up string.
  */
-std::string utf8_clean(const std::string& dirty);
+[[nodiscard]] std::string utf8_clean(const std::string& dirty);
 
 
 /**
@@ -227,7 +227,7 @@ std::string utf8_clean(const std::string& dirty);
  *
  * @return string
  */
-std::string utf8_wordbreak(const std::string& txt);
+[[nodiscard]] std::string utf8_wordbreak(const std::string& txt);
 
 
 /**
@@ -238,7 +238,7 @@ std::string utf8_wordbreak(const std::string& txt);
  *
  * @return the string without control characters
  */
-std::string remove_ctrl(const std::string& str);
+[[nodiscard]] std::string remove_ctrl(const std::string& str);
 
 /**
  * Split a string in parts. As a special case, splitting an empty string
@@ -249,7 +249,8 @@ std::string remove_ctrl(const std::string& str);
  *
  * @return the parts.
  */
-std::vector<std::string> split(const std::string& str, const std::string& sepa);
+[[nodiscard]] std::vector<std::string> split(const std::string& str,
+					     const std::string& sepa);
 
 /**
  * Split a string in parts. As a special case, splitting an empty string
@@ -270,8 +271,10 @@ std::vector<std::string> split(const std::string& str, char sepa);
  *
  * @return string
  */
-std::string join(const std::vector<std::string>& svec, const std::string& sepa);
-static inline std::string join(const std::vector<std::string>& svec, char sepa) {
+[[nodiscard]] std::string join(const std::vector<std::string>& svec,
+			       const std::string& sepa);
+[[nodiscard]] static inline std::string join(const std::vector<std::string>& svec,
+					     char sepa) {
 	return join(svec, std::string(1, sepa));
 }
 
@@ -313,7 +316,7 @@ static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) n
  */
 constexpr ::time_t time_t_min = 0;
 constexpr ::time_t time_t_max = std::numeric_limits<::time_t>::max();
-constexpr ::time_t to_time_t(int64_t t) {
+[[nodiscard]] constexpr ::time_t to_time_t(int64_t t) {
 	return std::clamp(t,
 			  static_cast<int64_t>(time_t_min),
 			  static_cast<int64_t>(time_t_max));
@@ -332,7 +335,8 @@ constexpr ::time_t to_time_t(int64_t t) {
  *
  * @return the corresponding time_t or Nothing if parsing failed.
  */
-Option<::time_t> parse_date_time(const std::string& date, bool first, bool use_utc=false);
+[[nodiscard]] Option<::time_t> parse_date_time(const std::string& date,
+					       bool first, bool use_utc=false);
 
 /**
  * Crudely convert HTML to plain text. This attempts to scrape the
@@ -342,7 +346,7 @@ Option<::time_t> parse_date_time(const std::string& date, bool first, bool use_u
  *
  * @return plain text
  */
-std::string html_to_text(const std::string& html);
+[[nodiscard]] std::string html_to_text(const std::string& html);
 
 /**
  * Hack to avoid locale crashes

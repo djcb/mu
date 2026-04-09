@@ -112,7 +112,7 @@ public:
 	 * @return true or false
 	 */
 	bool looking_at(std::string_view str) const {
-		if (pos_ >= html_.size() || pos_ + str.size() >= html_.size())
+		if (pos_ >= html_.size() || pos_ + str.size() > html_.size())
 			return false;
 		else
 			return matches({html_.data()+pos_, str.size()}, str);

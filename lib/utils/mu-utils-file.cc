@@ -87,9 +87,10 @@ Mu::canonicalize_filename(const std::string& path, const std::string& relative_t
 			path.c_str(),
 			relative_to.empty() ? nullptr : relative_to.c_str())).value()};
 
-	// remove trailing '/'... is this needed?
-	if (str[str.length()-1] == G_DIR_SEPARATOR)
-		str.erase(str.length() - 1);
+	if (!str.empty()) { // remove trailing '/'... is this needed?
+		if (str[str.length()-1] == G_DIR_SEPARATOR)
+			str.erase(str.length() - 1);
+	}
 
 	return str;
 }
@@ -232,7 +233,6 @@ Mu::read_from_stdin()
 {
 	g_autoptr(GOutputStream) outmem = g_memory_output_stream_new_resizable();
 	g_autoptr(GInputStream) input = g_unix_input_stream_new(STDIN_FILENO, TRUE);
-	//g_autoptr(GCancellable) cancel{maybe_cancellable_timeout(timeout)};
 
 	GError *err{};
 	auto bytes = g_output_stream_splice(outmem, input,

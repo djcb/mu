@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -36,8 +36,8 @@ Command::string_vec_arg(const std::string& name) const
 	std::vector<std::string> vec;
 	for (const auto& item : val->list()) {
 		if (!item.stringp()) {
-			// mu_warning("command: non-string in string-list for {}: {}",
-			//	  name, to_string());
+			 mu_warning("command: non-string in string-list for {}: {}",
+				    name, to_string());
 			return Nothing;
 		} else
 			vec.emplace_back(item.string());
@@ -63,7 +63,6 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 		//
 		//  so, we're looking for the odd-numbered parameters.
 		const auto param_it = cmd.find_arg(argname);
-		const auto&& param_val = std::next(param_it);
 		// it's an error when a required parameter is missing.
 		if (param_it == cmd.cend()) {
 			if (arginfo.required)
@@ -72,6 +71,13 @@ validate(const CommandHandler::CommandInfoMap& cmap,
 					   argname, cmd.to_string());
 			continue; // not required
 		}
+
+		// the keyword is present; its value must follow it.
+		const auto param_val = std::next(param_it);
+		if (param_val == cmd.cend())
+			return Err(Error::Code::Command,
+				   "missing value for parameter {} in command '{}'",
+				   argname, cmd.to_string());
 
 		// the types must match, but the 'nil' symbol is acceptable as "no value"
 		if (param_val->type() != arginfo.type && !(param_val->nilp()))
