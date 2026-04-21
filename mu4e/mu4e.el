@@ -150,7 +150,7 @@ Invoke FUNC if non-nil."
                            (condition-case err
                                (mu4e-update-mail-and-index
                                 mu4e-index-update-in-background)
-                             (error (mu4e-warn "Error during mu4e automatic update: %s" err)))))))))
+                             (error (message "[mu4e] error during automatic update: %s" (error-message-string err))))))))))
 
 (defun mu4e--start (&optional func)
   "Start mu4e.
