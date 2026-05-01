@@ -759,7 +759,7 @@ filename."
       (dolist (p positions)
         (when-let* ((handle (get-text-property p 'gnus-data))
                     ((listp handle))
-                    (name (mm-handle-filename handle))
+                    (name (ignore-errors (mm-handle-filename handle)))
                     (icon (mu4e-file-name-to-icon name)))
           (goto-char p)
           (insert icon " "))))))
