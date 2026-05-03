@@ -474,6 +474,12 @@ As a side-effect, a message that is being viewed loses its
       (if (memq mu4e-split-view '(horizontal vertical))
           (delete-windows-on existing-buffer t))
       (kill-buffer existing-buffer))
+
+    ;; HACK: we create a *Summary* buffer, since its mere existence
+    ;; is enough for some gnus commands / functions to work in
+    ;; in the mu4e view as well.
+    (get-buffer-create (or gnus-summary-buffer "*Summary*"))
+
     (setq gnus-article-buffer (mu4e-get-view-buffer nil t))
     (with-current-buffer gnus-article-buffer
       (when linked-headers-buffer
