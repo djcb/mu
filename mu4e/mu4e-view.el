@@ -645,7 +645,7 @@ activates URLs (in plain-text mode only)."
           (unless (mu4e--view-html-displayed-p)
             (mu4e--view-activate-urls))
           (kill-local-variable 'bookmark-make-record-function)
-          (setq mu4e~gnus-article-mime-handles gnus-article-mime-handles
+          (setq mu4e--gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
           (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles))

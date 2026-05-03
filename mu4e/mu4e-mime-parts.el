@@ -63,14 +63,14 @@ See `mu4e--uniquify-file-name' for an example."
 
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
-(defvar-local mu4e~gnus-article-mime-handles nil)
-(put 'mu4e~gnus-article-mime-handles 'permanent-local t)
+(defvar-local mu4e--view-gnus-article-mime-handles nil)
+(put 'mu4e--view-gnus-article-mime-handles 'permanent-local t)
 
 (defun mu4e--view-kill-mime-handles ()
   "Kill cached MIME-handles, if any."
-  (when mu4e~gnus-article-mime-handles
-    (mm-destroy-parts mu4e~gnus-article-mime-handles)
-    (setq mu4e~gnus-article-mime-handles nil)))
+  (when mu4e--view-gnus-article-mime-handles
+    (mm-destroy-parts mu4e--view-gnus-article-mime-handles)
+    (setq mu4e--view-gnus-article-mime-handles nil)))
 
 ;;; MIME-parts
 (defvar-local mu4e--view-mime-parts nil
