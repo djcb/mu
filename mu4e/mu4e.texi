@@ -1747,6 +1747,17 @@ picks some other character; the prompt shows which. In the unlikely case that
 the file names contain all of those, it is recommended to use
 @code{mu4e-view-mime-part-action} instead, which does not have this limitation.
 
+@code{mu4e-view-save-attachments} saves all the attachments to the given
+directory and keeps the attachment names. For example, if the sender called an
+attachment @file{Form to Fill 1.pdf}, it will be saved on your system as
+@file{Form to Fill 1.pdf}, with spaces and mixed case.
+
+If you want to change the attachment name, you can use
+@code{mu4e-view-save-one-attachment}, which prompts for an attachment and the
+destination file name. The associated key is @key{o} (think @emph{one}). It is
+also convenient if you only want to save a few attachments instead of all of
+them.
+
 @subsection Other MIME-parts
 @cindex mime-parts
 
