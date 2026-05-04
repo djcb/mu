@@ -1700,12 +1700,10 @@ Other MIME-parts in the messages include @emph{attachments}.
 @cindex attachments
 
 Many e-mail messages contain @emph{attachments}, which are MIME-parts that
-encode files which you can extract.
-
-@footnote{@code{mu} uses some heuristics to decide if a part should be treated
-as an attachment; including @t{inline} parts that specify a filename. The
-heuristic tries to balance false-positive and false-negatives, both of which are
-possible}
+encode files which you can extract@footnote{@code{mu} uses some heuristics to
+decide if a part should be treated as an attachment; including @t{inline} parts
+that specify a filename. The heuristic tries to balance false-positive and
+false-negatives, both of which are possible}.
 
 @findex mu4e-view-save-attachments
 To save attachments as files on your computer, @code{mu4e}'s message-view
