@@ -84,7 +84,6 @@ You can specify the flags with the *--flags* parameter, and do either with eithe
 
 Absolute flags just specify the new flags by their letters; e.g. to specify a
 /Trashed/, /Seen/, /Replied/ message, you'd use *--flags STR*.
-#+end_example
 
 Relative flags are relative to the current flags for some message, and each of
 the flags is prefixed with either *+* ("add this flag") or *-* ("remove this flag").
