@@ -359,9 +359,8 @@ Function returns the value (cdr) of the matching cell."
   (unless (get-buffer mu4e--log-buffer-name)
     (with-current-buffer (get-buffer-create mu4e--log-buffer-name)
       (view-mode)
-      (when (fboundp 'so-long-mode)
-        (unless (eq major-mode 'so-long-mode)
-          (eval '(so-long-mode))))
+      (unless (eq major-mode 'so-long-mode)
+        (so-long-mode))
       (setq buffer-undo-list t)))
   mu4e--log-buffer-name)
 

@@ -128,8 +128,7 @@ I.e. a message with the draft flag set."
   :group 'mu4e-faces)
 
 (defface mu4e-header-highlight-face
-  `((t :inherit hl-line :weight bold :underline t
-       ,@(and (>= emacs-major-version 27) '(:extend t))))
+  '((t :inherit hl-line :weight bold :underline t :extend t))
   "Face for the header at point."
   :group 'mu4e-faces)
 

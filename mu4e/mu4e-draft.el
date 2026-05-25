@@ -254,8 +254,7 @@ It looks something like
 
 This filename is used for the draft message and the sent message,
 depending on `mu4e-sent-messages-behavior'."
-  (let* ((sysname (if (fboundp 'system-name)
-                      (system-name) (with-no-warnings system-name)))
+  (let* ((sysname (system-name))
          (sysname (if (string= sysname "") "localhost" sysname))
          (hostname (downcase
                     (save-match-data

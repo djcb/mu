@@ -191,16 +191,6 @@ buffer's major mode."
   (eq (mu4e--get-current-buffer-type) type))
 
 
-;; backward-compat; buffer-local-boundp was introduced in emacs 28.
-(defun mu4e--buffer-local-boundp (symbol buffer)
-  "Return non-nil if SYMBOL is bound in BUFFER.
-Also see `local-variable-p'."
-  (condition-case nil
-      (buffer-local-value symbol buffer)
-    (:success t)
-    (void-variable nil)))
-
-
 (defun mu4e-get-view-buffer (&optional headers-buffer create)
   "Return a view buffer belonging optionally to HEADERS-BUFFER.
 
@@ -229,7 +219,7 @@ being created if CREATE is non-nil."
           (linked-buffer
            (mu4e-get-view-buffers
             (lambda (buf)
-              (and (mu4e--buffer-local-boundp 'mu4e-linked-headers-buffer buf)
+              (and (buffer-local-boundp 'mu4e-linked-headers-buffer buf)
                    (eq mu4e-linked-headers-buffer headers-buffer))))))
       ;; If such a linked buffer exists and its buffer is live, we use that
       ;; buffer.

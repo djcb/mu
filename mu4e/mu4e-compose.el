@@ -268,9 +268,6 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (define-key map (kbd "C-c C-u")  #'mu4e-update-mail-and-index)
     (define-key map (kbd "C-c ;")    #'mu4e-compose-context-switch)
 
-    ;; emacs 29
-    ;;(keymap-set map "<remap> <beginning-of-buffer>" #'mu4e-compose-goto-top)
-    ;;(keymap-set map "<remap> <end-of-buffer>" #'mu4e-compose-goto-bottom)
     (define-key map (vector 'remap #'beginning-of-buffer)
                 #'mu4e-compose-goto-top)
     (define-key map (vector 'remap #'end-of-buffer)

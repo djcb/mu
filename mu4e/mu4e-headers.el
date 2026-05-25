@@ -1189,13 +1189,8 @@ The following specs are supported:
 
   ;; Eldoc support
   (when (and (featurep 'eldoc) mu4e-eldoc-support)
-    (if (boundp 'eldoc-documentation-functions)
-        ;; Emacs 28 or newer
-        (add-hook 'eldoc-documentation-functions
-                  #'mu4e-headers-eldoc-function nil t)
-      ;; Emacs 27 or older
-      (add-function :before-until (local 'eldoc-documentation-function)
-                    #'mu4e-headers-eldoc-function)))
+    (add-hook 'eldoc-documentation-functions
+              #'mu4e-headers-eldoc-function nil t))
 
   ;; support bookmarks.
   (setq-local bookmark-make-record-function

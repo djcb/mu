@@ -249,9 +249,7 @@ Returns the full path."
         (kill-buffer mu4e--sexp-buffer-name))
       (with-current-buffer-window
           (get-buffer-create mu4e--sexp-buffer-name) nil nil
-        (if (fboundp 'lisp-data-mode)
-            (lisp-data-mode)
-          (lisp-mode))
+        (lisp-data-mode)
         (insert (pp-to-string msg))
         (font-lock-ensure)
         ;; add basic `quit-window' bindings
