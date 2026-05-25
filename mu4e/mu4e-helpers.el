@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'seq)
-(require 'ido)
 (require 'cl-lib)
 (require 'bookmark)
 (require 'message)

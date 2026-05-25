@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'ido)
 (require 'browse-url)
 
 (require 'mu4e-helpers)
