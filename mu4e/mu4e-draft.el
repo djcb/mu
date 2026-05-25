@@ -364,8 +364,9 @@ With HEADERS-ONLY non-nil, only include the headers part."
 (defun mu4e--draft-set-friendly-buffer-name ()
   "Use some friendly name for this draft buffer."
   (let* ((subj (message-field-value "subject"))
-         (subj (if (or (not subj) (string-match "^[:blank:]*$" subj))
-                   "No subject"  subj)))
+         (subj (if (or (not subj)
+                       (string-match-p (rx bos (* blank) eos) subj))
+                   "No subject" subj)))
     (rename-buffer (generate-new-buffer-name
                     (format "\"%s\""
                             (truncate-string-to-width subj
