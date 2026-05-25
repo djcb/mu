@@ -238,8 +238,8 @@ When enabled, this attempts to put mu4e's completions at the
 start of the buffer-local `completion-at-point-functions'. Other
 completion functions still apply."
   (when mu4e-compose-complete-addresses
-    (set (make-local-variable 'completion-ignore-case) t)
-    (set (make-local-variable 'completion-cycle-threshold) 7)
+    (setq-local completion-ignore-case t)
+    (setq-local completion-cycle-threshold 7)
     (add-to-list (make-local-variable 'completion-styles) 'substring)
     (add-hook 'completion-at-point-functions
               #'mu4e--compose-complete-contact-field -10 t)))
@@ -289,13 +289,13 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (when (eq major-mode 'mu4e-compose-mode)
     (mu4e-warn "Not available in mu4e")))
 
-(defun mu4e--neutralize-undesirables ()
-  "Beware Gnus commands that do not work with mu4e."
-  ;; the Field menu contains many items that don't apply.
-  (advice-add 'gnus-delay-article
-              :before #'mu4e--compose-unsupported) ;; # XXX does not work?!
-  (advice-add 'message-goto-newsgroups :before #'mu4e--compose-unsupported)
-  (advice-add 'message-insert-newsgroups :before #'mu4e--compose-unsupported))
+;; Neutralize Gnus commands that do not work with mu4e. The advice is a no-op
+;; outside mu4e-compose-mode (see `mu4e--compose-unsupported'), so it is safe
+;; to install unconditionally at load time.
+(advice-add 'gnus-delay-article
+            :before #'mu4e--compose-unsupported) ;; # XXX does not work?!
+(advice-add 'message-goto-newsgroups :before #'mu4e--compose-unsupported)
+(advice-add 'message-insert-newsgroups :before #'mu4e--compose-unsupported)
 
 (define-derived-mode mu4e-compose-mode message-mode "mu4e:compose"
   "Major mode for the mu4e message composition, derived from `message-mode'.
@@ -303,13 +303,12 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   (progn
     (use-local-map mu4e-compose-mode-map)
     (mu4e-context-minor-mode)
-    (mu4e--neutralize-undesirables)
     (mu4e--compose-remap-faces)
     (setq-local nobreak-char-display nil)
     ;; set this to allow mu4e to work when gnus-agent is unplugged in gnus
-    (set (make-local-variable 'message-send-mail-real-function) nil)
+    (setq-local message-send-mail-real-function nil)
     ;; Set to nil to enable `electric-quote-local-mode' to work:
-    (set (make-local-variable 'comment-use-syntax) nil)
+    (setq-local comment-use-syntax nil)
     (mu4e--compose-setup-completion) ;; maybe offer address completion
     (if mu4e-compose-format-flowed   ;; format-flowed
         (progn

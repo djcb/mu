@@ -72,6 +72,17 @@ See `mu4e--uniquify-file-name' for an example."
     (mm-destroy-parts mu4e--view-gnus-article-mime-handles)
     (setq mu4e--view-gnus-article-mime-handles nil)))
 
+;; Temp directories created to hand attachments to external openers; cleaned up
+;; when the view buffer is killed.
+(defvar-local mu4e--view-temp-dirs nil)
+(put 'mu4e--view-temp-dirs 'permanent-local t)
+
+(defun mu4e--view-kill-temp-dirs ()
+  "Delete temp dirs created for opening MIME-parts externally."
+  (dolist (dir mu4e--view-temp-dirs)
+    (ignore-errors (delete-directory dir)))
+  (setq mu4e--view-temp-dirs nil))
+
 ;;; MIME-parts
 (defvar-local mu4e--view-mime-parts nil
   "Cached MIME parts for this message.")
@@ -229,7 +240,7 @@ COMPLETIONS is the list of completion strings to affixate."
                    'face 'mu4e-system-face))
             (target (propertize (or (plist-get part :target-dir) "")
                                 'face 'mu4e-system-face))
-            (icon (or (and (> (length raw-filename) 0)
+            (icon (or (and (not (string-empty-p raw-filename))
                            (mu4e-file-name-to-icon raw-filename))
                       (mu4e-mime-type-to-icon
                        (plist-get part :mime-type))))
@@ -430,32 +441,33 @@ Each of the actions is a plist with keys
 The filename is deduced from the MIME-part's filename, or
 otherwise random; the result is placed in a temporary directory
 with a unique name. Returns the full path for the file created.
-The directory and file are self-destructed."
+The directory is registered for cleanup when the current view
+buffer is killed (see `mu4e--view-kill-temp-dirs')."
   (let* ((tmpdir (make-temp-file "mu4e-temp-" t))
          (fname (mm-handle-filename handle))
          (fname (and fname
                      (gnus-map-function mm-file-name-rewrite-functions
                                         (file-name-nondirectory fname))))
          (fname (if fname
-                    (concat tmpdir "/" (replace-regexp-in-string "/" "-" fname))
+                    (mu4e-join-paths
+                     tmpdir (replace-regexp-in-string "/" "-" fname))
                   (let ((temporary-file-directory tmpdir))
                     (make-temp-file "mimepart")))))
     (mm-save-part-to-file handle fname)
-    (run-at-time "30 sec" nil
-                 (lambda () (ignore-errors (delete-directory tmpdir t))))
+    (push tmpdir mu4e--view-temp-dirs)
     fname))
 
 (defun mu4e--view-open-file (file &optional force-ask)
   "Open FILE with default handler, if any.
-Otherwise, or if FORCE-ASK is set, ask user for the program to
-open with."
+Otherwise, or if FORCE-ASK is set, ask user for the shell command
+to open with."
   (if (and (not force-ask)
            (functionp mu4e-view-open-program))
       (funcall mu4e-view-open-program file)
     (let ((opener
            (or (and (not force-ask) mu4e-view-open-program
                     (executable-find mu4e-view-open-program))
-               (read-shell-command "Open MIME-part with: "))))
+               (read-shell-command "Open MIME-part with shell command: "))))
       (call-process opener nil 0 nil file))))
 
 (defun mu4e-view-mime-part-action (&optional n)
@@ -515,17 +527,16 @@ the third MIME-part."
                     (cond
                      ((eq receives 'index)
                       (shell-command
-                       (concat handler " " (shell-quote-argument id))))
+                       (concat handler " " id)))
                      ((eq receives 'pipe)
                       (progn
                         (mm-pipe-part handle handler)))
                      ((eq receives 'temp)
                       (shell-command
-                       (shell-command
-                        (concat
-                         handler " "
-                         (shell-quote-argument
-                          (mu4e--view-mime-part-to-temp-file handle))))))
+                       (concat
+                        handler " "
+                        (shell-quote-argument
+                         (mu4e--view-mime-part-to-temp-file handle)))))
                      (t (mu4e-error "Invalid action %S" action))))))))
             ids)))
 

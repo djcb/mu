@@ -1185,7 +1185,7 @@ The following specs are supported:
   (use-local-map mu4e-headers-mode-map)
   (make-local-variable 'mu4e~headers-proc)
   (make-local-variable 'mu4e~highlighted-docid)
-  (set (make-local-variable 'hl-line-face) 'mu4e-header-highlight-face)
+  (setq-local hl-line-face 'mu4e-header-highlight-face)
 
   ;; Eldoc support
   (when (and (featurep 'eldoc) mu4e-eldoc-support)
@@ -1198,8 +1198,8 @@ The following specs are supported:
                     #'mu4e-headers-eldoc-function)))
 
   ;; support bookmarks.
-  (set (make-local-variable 'bookmark-make-record-function)
-       'mu4e--make-bookmark-record)
+  (setq-local bookmark-make-record-function
+              #'mu4e--make-bookmark-record)
   ;; maybe update the current headers upon indexing changes
   (add-hook 'mu4e-index-updated-hook #'mu4e~headers-maybe-auto-update)
   (setq

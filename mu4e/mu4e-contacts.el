@@ -280,7 +280,7 @@ case a phrase contains a quote, it will be escaped."
   "Get the full combination of name and email address from CONTACT."
   (let* ((email (mu4e-contact-email contact))
          (name (mu4e-contact-name contact)))
-    (if (and name (> (length name) 0))
+    (if (and name (not (string-empty-p name)))
         (format "%s <%s>" (mu4e--rfc822-quote-phrase name) email)
       email)))
 

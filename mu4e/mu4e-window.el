@@ -103,7 +103,11 @@ A symbol:
 
 For backward compatibility with `mu4e-compose-in-new-frame', t is
 treated as =\\'frame."
-  :type 'symbol
+  :type '(choice (const :tag "New buffer" nil)
+                 (const :tag "New window" window)
+                 (const :tag "New frame" frame)
+                 (const :tag "New frame (compat)" t)
+                 (const :tag "Use display-buffer" display-buffer))
   :group 'mu4e-compose)
 
 (declare-function mu4e-view-mode "mu4e-view")
@@ -252,7 +256,7 @@ being created if CREATE is non-nil."
         ;; Required. The call chain of `mu4e-view-mode' ends up
         ;; calling `kill-all-local-variables', which destroys the
         ;; local binding.
-        (set (make-local-variable 'mu4e-linked-headers-buffer) headers-buffer))
+        (setq-local mu4e-linked-headers-buffer headers-buffer))
       buffer)))
 
 ;; backward compat: `display-buffer-full-frame' only appears in emacs 29.

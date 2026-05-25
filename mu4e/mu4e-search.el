@@ -281,7 +281,7 @@ limit the stack size."
     (unless (and stack (string= (car stack) query))
       (push query stack)
       ;; limit the stack to `mu4e--search-query-stack-size' elements
-      (when (> (length stack) mu4e--search-query-stack-size)
+      (when (length> stack mu4e--search-query-stack-size)
         (setq stack (cl-subseq stack 0 mu4e--search-query-stack-size)))
       ;; remove all duplicates of the new element
       (seq-remove (lambda (elm) (string= elm (car stack))) (cdr stack))
@@ -607,24 +607,30 @@ query before submitting it."
          (longest-query
           (seq-max (seq-map (lambda (c) (length (plist-get (cdr c) :query)))
                             candidates)))
-
-         (annotation-func
-          (lambda (candidate)
-            (let* ((item (cdr-safe (assoc candidate candidates)))
-                   (name (propertize (or  (plist-get item :name) "")
-                                     'face 'mu4e-header-key-face))
-                   (query (propertize (or (plist-get item :query) "")
-                                      'face 'mu4e-header-value-face)))
-              (concat
-               "  "
-               (make-string (- longest-name (length name)) ?\s)
-               query
-               (make-string (- longest-query (length query)) ?\s)
-               "  "
-               (mu4e--query-item-display-counts item)))))
-         (completion-extra-properties
-          `(:annotation-function ,annotation-func))
-         (chosen (completing-read "Query: " candidates))
+         (affixation-func
+          (lambda (completions)
+            (mapcar
+             (lambda (candidate)
+               (let* ((item (cdr-safe (assoc candidate candidates)))
+                      (query (propertize (or (plist-get item :query) "")
+                                         'face 'mu4e-header-value-face))
+                      (suffix
+                       (concat
+                        "  "
+                        (make-string (- longest-name (length candidate)) ?\s)
+                        query
+                        (make-string (- longest-query (length query)) ?\s)
+                        "  "
+                        (mu4e--query-item-display-counts item))))
+                 (list candidate "" suffix)))
+             completions)))
+         (table (lambda (string pred action)
+                  (if (eq action 'metadata)
+                      `(metadata
+                        (category . mu4e-query)
+                        (affixation-function . ,affixation-func))
+                    (complete-with-action action candidates string pred))))
+         (chosen (completing-read "Query: " table))
          (query (or (plist-get (cdr-safe (assoc chosen candidates)) :query)
                     (mu4e-warn "No query for %s" chosen))))
     (mu4e-search-bookmark query edit)))

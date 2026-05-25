@@ -721,7 +721,7 @@ shorter keys in some cases where there are multiple bindings."
   ;; not a perfect heuristic: e.g. '<up>' is longer that 'C-p'
   (car-safe
    (seq-sort (lambda (b1 b2)
-               (< (length b1) (length b2)))
+               (length< b1 (length b2)))
              (seq-map #'key-description
                       (where-is-internal cmd)))))
 

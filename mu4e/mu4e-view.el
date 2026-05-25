@@ -651,10 +651,11 @@ activates URLs (in plain-text mode only)."
           (unless (mu4e--view-html-displayed-p)
             (mu4e--view-activate-urls))
           (kill-local-variable 'bookmark-make-record-function)
-          (setq mu4e--gnus-article-mime-handles gnus-article-mime-handles
+          (setq mu4e--view-gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
-          (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles))
+          (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles)
+          (add-hook 'kill-buffer-hook #'mu4e--view-kill-temp-dirs))
       (epg-error
        (mu4e-message "EPG error: %s; fall back to raw view"
                      (error-message-string err))))))
@@ -789,7 +790,7 @@ filename."
                   ;; (e.g. :user-agent): derive from the keyword name.
                   (capitalize (substring (symbol-name field) 1))))
          (help (plist-get info :help)))
-    (if (and val (> (length val) 0))
+    (if (and val (not (string-empty-p val)))
         (insert (propertize (concat key ":") 'help-echo help)
                 " " val "\n"))))
 
@@ -803,7 +804,7 @@ filename."
                                field info)))
          (val (funcall func msg))
          (help (plist-get info :help)))
-    (when (and val (> (length val) 0))
+    (when (and val (not (string-empty-p val)))
       (insert (propertize (concat key ":") 'help-echo help) " " val "\n"))))
 
 (define-advice gnus-icalendar-event-from-handle

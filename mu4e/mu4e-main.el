@@ -205,7 +205,7 @@ binding representation, remove that first letter."
   (let* ((bindstr (or bindstr (mu4e-key-description cmd) alt
                       (mu4e-error "No binding for %s" cmd)))
          (bindstr
-          (if (and alt (> (length bindstr) 1)) alt bindstr))
+          (if (and alt (length> bindstr 1)) alt bindstr))
          (title ;; remove first letter afrer [] if it equal last of binding
           (string-replace
            (concat "[@]" (substring bindstr -1)) "[@]" title))

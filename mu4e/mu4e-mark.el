@@ -106,7 +106,7 @@ is the target directory (for \"move\")")
 
 (defun mu4e--mark-initialize ()
   "Initialize the marks-subsystem."
-  (set (make-local-variable 'mu4e--mark-map) (make-hash-table))
+  (setq-local mu4e--mark-map (make-hash-table))
   ;; ask user when kill buffer / emacs with live marks.
   ;; (subject to mu4e-headers-leave-behavior)
   (add-hook 'kill-buffer-query-functions
