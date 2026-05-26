@@ -1,6 +1,6 @@
 ;;; mu4e-mime-parts.el --- Dealing with MIME-parts & URLs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -63,25 +63,25 @@ See `mu4e--uniquify-file-name' for an example."
 
 ;; remember the mime-handles, so we can clean them up when
 ;; we quit this buffer.
-(defvar-local mu4e--view-gnus-article-mime-handles nil)
+
+(defvar-local mu4e--view-gnus-article-mime-handles nil
+  "MIME handles for the message in this buffer.")
 (put 'mu4e--view-gnus-article-mime-handles 'permanent-local t)
 
-(defun mu4e--view-kill-mime-handles ()
-  "Kill cached MIME-handles, if any."
+(defvar-local mu4e--view-temp-files nil
+  "Temporary files.")
+(put 'mu4e--view-temp-files 'permanent-local t)
+
+(defun mu4e--view-buffer-cleanup ()
+  "Clean-up some internals when killing the view buffer."
+  ;; Kill cached MIME-handles, if any.
   (when mu4e--view-gnus-article-mime-handles
     (mm-destroy-parts mu4e--view-gnus-article-mime-handles)
-    (setq mu4e--view-gnus-article-mime-handles nil)))
-
-;; Temp directories created to hand attachments to external openers; cleaned up
-;; when the view buffer is killed.
-(defvar-local mu4e--view-temp-dirs nil)
-(put 'mu4e--view-temp-dirs 'permanent-local t)
-
-(defun mu4e--view-kill-temp-dirs ()
-  "Delete temp dirs created for opening MIME-parts externally."
-  (dolist (dir mu4e--view-temp-dirs)
-    (ignore-errors (delete-directory dir)))
-  (setq mu4e--view-temp-dirs nil))
+    (setq mu4e--view-gnus-article-mime-handles nil))
+  ;; Delete temp files created for opening MIME-parts externally.
+  (dolist (file mu4e--view-temp-files)
+    (ignore-errors (delete-file file)))
+  (setq mu4e--view-temp-files nil))
 
 ;;; MIME-parts
 (defvar-local mu4e--view-mime-parts nil
@@ -438,23 +438,25 @@ Each of the actions is a plist with keys
 
 (defun mu4e--view-mime-part-to-temp-file (handle)
   "Write MIME-part HANDLE to a temporary file and return the file name.
+
 The filename is deduced from the MIME-part's filename, or
 otherwise random; the result is placed in a temporary directory
 with a unique name. Returns the full path for the file created.
-The directory is registered for cleanup when the current view
-buffer is killed (see `mu4e--view-kill-temp-dirs')."
-  (let* ((tmpdir (make-temp-file "mu4e-temp-" t))
-         (fname (mm-handle-filename handle))
+
+The file is registered for cleanup when the current view
+buffer is killed."
+  (let* ((fname (mm-handle-filename handle))
          (fname (and fname
                      (gnus-map-function mm-file-name-rewrite-functions
                                         (file-name-nondirectory fname))))
          (fname (if fname
                     (mu4e-join-paths
-                     tmpdir (replace-regexp-in-string "/" "-" fname))
-                  (let ((temporary-file-directory tmpdir))
-                    (make-temp-file "mimepart")))))
+                     mu4e--temp-dir
+                     (replace-regexp-in-string "/" "-" fname))
+                  (let ((temporary-file-directory mu4e--temp-dir))
+                    (make-temp-file "mime-part-")))))
     (mm-save-part-to-file handle fname)
-    (push tmpdir mu4e--view-temp-dirs)
+    (push fname mu4e--view-temp-files)
     fname))
 
 (defun mu4e--view-open-file (file &optional force-ask)

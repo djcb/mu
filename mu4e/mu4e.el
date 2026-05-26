@@ -158,6 +158,9 @@ mu4e is already running, invoke FUNC (if non-nil).
 
 Otherwise, check requirements, then start mu4e. When successful,
 invoke FUNC (if available) afterwards."
+  ;; create dir for temporary files.
+  (unless (and mu4e--temp-dir (file-directory-p mu4e--temp-dir))
+    (setq mu4e--temp-dir (make-temp-file "mu4e-" t)))
   (unless (mu4e-context-current)
     (mu4e--context-autoswitch nil mu4e-context-policy))
   (setq mu4e-pong-func
@@ -216,7 +219,10 @@ invoke FUNC (if available) afterwards."
          (when (member major-mode
                        '(mu4e-headers-mode mu4e-view-mode mu4e-main-mode))
            (kill-buffer)))))
-   (buffer-list)))
+   (buffer-list))
+  (when mu4e--temp-dir
+    (ignore-errors (delete-directory mu4e--temp-dir 'recursive))
+    (setq mu4e--temp-dir nil)))
 
 ;;; Handlers
 (defun mu4e--default-handler (&rest args)

@@ -534,11 +534,16 @@ string after PROMPT."
   (let ((timestr (read-string (mu4e-format "%s" prompt))))
     (apply 'encode-time (parse-time-string timestr))))
 
+
+(defvar mu4e--temp-dir nil "Directory for temporary files.
+Created when mu4e starts, and removed when it closes.")
+
 (defun mu4e-make-temp-file (ext)
   "Create a self-destructing temporary file with extension EXT.
 The file will self-destruct in a short while, enough to open it
 in an external program."
-  (let ((tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
+  (let* ((temporary-file-directory (or mu4e--temp-dir temporary-file-directory))
+         (tmpfile (make-temp-file "mu4e-" nil (concat "." ext))))
     (run-at-time "30 sec" nil
                  (lambda () (ignore-errors (delete-file tmpfile))))
     tmpfile))

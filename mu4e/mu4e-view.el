@@ -654,8 +654,7 @@ activates URLs (in plain-text mode only)."
           (setq mu4e--view-gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
-          (add-hook 'kill-buffer-hook #'mu4e--view-kill-mime-handles)
-          (add-hook 'kill-buffer-hook #'mu4e--view-kill-temp-dirs))
+          (add-hook 'kill-buffer-hook #'mu4e--view-buffer-cleanup))
       (epg-error
        (mu4e-message "EPG error: %s; fall back to raw view"
                      (error-message-string err))))))
