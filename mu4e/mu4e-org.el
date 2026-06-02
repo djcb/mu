@@ -1,6 +1,6 @@
 ;;; mu4e-org --- Org-links to mu4e messages/queries -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org)
+(require 'tabulated-list)
 (require 'mu4e-view)
 (require 'mu4e-contacts)
 
@@ -147,5 +148,146 @@ it with org)."
 (org-link-set-parameters "mu4e"
                          :follow #'mu4e-org-open
                          :store  #'mu4e-org-store-link)
+
+
+(defun mu4e-org-links-in-buffer (&optional file)
+  "List all mu4e:msgid links in the current `org-mode' buffer.
+
+The list elements are plists with:
+ :link    the org-link
+ :msgid   the message-id it refers to
+ :context a string describing the org item
+ :file    the FILE in which this link was found
+
+If FILE is non-nil:
+  :start the start position of the link
+plists."
+  (save-excursion
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (org-element-map (org-element-parse-buffer) 'link
+       (lambda (link)
+         (let* ((type (org-element-property :type link))
+                (raw-link (org-element-property :raw-link link))
+                (start (org-element-property :contents-begin link))
+                (path (org-element-property :path link))
+                (msgid "msgid:"))
+           ;; a little hacky; seems org-mode doesn't have something built-in for
+           ;; this.
+           (when (string= type "mu4e")
+             (when-let* ((msgid (when (string-prefix-p msgid path)
+                                  (substring path (length msgid)))))
+               (let* ((begin (org-element-property :begin link))
+                      (context-line
+                       (save-excursion
+                         (goto-char begin)
+                         (org-link-display-format
+                          (string-trim
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (line-end-position))))))
+                      (info (list :link raw-link
+                                  :msgid msgid
+                                  :context context-line
+                                  :start start))
+                      (info
+                       (if file
+                           (plist-put info :file file)
+                         info)))
+                 info)))))
+       nil nil nil nil t))))
+
+(defun mu4e-org-links-in-agenda-files ()
+  "List all mu4e:msgid: links in `org-agenda-files'.
+
+The list elements are plists as per `mu4e-org-links-in-buffer'.."
+  (let ((msgid-links '()))
+    (dolist (file org-agenda-files)
+      (when (file-exists-p file)
+        (with-current-buffer (find-file-noselect file)
+          (when-let* ((buflinks (mu4e-org-links-in-buffer file)))
+            (setq msgid-links (append msgid-links buflinks))))))
+    msgid-links))
+
+(defcustom mu4e-org-agenda-links-context-length 60
+  "Maximum length of the Context column in `mu4e-org-agenda-links'.
+Longer context strings are ellipsized to fit."
+  :type 'integer
+  :group 'mu4e-org)
+
+(defvar-keymap mu4e-org-agenda-links-mode-map
+  :doc "Keymap for `mu4e-org-agenda-links-mode'."
+  :parent tabulated-list-mode-map
+  "RET" #'mu4e-org-agenda-links-follow
+  "o"   #'mu4e-org-agenda-links-visit-file)
+
+(define-derived-mode mu4e-org-agenda-links-mode tabulated-list-mode
+  "mu4e-org-agenda-links"
+  "Major mode for listing mu4e:msgid links found in `org-agenda-files'."
+  (setq tabulated-list-format
+        (vector
+         (list "Context" mu4e-org-agenda-links-context-length nil)
+         (list "File"    25 t)))
+  (setq tabulated-list-padding 2)
+  (tabulated-list-init-header))
+
+(defun mu4e-org-agenda-links--entry-at-point ()
+  "Return the link entry at point, or signal an error."
+  (or (tabulated-list-get-id)
+      (mu4e-error "No entry at point")))
+
+(defun mu4e-org-agenda-links-follow (&optional other-window)
+  "Follow the mu4e link at point.
+With prefix arg OTHER-WINDOW, display the result in another window."
+  (interactive "P")
+  (let ((link (plist-get (mu4e-org-agenda-links--entry-at-point) :link)))
+    (if other-window
+        (let ((display-buffer-overriding-action
+               '((display-buffer-reuse-window
+                  display-buffer-pop-up-window)
+                 (inhibit-same-window . t))))
+          (org-link-open-from-string link))1
+      (org-link-open-from-string link))))
+
+(defun mu4e-org-agenda-links-visit-file (&optional other-window)
+  "Visit the org file for the link at point, at its source location.
+With prefix arg OTHER-WINDOW, visit in another window."
+  (interactive "P")
+  (let* ((entry (mu4e-org-agenda-links--entry-at-point))
+         (file  (plist-get entry :file))
+         (start (plist-get entry :start)))
+    (unless (and file (file-exists-p file))
+      (mu4e-error "File not found: %s" file))
+    (if other-window
+        (find-file-other-window file)
+      (find-file file))
+    (when start (goto-char start))))
+
+;;;###autoload
+(defun mu4e-org-agenda-links ()
+  "Show mu4e:msgid links found in `org-agenda-files'.
+Display a tabulated-list buffer with Context and File columns."
+  (interactive)
+  (let ((buf (get-buffer-create "*mu4e-org-agenda-links*")))
+    (with-current-buffer buf
+      (mu4e-org-agenda-links-mode)
+      (setq tabulated-list-entries
+            (mapcar
+             (lambda (entry)
+               (let* ((file    (or (plist-get entry :file) ""))
+                      (context (or (plist-get entry :context) ""))
+                      (short   (truncate-string-to-width
+                                context
+                                mu4e-org-agenda-links-context-length
+                                nil nil t)))
+                 (list entry
+                       (vector
+                        (propertize short 'face 'mu4e-link-face)
+                        (propertize (file-name-nondirectory file)
+                                    'face 'mu4e-title-face)))))
+             (mu4e-org-links-in-agenda-files)))
+      (tabulated-list-print))
+    (pop-to-buffer buf)))
+
 (provide 'mu4e-org)
 ;;; mu4e-org.el ends here

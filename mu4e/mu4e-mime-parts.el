@@ -450,9 +450,10 @@ buffer is killed."
                      (gnus-map-function mm-file-name-rewrite-functions
                                         (file-name-nondirectory fname))))
          (fname (if fname
-                    (mu4e-join-paths
-                     mu4e--temp-dir
-                     (replace-regexp-in-string "/" "-" fname))
+                    (mu4e--uniquify-file-name
+                     (mu4e-join-paths
+                      mu4e--temp-dir
+                      (replace-regexp-in-string "/" "-" fname)))
                   (let ((temporary-file-directory mu4e--temp-dir))
                     (make-temp-file "mime-part-")))))
     (mm-save-part-to-file handle fname)

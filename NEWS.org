@@ -41,6 +41,10 @@
    - ~mu4e-compose-crypto-policy~ now also recognizes ~sign-signed-replies~, to
      automatically sign when replying to signed messages (1.14.1).
 
+   - For Org-integration, there is a new command ~mu4e-org-agenda-links~ to pop up
+     a buffer with a tabulated list of the mu4e links in your ~org-agenda-files~
+     (1.14.2).
+
 *** scm
 
    - added new ~--eval~ command-line option, so you can do e.g.

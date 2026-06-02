@@ -3826,6 +3826,15 @@ key-bindings for that in headers and view mode:
   (define-key mu4e-view-mode-map    (kbd "C-c c") 'mu4e-org-store-and-capture)
 @end lisp
 
+@subsection Listing linked messages
+
+@t{mu4e} offers a command @kbd{mu4e-org-agenda-links}. This provides a buffer
+that shows a tabulated list of all the mu4e message links found in your
+@code{org-agenda-files}.
+
+Pressing @kbd{RET} opens the link, while @kbd{o} visits the Org-file where the
+links was found. When prefixed by @kbd{C-u} these use the 'other window'.
+
 @subsection Tracking sent mail
 
 To build on the above, it can be useful to automatically track outgoing e-mail
