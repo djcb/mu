@@ -325,19 +325,28 @@ buffers; lets remap its faces so it uses the ones for mu4e."
     (message-cite-original-without-signature)
     (delete-region (point-min) (point-max))))
 
-(defun mu4e--compose-cite (msg)
-  "Return a cited version of the ORIG message MSG (a string).
-This function uses `message-cite-function', and its settings apply."
-  (with-temp-buffer
-    (insert (mu4e-view-message-text msg))
-    (goto-char (point-min))
-    (push-mark (point-max))
-    (let ((message-signature-separator "^-- *$")
-          (message-signature-insert-empty-line t))
-      (funcall message-cite-function))
-    (pop-mark)
-    (goto-char (point-min))
-    (buffer-string)))
+(defun mu4e--compose-cite (msg &optional region)
+  "Return a cited version of the message MSG (a string).
+If REGION is non-nil, cite it instead of MSG' body. This function
+uses `message-cite-function', and its settings apply."
+  (let ((orig (mu4e--compose-message-text msg)))
+    (with-temp-buffer
+      (insert orig)
+      (goto-char (point-min))
+
+      ;; if have a region, replace the body with it.
+      (save-excursion
+        (when (and region (re-search-forward "\n\n" nil 'noerror))
+          (delete-region (point) (point-max))
+          (insert region)))
+
+      (push-mark (point-max))
+      (let ((message-signature-separator "^-- *$")
+            (message-signature-insert-empty-line t))
+        (funcall message-cite-function))
+      (pop-mark)
+      (goto-char (point-min))
+      (buffer-string))))
 
 ;;; Interactive functions
 
@@ -365,15 +374,24 @@ SWITCH-FUNCTION is ignored."
 (defun mu4e-compose-reply-to (&optional to wide)
   "Reply to the message at point.
 Optional TO can be the To: address for the message. If WIDE is
-non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\")."
+non-nil, make it a \"wide\" reply (a.k.a. \"reply-to-all\").
+
+The original message body is cited (as per
+`message-cite-function'). If some region in the view buffer is
+selected, that region is used instead of the original message
+body for citing.'"
   (interactive)
-  (let ((parent (mu4e-message-at-point)))
+  (let ((parent (mu4e-message-at-point))
+        (region (when (and (eq major-mode 'mu4e-view-mode)
+                           (use-region-p))
+                  (buffer-substring-no-properties
+                   (region-beginning) (region-end)))))
     (mu4e--draft-with-parent
      'reply parent
      (lambda ()
        (with-current-buffer (mu4e--message-call #'message-reply to wide)
          (message-goto-body)
-         (insert (mu4e--compose-cite parent))
+         (insert (mu4e--compose-cite parent region))
          ;; include matching MIME parts from the parent
          (mu4e--reply-insert-mime-parts parent)
          (current-buffer))))))

@@ -45,6 +45,9 @@
      a buffer with a tabulated list of the mu4e links in your ~org-agenda-files~
      (1.14.2).
 
+   - When replying to message with a region marked, cite only the marked region.
+     A very only feature-request, finally implemented.
+
 *** scm
 
    - added new ~--eval~ command-line option, so you can do e.g.

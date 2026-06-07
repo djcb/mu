@@ -1819,7 +1819,8 @@ reply''.
 
 By default, the reply will cite the message being replied to. If you do not want
 that, you can set (or @code{let}-bind) @code{message-cite-function} to
-@code{mu4e-message-cite-nothing}.
+@code{mu4e-message-cite-nothing}. When you have a region selected while
+replying, only the selected part is cited.
 
 See @ref{(message) Reply} and @ref{(message) Wide Reply} for further details.
 
