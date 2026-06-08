@@ -317,7 +317,7 @@ static std::vector<std::string>
 extract_tags(const MimeMessage& mime_msg)
 {
 	constexpr std::array<std::pair<const char*, char>, 3> tag_headers = {{
-		{"X-Label", ' '}, {"X-Keywords", ','}, {"Keywords", ' '}
+		{"X-Label", ' '}, {"X-Keywords", ','}, {"Keywords", ','}
 	}};
 
 	std::vector<std::string> tags;
