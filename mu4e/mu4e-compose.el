@@ -329,17 +329,15 @@ buffers; lets remap its faces so it uses the ones for mu4e."
   "Return a cited version of the message MSG (a string).
 If REGION is non-nil, cite it instead of MSG' body. This function
 uses `message-cite-function', and its settings apply."
-  (let ((orig (mu4e--compose-message-text msg)))
+  (let ((orig (mu4e-view-message-text msg)))
     (with-temp-buffer
       (insert orig)
       (goto-char (point-min))
-
-      ;; if have a region, replace the body with it.
+      ;; if we have a region, replace the body with it.
       (save-excursion
         (when (and region (re-search-forward "\n\n" nil 'noerror))
           (delete-region (point) (point-max))
           (insert region)))
-
       (push-mark (point-max))
       (let ((message-signature-separator "^-- *$")
             (message-signature-insert-empty-line t))

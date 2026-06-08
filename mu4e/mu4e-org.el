@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'org)
+(require 'org-element)
 (require 'tabulated-list)
 (require 'mu4e-view)
 (require 'mu4e-contacts)
