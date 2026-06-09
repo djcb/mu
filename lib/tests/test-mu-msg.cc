@@ -278,6 +278,18 @@ test_mu_msg_tags()
 }
 
 static void
+test_mu_msg_tags_keyword()
+{
+	g_test_bug("2933");
+
+	const auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/181736.eml").value()};
+	const auto expected = std::to_array<std::string>({"aap", "noot", "mies"});
+
+	assert_equal_seq_str(msg.tags(), expected);
+}
+
+
+static void
 test_mu_msg_comp_unix_programmer()
 {
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/181736.eml").value()};
@@ -380,6 +392,8 @@ main(int argc, char* argv[])
 	g_test_add_func("/msg/mu-msg-flags", test_mu_msg_flags);
 
 	g_test_add_func("/msg/mu-msg-tags", test_mu_msg_tags);
+	g_test_add_func("/msg/mu-msg-tags-keyword", test_mu_msg_tags_keyword);
+
 	g_test_add_func("/msg/mu-msg-references", test_mu_msg_references);
 	g_test_add_func("/msg/mu-msg-references_dups", test_mu_msg_references_dups);
 	g_test_add_func("/msg/mu-msg-references_many", test_mu_msg_references_many);
