@@ -19,6 +19,7 @@ For information about the common options, see *COMMON OPTIONS*.
 
 - *add*:  add specific messages to the database.
 - *cfind*: find contacts
+- *completions*: generate command-line completions (hidden)
 - *extract*: extract attachments and other MIME-parts
 - *find*: find messages in the database
 - *help*: get help for some command
@@ -55,6 +56,18 @@ e-mail clients.
 This manpage gives a general overview of the available commands
 (*index*, *find*, etc.); each *mu* command has its own
 man-page as well.
+
+* COMPLETIONS
+
+The *completions* sub-command is hidden from the normal output of *mu* and does not
+have its own manpage.
+
+#+begin_example
+$ mu completions bash|fish|zsh
+#+end_example>
+
+You can use it to generate command-line completion files. However, note that *mu*
+already does this for you upon installation.
 
 * COLORS
 

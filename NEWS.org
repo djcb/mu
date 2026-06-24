@@ -22,6 +22,12 @@
      most recent =Received:= header. Not perfect, but better than nothing.
      Requires re-indexing to apply to older messages (1.14.3)
 
+   - Command-line completion for bash and zsh; see the ~bash-completion~ and
+     ~bash-completion-dir~, resp. ~zsh-completion~ and ~zsh-completion-dir~ meson
+     build-options if you want to customize this (1.14.3). Add a (hidden)
+     =completions= sub-command for generating these, and include *experimental*
+     support for the Fish shell (1.14.4)
+
 *** mu4e
 
    - ~mu4e-main-hide-personal-addresses~ can now also be a number, which

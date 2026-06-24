@@ -82,6 +82,14 @@ option('bash-completion-dir',
        type: 'string',
        description: 'custom install path for bash completion')
 
+option('fish-completion',
+       type : 'feature',
+       value: 'auto',
+       description: 'whether to install fish completion for mu')
+option('fish-completion-dir',
+       type: 'string',
+       description: 'custom install path for fish completion')
+
 option('zsh-completion',
        type : 'feature',
        value: 'auto',

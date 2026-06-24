@@ -30,6 +30,22 @@ if get_option('bash-completion').allowed()
 endif
 
 #
+# fish
+#
+# if get_option('fish-completion').allowed()
+#   if get_option('fish-completion-dir') == ''
+#     fcdir = datadir / 'fish' / 'vendor_completions.d'
+#   else
+#     fcdir = get_option('fish-completion-dir')
+#   endif
+
+#   install_data('mu-completion.fish',
+#                rename: 'mu.fish',
+#                install_dir: fcdir)
+# endif
+
+
+#
 # zsh
 #
 if get_option('zsh-completion').allowed()

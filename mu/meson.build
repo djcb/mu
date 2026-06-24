@@ -18,6 +18,7 @@ mu = executable(
   'mu', [
   'mu.cc',
   'mu-options.cc',
+  'mu-options-completion.cc',
   'mu-cmd-add.cc',
   'mu-cmd-cfind.cc',
   'mu-cmd-extract.cc',

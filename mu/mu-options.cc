@@ -44,6 +44,7 @@
 #include <utils/mu-error.hh>
 #include "utils/mu-test-utils.hh"
 #include "mu-options.hh"
+#include "mu-options-completion.hh"
 #include "mu-script.hh"
 
 #include <CLI/CLI.hpp>
@@ -220,6 +221,7 @@ add_choice_option(CLI::App& sub, const std::string& name, T& value,
 	friendly_errors.push_back(
 		{&sub, opt, mu_format("{} requires one of {}; default is {}",
 				      opt->get_name(), choices_str, default_name)});
+	Completion::register_choices(opt, std::move(choice_names));
 	return opt;
 }
 
@@ -958,14 +960,18 @@ Options::make(int argc, char *argv[])
 	Options opts{};
 	CLI::App app{"mu mail indexer/searcher " PACKAGE_VERSION, "mu"};
 
-	friendly_errors.clear(); // entries refer to the previous app, if any.
+	// refer to the previous app
+	friendly_errors.clear();
+	Completion::clear_choices();
 
-	app.description(R"(mu mail indexer/searcher
-Copyright (C) 2008-2025 Dirk-Jan C. Binnema
+// clang-format off
+	app.description(mu_format(R"(mu mail indexer/searcher
+		Copyright (C) 2008-{} Dirk-Jan C. Binnema
 
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.)");
+There is NO WARRANTY, to the extent permitted by law.)", MU_COPYRIGHT_YEAR));
+// clang-format on
 
 	app.set_version_flag("-V,--version", PACKAGE_VERSION);
 	app.set_help_flag("-h,--help", "Show help information");
@@ -1007,8 +1013,26 @@ There is NO WARRANTY, to the extent permitted by law.)");
 	/* add scripts (if supported) as semi-subcommands as well */
 	const auto scripts = add_scripts(app, opts);
 
+	/* hidden subcommand to generate shell-completion scripts */
+	std::string completions_shell;
+	auto completions_sub = app.add_subcommand(
+		"completions", "Generate shell-completion script")
+		->group(""/*hide*/);
+	completions_sub->add_option("shell", completions_shell,
+				    "Shell to generate completions for")
+		->required()
+		->check(CLI::IsMember({"bash", "fish", "zsh"}));
+
 	try {
 		app.parse(argc, argv);
+
+		/* completion-script generation? just print it; the
+		 * unset sub_command makes the caller exit afterwards. */
+		if (completions_sub->parsed()) {
+			mu_print("{}", Completion::completion_script(
+					 app, completions_shell));
+			return Ok(std::move(opts));
+		}
 
 		// find the chosen sub command,  if any.
 		for (auto&& cmdinfo: SubCommandInfos) {
@@ -1230,6 +1254,18 @@ test_number_option(void)
 }
 
 static void
+test_completions(void)
+{
+	// unknown shell
+	const auto bad = test_make_options({"mu", "completions", "ksh"});
+	g_assert_false(!!bad);
+
+	// missing shell
+	const auto missing = test_make_options({"mu", "completions"});
+	g_assert_false(!!missing);
+}
+
+static void
 test_unknown_command(void)
 {
 	constexpr auto errmsg = "'flimflam' is not a mu command. See 'mu --help'";
@@ -1270,6 +1306,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/options/sortfield", test_sortfield_option);
 	g_test_add_func("/options/number", test_number_option);
 	g_test_add_func("/options/unknown-command", test_unknown_command);
+	g_test_add_func("/options/completions", test_completions);
 
 	return g_test_run();
 }

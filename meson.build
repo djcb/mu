@@ -128,6 +128,8 @@ add_project_arguments(['-DHAVE_CONFIG_H'], language: ['c', 'cpp'])
 config_h_dep=declare_dependency(
   include_directories: include_directories(['.']))
 
+config_h_data.set('MU_COPYRIGHT_YEAR', mu_year)
+
 #
 # d_type, d_ino are not available universally, so let's check
 # (we use them for optimizations in mu-scanner
@@ -433,6 +435,7 @@ if emacs.found()
 endif
 
 summary({'bash' : get_option('bash-completion').allowed(),
+         'fish' : get_option('fish-completion').allowed(),
          'zsh'  : get_option('zsh-completion').allowed()},
         section: 'Completion', bool_yn: true)
 
