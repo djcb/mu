@@ -473,6 +473,10 @@ message."
   "Whether to show MIME part buttons (e.g. \"[1. text/html]\").
 Toggle with `mu4e-view-toggle-mime-buttons'.")
 
+(defvar mu4e--view-show-all-mime-parts nil
+  "Whether to display all MIME-parts.
+Toggle with `mu4e-view-show-mime-parts'.")
+
 (defun mu4e--original-article-field (field)
   "Get FIELD from the original article."
   (when (bufferp gnus-original-article-buffer)
@@ -520,7 +524,9 @@ As a side-effect, a message that is being viewed loses its
              (append (list "multipart/signed" "multipart/encrypted"
                            "multipart/alternative")
                      gnus-buttonized-mime-types))
-            (gnus-inhibit-mime-unbuttonizing mu4e--view-show-mime-buttons))
+            (gnus-inhibit-mime-unbuttonizing mu4e--view-show-mime-buttons)
+            (gnus-mime-display-multipart-as-mixed
+             mu4e--view-show-all-mime-parts))
         (erase-buffer)
         (insert-file-contents-literally
          (mu4e-message-readable-path msg) nil nil nil t)
@@ -743,18 +749,17 @@ activates URLs (in plain-text mode only)."
     (mu4e-view msg)))
 
 (defun mu4e-view-show-mime-parts()
-  "Show all MIME-parts.
+  "Toggle display of all MIME-parts.
 
-This can be useful for messages with embedded images etc. that
-you want to save, and that are not accessible otherwise. However,
-note that Emacs can get slow with big attached images.
-
-To go back to normal display, quit the message and re-open."
+Showing all parts can be useful for messages with embedded images
+etc. that you want to save, and that are not accessible otherwise.
+However, note that Emacs can get slow with big attached images."
   (interactive)
-  (let* ((toggle (not gnus-mime-display-multipart-as-mixed))
-         (gnus-inhibit-mime-unbuttonizing (not toggle))
-         (gnus-mime-display-multipart-as-mixed toggle))
-    (mu4e-view-refresh)))
+  (setq mu4e--view-show-all-mime-parts
+        (not mu4e--view-show-all-mime-parts))
+  (mu4e-view-refresh)
+  (mu4e-message "All MIME parts %s"
+                (if mu4e--view-show-all-mime-parts "shown" "hidden")))
 
 (defun mu4e-view-toggle-mime-buttons ()
   "Toggle display of MIME part buttons and re-render."
@@ -770,6 +775,18 @@ To go back to normal display, quit the message and re-open."
   (interactive)
   (setq mm-fill-flowed (not mm-fill-flowed))
   (mu4e-view-refresh))
+
+(defun mu4e-view-toggle-hide-citation ()
+  "Toggle hiding of cited text in the message body.
+Like `gnus-article-hide-citation', but keep point in place; if
+point is inside cited text that gets hidden, move it just before
+the hidden text."
+  (interactive)
+  (save-excursion (gnus-article-hide-citation))
+  (when (get-char-property (point) 'invisible)
+    (goto-char (or (previous-single-char-property-change
+                    (point) 'invisible)
+                   (point-min)))))
 
 (defun mu4e-view-toggle-emulate-mime()
   "Toggle GNUs MIME-emulation.
@@ -1133,27 +1150,26 @@ Based on Gnus' article-mode."
 ;;; Massaging the message view
 
 (defcustom mu4e-view-massage-options
-  '( ("ctoggle citations"           . gnus-article-hide-citation)
-     ("htoggle headers"             . gnus-article-hide-headers)
-     ("ytoggle crypto"              . gnus-article-hide-pem)
+  '( ("ctoggle citations"           . mu4e-view-toggle-hide-citation)
      ("ftoggle fill-flowed"         . mu4e-view-toggle-fill-flowed)
-     ("btoggle MIME buttons"        . mu4e-view-toggle-mime-buttons)
-     ("ntoggle URL numbers"         . mu4e-view-toggle-url-numbers)
-     ("mtoggle show all MIME parts" . mu4e-view-show-mime-parts)
-     ("Mtoggle emulate MIME"        . mu4e-view-toggle-emulate-mime))
+     ("mtoggle show all MIME parts" . mu4e-view-show-mime-parts))
 "Various options for \"massaging\" the message view. See `(gnus)
-Article Treatment' for more options."
+Article Treatment' for more options, e.g.
+`gnus-article-hide-pem'. This is on a best-effort basis - not all
+gnus toggles are supported in mu4e."
   :group 'mu4e-view
   :type '(alist :key-type string :value-type function))
-
-(defun mu4e-view-massage()
-  "Massage current message view as per `mu4e-view-massage-options'."
-  (interactive)
-  (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 (defvar-local mu4e--view-html-fallback nil
   "Non-nil if the view shows the shr-rendered html fallback.
 See `mu4e--view-render-html-fallback'.")
+
+(defun mu4e-view-massage()
+  "Massage current message view as per `mu4e-view-massage-options'."
+  (interactive)
+  (when (or mu4e--view-html-fallback (mu4e--view-html-displayed-p))
+    (mu4e-warn "Massage options not available for html display"))
+  (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 (defun mu4e--view-render-html-fallback ()
   "Re-render the current message as html, using `shr'.

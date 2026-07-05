@@ -49,13 +49,16 @@
      An old feature-request, finally implemented. (1.14.2)
 
    - In the message-view URLs/email addresses no longer automatically get an
-     indicator next to them; they appear only when you invoke
+     indicator next to them ([1],[2] etc.); these appear only when you invoke
      ~mu4e-view-go-to-url~ (~g~) or ~mu4e-view-save-url~ (~k~). However, you can set
-     ~mu4e-view-always-show-url-indicators~ to non-~nil~ to restore the old
-     behavior (1.14.3)
+     ~mu4e-view-always-show-url-indicators~ to non-~nil~ to restore the old behavior
+     (1.14.3)
 
    - In the message-view, now also generates HTML version for text-only
      messages, thus allowing for displaying them in external browser (1.14.3)
+
+   - Message "massaging" has been cleaned up an bit, with some non-working
+     options removed, and existing ones made to work better (1.14.3)
 
 *** scm
 

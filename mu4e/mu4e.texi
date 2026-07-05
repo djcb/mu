@@ -1367,12 +1367,12 @@ message body. Its major mode is @code{mu4e-view-mode}, which derives
 from @code{gnus-article-mode}.
 
 @menu
-* Overview: MSGV Overview. What is the Message View
-* Keybindings: MSGV Keybindings. Do things with your keyboard
-* Rich-text and images: MSGV Rich-text and images. Reading rich-text messages
-* Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts
-* Custom headers: MSGV Custom headers. Your very own headers
-* Actions: MSGV Actions. Defining and using actions
+* Overview: MSGV Overview. What is the Message View.
+* Keybindings: MSGV Keybindings. Do things with your keyboard.
+* Rich-text and images: MSGV Rich-text and images. Reading rich-text messages.
+* Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts.
+* Custom headers: MSGV Custom headers. Your very own headers.
+* Actions: MSGV Actions. Defining and using actions.
 * Detaching & reattaching: MSGV Detaching and reattaching. Multiple message views.
 * Mailing lists: MSGV Mailing lists. Subscribing and unsubscribing.
 @end menu
@@ -1500,6 +1500,7 @@ J            jump to MIME part by its number
 
 misc
 ----
+M            ``massage'' various display options
 z, Z         detach (or reattach) a message view to a headers buffer
 .            show the raw message view. 'q' takes you back.
 C-+,C--      increase / decrease the number of headers shown
@@ -1604,6 +1605,7 @@ well.
 Finally, for some message with big images it can be useful to enable buttons and
 full display, e.g. for saving inline images. For this you can try @kbd{M-x
 mu4e-view-show-mime-parts}. This can be a little slow.
+
 
 @node MSGV Attachments and MIME-parts
 @section Attachments and MIME-parts
