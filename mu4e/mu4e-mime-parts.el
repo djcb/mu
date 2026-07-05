@@ -553,6 +553,153 @@ the third MIME-part."
         (view-mode)))
     (display-buffer buf)))
 
+;;; Message as HTML
+
+(defconst mu4e--view-plain-text-html-template
+  (concat "<html><head><meta charset=\"utf-8\"/></head>"
+          "<body><pre style=\"white-space:pre-wrap\">%s"
+          "</pre></body></html>")
+  "HTML template for wrapping a plain-text message body.
+The %s is replaced by the HTML-escaped text.")
+
+(defun mu4e--view-mime-part (handles media-type)
+  "Find the first MIME part with MEDIA-TYPE in HANDLES.
+HANDLES is a MIME handle or handle tree, as produced by
+`mm-dissect-buffer'.
+
+Return the handle, or nil."
+  (cond
+   ((not (listp handles)) nil)
+   ;; leaf: check media type
+   ((bufferp (car handles))
+    (when (equal (mm-handle-media-type handles) media-type)
+      handles))
+   ;; composite: recurse through sub-handles
+   (t (seq-some (lambda (handle)
+                  (mu4e--view-mime-part handle media-type))
+                (cdr handles)))))
+
+(defun mu4e--view-cid-parts (handles)
+  "Collect all MIME parts in HANDLES that have a Content-ID.
+Return an alist of (CID . HANDLE) pairs."
+  (cond
+   ((not (listp handles)) nil)
+   ((bufferp (car handles))
+    (when-let* ((id (mm-handle-id handles)))
+      ;; strip the angle brackets from the content-id
+      (list (cons (replace-regexp-in-string
+                   (rx (or (seq bos "<") (seq ">" eos))) "" id)
+                  handles))))
+   (t (seq-mapcat #'mu4e--view-cid-parts (cdr handles)))))
+
+(defun mu4e--view-resolve-cids (html cid-parts)
+  "Replace \"cid:\" references in HTML with data:-URIs.
+CID-PARTS is an alist of (CID . HANDLE) pairs, as per
+`mu4e--view-cid-parts'. Return the updated HTML."
+  (dolist (part cid-parts html)
+    (let* ((handle (cdr part))
+           (data-uri (format "data:%s;base64,%s"
+                             (mm-handle-media-type handle)
+                             (base64-encode-string
+                              (mm-get-part handle) t))))
+      (setq html (replace-regexp-in-string
+                  (regexp-quote (concat "cid:" (car part)))
+                  data-uri html t t)))))
+
+(defun mu4e--view-html-escape (text)
+  "Escape TEXT for inclusion in HTML."
+  (seq-reduce (lambda (text pair)
+                (replace-regexp-in-string (car pair) (cdr pair) text t t))
+              '(("&" . "&amp;") ("<" . "&lt;") (">" . "&gt;"))
+              text))
+
+(defconst mu4e--view-url-regexp
+  (rx "http" (? "s") "://"
+      (* (any "-a-zA-Z0-9._~%#?&=/+:;@!$*(),'"))
+      (any "-a-zA-Z0-9_~%#&=/+@$'"))
+  "Regexp matching URLs in text.
+The final character class excludes punctuation, so that e.g. a
+full-stop after the URL is not included.")
+
+(defconst mu4e--view-email-regexp
+  (rx (any "a-zA-Z0-9") (* (any "-a-zA-Z0-9._%+"))
+      "@" (+ (any "-a-zA-Z0-9.")) "." (>= 2 alpha))
+  "Regexp matching e-mail addresses.")
+
+(defconst mu4e--view-linkable-regexp
+  (rx (or (regexp mu4e--view-url-regexp)
+          (regexp mu4e--view-email-regexp)))
+  "Regexp matching linkable things: URLs and e-mail addresses.")
+
+(defun mu4e--view-linkable-url (match)
+  "Return the URL for MATCH."
+  (if (string-match-p (rx bos (regexp mu4e--view-email-regexp) eos)
+                      match)
+      (concat "mailto:" match)
+    match))
+
+(defun mu4e--view-linkify-html (text)
+  "Turn URLs/e-mail addresses in escaped TEXT into HTML links."
+  (replace-regexp-in-string
+   mu4e--view-linkable-regexp
+   (lambda (match)
+     (format "<a href=\"%s\">%s</a>"
+             (mu4e--view-linkable-url match) match))
+   text t t))
+
+(defun mu4e--view-mime-part-string (handle)
+  "Return MIME part HANDLE as a decoded string."
+  (let* ((charset (mail-content-type-get (mm-handle-type handle) 'charset))
+         (coding (and charset (mm-charset-to-coding-system charset)))
+         (coding (if (memq coding '(nil ascii)) 'utf-8 coding)))
+    (decode-coding-string (mm-get-part handle) coding)))
+
+(defconst mu4e--view-html-headers-html-pre
+  (concat "<div style=\"font-family:sans-serif;padding-bottom:8px;"
+          "border-bottom:1px solid #ccc;margin-bottom:8px\">\n")
+  "HTML fragment that opens the message-headers block.")
+
+(defconst mu4e--view-html-headers-html-post
+  ;; the empty paragraph is invisible in external browsers but a nice empty line
+  ;; in shr.
+  "</div>\n<p style=\"margin:0\"></p>\n"
+  "HTML fragment that closes the message-headers block.")
+
+(defun mu4e--view-html-headers ()
+  "Create an HTML block for the message headers in the current buffer.
+The current buffer is expected to contain the raw message."
+  (concat
+   mu4e--view-html-headers-html-pre
+   (mapconcat
+    (lambda (field)
+      (if-let* ((val (message-field-value field)))
+          (format "<b>%s:</b> %s<br>\n" (capitalize field)
+                  (mu4e--view-html-escape val))
+        ""))
+    '("from" "to" "cc" "date" "subject") "")
+   mu4e--view-html-headers-html-post))
+
+(defun mu4e--view-html-prepend-headers (html headers)
+  "Insert the HEADERS block at the beginning of the body of HTML."
+  (let ((case-fold-search t))
+    (cond
+     ((string-match (rx "<body" (* (not (any ">"))) ">") html)
+      (replace-match (concat (match-string 0 html) headers) t t html))
+     ((string-match (rx "</head" (* (not (any ">"))) ">") html)
+      (replace-match (concat (match-string 0 html) headers) t t html))
+     (t (concat headers html)))))
+
+(defun mu4e--view-extract-html (handles)
+  "Extract an HTML body string from MIME HANDLES, or nil.
+Prefer text/html part; otherwise construct HTML from a
+text/plain part, if any."
+  (if-let* ((handle (mu4e--view-mime-part handles "text/html")))
+      (mu4e--view-mime-part-string handle)
+    (when-let* ((handle (mu4e--view-mime-part handles "text/plain")))
+      (format mu4e--view-plain-text-html-template
+              (mu4e--view-linkify-html
+               (mu4e--view-html-escape
+                (mu4e--view-mime-part-string handle)))))))
 
 (provide 'mu4e-mime-parts)
 ;;; mu4e-mime-parts.el ends here
