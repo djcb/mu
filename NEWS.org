@@ -19,7 +19,7 @@
    - ~mu4e-compose-reply-include-mime-types~ specifies the mime-types for message
      attachments that should be included in replies, with the default set to
      "text/x-patch" -- i.e., patches are included in replies, so you can comment
-     on them. Set to nil to disable. (1.14.0)
+     on them. Set to ~nil~ to disable. (1.14.0)
 
    - ~mu4e-compose-post-hook~ only runs once per message (buffer) (1.14.1)
 
@@ -46,7 +46,16 @@
      (1.14.2).
 
    - When replying to message with a region marked, cite only the marked region.
-     A very only feature-request, finally implemented.
+     An old feature-request, finally implemented. (1.14.2)
+
+   - In the message-view URLs/email addresses no longer automatically get an
+     indicator next to them; they appear only when you invoke
+     ~mu4e-view-go-to-url~ (~g~) or ~mu4e-view-save-url~ (~k~). However, you can set
+     ~mu4e-view-always-show-url-indicators~ to non-~nil~ to restore the old
+     behavior (1.14.3)
+
+   - In the message-view, now also generates HTML version for text-only
+     messages, thus allowing for displaying them in external browser (1.14.3)
 
 *** scm
 

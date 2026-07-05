@@ -1077,7 +1077,7 @@ marking
 -------
 d            mark for moving to the trash folder
 =            mark for removing trash flag ('untrash')
-DEL,D        mark for complete deletion
+DEL,D        mark for deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
 +,-          mark for flagging/unflagging
@@ -1461,7 +1461,7 @@ marking messages
 ----------------
 d            mark for moving to the trash folder
 =            mark for removing trash flag ('untrash')
-DEL,D        mark for complete deletion
+DEL,D        mark for deletion
 m            mark for moving to another maildir folder
 r            mark for refiling
 l            mark for labels
@@ -1490,9 +1490,8 @@ g            go to (visit) numbered URL (using `browse-url')
 C-u g visits multiple URLs
 f            fetch (download )the numbered URL.
 C-u f fetches multiple URLs
-k            save the numbered URL in the kill-ring.
 C-u k saves multiple URLs
-
+k            save the numbered URL in the kill-ring.
 e            extract (save) one or more attachments (asks for numbers)
 (or: <mouse-2> or S-RET with point on attachment)
 a            execute some custom action on the message
@@ -1517,13 +1516,17 @@ Some keybindings are available through minor modes:
 
 For the marking commands, please refer to @ref{Marking messages}.
 
+The @kbd{mu4e-view-go-to-url} (@kbd{g}) and @kbd{mu4e-view-save-url} (@kbd{k})
+allow you to respectively visit links (URLs or e-mail addresses), or save them
+to the kill-ring. When you invoke these commands, little indicators (numbers)
+appear next to the links, with which you can indicate the link to use.
+
 @node MSGV Rich-text and images
 @section Reading rich-text messages
 @cindex rich-text
 
-These days, many e-mail messages contain rich-text (typically, HTML);
-either as an alternative to a text-only version, or even as the only
-option.
+These days, many e-mail messages contain rich-text (typically, HTML); either as
+an alternative to a text-only version, or even as the only option.
 
 By default, mu4e tries to display the 'richest' option, which is the
 last MIME-part of the alternatives. You can customize this to prefer
@@ -1539,6 +1542,10 @@ your configuration (and see the docstring for
 
 These influence both display of message and what is used when citing them in a
 reply.
+
+You can toggle between the plain-text and HTML versions of a message using
+@kbd{mu4e-view-toggle-html}. For plain-text messages without an HTML-part, an
+HTML part is generated.
 
 When displaying rich-text messages inline, @code{mu4e} (through @code{gnus})
 uses the @code{shr} built-in HTML-renderer. If you're using a dark color
