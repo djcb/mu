@@ -31,6 +31,8 @@
 ;;; Code:
 (require 'mu4e-vars)
 (require 'mu4e-folders)
+(require 'mu4e-message)
+(require 'mu4e-contacts)
 (require 'gnus-art)
 (require 'crm)
 
@@ -665,18 +667,23 @@ full-stop after the URL is not included.")
   "</div>\n<p style=\"margin:0\"></p>\n"
   "HTML fragment that closes the message-headers block.")
 
-(defun mu4e--view-html-headers ()
-  "Create an HTML block for the message headers in the current buffer.
-The current buffer is expected to contain the raw message."
+(defun mu4e--view-html-headers (msg)
+  "Create an HTML block for the headers of message MSG."
   (concat
    mu4e--view-html-headers-html-pre
    (mapconcat
     (lambda (field)
-      (if-let* ((val (message-field-value field)))
-          (format "<b>%s:</b> %s<br>\n" (capitalize field)
+      (if-let* ((val (mu4e-message-field-raw msg field))
+                (val (pcase field
+                       ((or :from :to :cc)
+                        (mapconcat #'mu4e-contact-full val ", "))
+                       (:date (message-make-date val))
+                       (_ val))))
+          (format "<b>%s:</b> %s<br>\n"
+                  (capitalize (substring (symbol-name field) 1))
                   (mu4e--view-html-escape val))
         ""))
-    '("from" "to" "cc" "date" "subject") "")
+    '(:from :to :cc :date :subject) "")
    mu4e--view-html-headers-html-post))
 
 (defun mu4e--view-html-prepend-headers (html headers)

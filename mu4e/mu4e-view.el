@@ -62,7 +62,7 @@ Otherwise, don't move to the next message."
   :group 'mu4e-view)
 
 (defcustom mu4e-view-fields
-  '(:from :to  :cc :subject :flags :date
+  '(:from :to :cc :subject :flags :date
           :maildir :mailing-list :tags :labels)
   "Mu4e header fields to display in the message view buffer.
 
@@ -441,7 +441,7 @@ Prompting the user with PROMPT for the number."
 Prompting the user with PROMPT for the numbers.
 
 Default is to apply it to all URLs, [1..n], where n is the number
-of urls. You can type multiple values separated by space, e.g.  1
+of urls. You can type multiple values separated by space, e.g., 1
 3-6 8 will visit urls 1,3,4,5,6 and 8.
 
 Furthermore, there is a shortcut \"a\" which means all urls, but as
@@ -613,7 +613,7 @@ part."
     ;; just continue if some of the decoding fails.
     (ignore-errors (run-hooks 'gnus-article-decode-hook))
     (let ((handles (mm-dissect-buffer t t))
-          (headers (unless skip-headers (mu4e--view-html-headers))))
+          (headers (unless skip-headers (mu4e--view-html-headers msg))))
       (unwind-protect
           (when-let* ((html (mu4e--view-extract-html handles)))
             (when-let* ((cid-parts (mu4e--view-cid-parts handles)))
@@ -684,7 +684,7 @@ Uses the MIME handle alist populated by Gnus after rendering."
 
 (defun mu4e--view-render-buffer (msg)
   "Render current buffer with MSG using Gnus' article mode.
-The buffer must already contain the raw message.  This function
+The buffer must already contain the raw message. This function
 decodes and displays it, sets up the original-article-buffer, and
 activates URLs (in plain-text mode only)."
   (let* ((inhibit-read-only t)
@@ -799,8 +799,8 @@ Note that for some messages, this can trigger high CPU load."
   "Insert mu4e headers for MSG into the current buffer at point.
 RAW-HEADERS, when non-nil, is an alist of (FIELD . VALUE) strings
 for standard RFC headers (From, To, Cc, etc.) that should be
-rendered directly.  When nil, those fields are left for Gnus to
-render.  After inserting, highlight the headers."
+rendered directly. When nil, those fields are left for Gnus to
+render. After inserting, highlight the headers."
   (dolist (field mu4e-view-fields)
     (let ((fieldval (mu4e-message-field msg field)))
       (pcase field
@@ -1062,9 +1062,9 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "$" #'mu4e-show-log)
     (define-key map "H" #'mu4e-display-manual)
 
-    ;; Make 0..9 shortcuts for digit-argument.  Actually, none of the bound
+    ;; Make 0..9 shortcuts for digit-argument. Actually, none of the bound
     ;; functions seem to use a prefix arg but those bindings existed because we
-    ;; used to use `suppress-keymap'.  And possibly users added their own
+    ;; used to use `suppress-keymap'. And possibly users added their own
     ;; prefix arg consuming commands.
     (dotimes (i 10)
       (define-key map (kbd (format "%d" i)) #'digit-argument))
@@ -1192,9 +1192,14 @@ multipart/alternative part to toggle; toggle again (or use
 (defun mu4e-view-toggle-html ()
   "Toggle between the HTML and plain-text alternatives.
 Works for `multipart/alternative' messages by pressing the
-corresponding Gnus selector button in the buffer.  For other
-messages, toggle between the normal rendering and an
-shr-rendered html version of the message."
+corresponding Gnus selector button in the buffer. For other
+messages, toggle between the normal rendering and an shr-rendered
+html version of the message.
+
+If the message does not its own HTML version, a version is
+concocted from the the text-version. This version is similar to
+the version for external web-browsers, i.e., with a reduced,
+fixed set of message headers."
   (interactive)
   (save-excursion
     (let ((inhibit-read-only t))
