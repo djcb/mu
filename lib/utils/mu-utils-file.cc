@@ -190,7 +190,7 @@ Mu::read_from_stdin()
 	return Ok(std::string{
 			static_cast<const char*>(g_memory_output_stream_get_data(
 							 G_MEMORY_OUTPUT_STREAM(outmem))),
-			g_memory_output_stream_get_size(G_MEMORY_OUTPUT_STREAM(outmem))});
+			g_memory_output_stream_get_data_size(G_MEMORY_OUTPUT_STREAM(outmem))});
 }
 /* LCOV_EXCL_STOP*/
 
