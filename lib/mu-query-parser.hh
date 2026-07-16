@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -16,6 +16,9 @@
 ** Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 **
 */
+#ifndef MU_QUERY_PARSER_HH__
+#define MU_QUERY_PARSER_HH__
+
 #include <string>
 
 #include "mu-xapian-db.hh"
@@ -41,8 +44,6 @@ inline const auto	and_sym		= "and"_sym;
 inline const auto	or_sym		= "or"_sym;
 inline const auto	xor_sym		= "xor"_sym;
 inline const auto	not_sym		= "not"_sym;
-inline const auto	and_not_sym	= "and-not"_sym;
-
 
 /*
  * We take a query, then parse it into a human-readable s-expression and then
@@ -113,3 +114,5 @@ Result<Xapian::Query> make_xapian_query(const Store& store, const std::string& e
 
 MU_ENABLE_BITOPS(ParserFlags);
 } // namespace Mu
+
+#endif /*MU_QUERY_PARSER_HH__*/

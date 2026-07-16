@@ -33,13 +33,6 @@
 using namespace Mu;
 
 // Sexp extensions...
-static Sexp&
-prepend(Sexp& s, Sexp&& e)
-{
-	s.list().insert(s.list().begin(), std::move(e));
-	return s;
-}
-
 static Option<Sexp&>
 second(Sexp& s)
 {
@@ -71,8 +64,35 @@ looks_like_matcher(const Sexp& sexp)
 }
 
 struct ParseContext {
-	bool				expand;
-	std::vector<std::string>	warnings;
+	bool	expand{};
+	size_t	depth{}; /* current parenthesis-nesting depth */
+};
+
+/* parsing is best-effort; deeper nesting than this is ignored
+ * (this also caps the recursion depth) */
+constexpr size_t MaxDepth{100};
+
+/**
+ * A cursor over the flat token-list, so popping is O(1)
+ */
+struct TokenStream {
+	explicit TokenStream(Sexp& tokens): toks_{tokens.list()} {}
+
+	bool empty() const { return pos_ >= toks_.size(); }
+	Option<Sexp&> head() {
+		if (empty())
+			return Nothing;
+		else
+			return toks_[pos_];
+	}
+	bool head_symbolp(const Sexp::Symbol& sym) const {
+		return pos_ < toks_.size() && toks_[pos_].symbolp(sym);
+	}
+	void pop_front() { ++pos_; }
+
+private:
+	Sexp::List&	toks_;
+	size_t		pos_{};
 };
 
 /**
@@ -118,21 +138,12 @@ phrasify(const Field& field, const Sexp& val)
  * matcher
  */
 
-static Sexp query(Sexp& tokens, ParseContext& ctx);
+static Sexp query(TokenStream& tokens, ParseContext& ctx);
 
 
 static Sexp
-matcher(Sexp& tokens, ParseContext& ctx)
+finalize_matcher(Sexp&& val, ParseContext& ctx)
 {
-	if (tokens.empty())
-		return {};
-
-	auto val{*tokens.head()};
-	tokens.pop_front();
-	/* special case: if we find some non-matcher type here, we need to second-guess the token */
-	if (!looks_like_matcher(val))
-		val = Sexp{placeholder_sym, val.symbol().name};
-
 	const auto fieldsym{val.front().symbol()};
 
 	// Note the _expand_ case is what we use when processing the query 'for real';
@@ -145,12 +156,10 @@ matcher(Sexp& tokens, ParseContext& ctx)
 
 	if (ctx.expand) { /* should we expand meta-fields? */
 		auto fields = fields_from_name(fieldsym == placeholder_sym ? "" : fieldsym.name);
-		if (!fields.empty()) {
+		if (!fields.empty() && second(val)) {
 			Sexp vals{};
 			vals.add(or_sym);
 			for (auto&& field: fields) {
-				if (!second(val))
-					continue;
 				if (auto&& phrase{phrasify(field, *second(val))}; phrase)
 					vals.add(std::move(*phrase));
 				else
@@ -163,23 +172,49 @@ matcher(Sexp& tokens, ParseContext& ctx)
 	}
 
 	if (auto&& field{field_from_name(fieldsym.name)}; field) {
-		if (auto&& phrase(phrasify(*field, *second(val))); phrase)
-			val = std::move(*phrase);
+		if (auto&& v{second(val)}; v)
+			if (auto&& phrase{phrasify(*field, *v)}; phrase)
+				val = std::move(*phrase);
 	}
 
-	return val;
+	return std::move(val);
 }
 
 static Sexp
-unit(Sexp& tokens, ParseContext& ctx)
+matcher(TokenStream& tokens, ParseContext& ctx)
+{
+	if (tokens.empty())
+		return {};
+
+	auto val{*tokens.head()};
+	tokens.pop_front();
+	/* special case: if we find some non-matcher type here, we need to second-guess the token */
+	if (!looks_like_matcher(val))
+		val = Sexp{placeholder_sym, val.symbol().name};
+
+	return finalize_matcher(std::move(val), ctx);
+}
+
+static Sexp
+unit(TokenStream& tokens, ParseContext& ctx)
 {
 	if (tokens.head_symbolp(not_sym)) { /* NOT */
-		tokens.pop_front();
+		/* handle (chains of) NOTs iteratively; parity decides */
+		bool neg{};
+		while (tokens.head_symbolp(not_sym)) {
+			tokens.pop_front();
+			neg = !neg;
+		}
 		Sexp sub{unit(tokens, ctx)};
 
-		/* special case: interpret "not" as a matcher instead; */
-		if (sub.empty())
-			return matcher(prepend(tokens, Sexp{placeholder_sym, not_sym.name}), ctx);
+		/* special case: interpret a trailing "not" as a matcher instead */
+		if (sub.empty()) {
+			sub = finalize_matcher(Sexp{placeholder_sym, not_sym.name}, ctx);
+			neg = !neg;
+		}
+
+		if (!neg)
+			return sub;
 
 		/* we try to optimize: double negations are removed */
 		if (sub.head_symbolp(not_sym))
@@ -189,12 +224,13 @@ unit(Sexp& tokens, ParseContext& ctx)
 
 	} else if (tokens.head_symbolp(open_sym)) { /* ( sub) */
 		tokens.pop_front();
+		if (ctx.depth >= MaxDepth) /* nested too deeply; bail out */
+			return {};
+		++ctx.depth;
 		Sexp sub{query(tokens, ctx)};
+		--ctx.depth;
 		if (tokens.head_symbolp(close_sym))
 			tokens.pop_front();
-		else {
-			//g_warning("expected <)>");
-		}
 		return sub;
 	}
 
@@ -204,7 +240,7 @@ unit(Sexp& tokens, ParseContext& ctx)
 
 
 static Sexp
-factor(Sexp& tokens, ParseContext& ctx)
+factor(TokenStream& tokens, ParseContext& ctx)
 {
 	Sexp un = unit(tokens, ctx);
 
@@ -245,44 +281,30 @@ factor(Sexp& tokens, ParseContext& ctx)
 }
 
 static Sexp
-query(Sexp& tokens, ParseContext& ctx)
+query(TokenStream& tokens, ParseContext& ctx)
 {
-	/* note: we flatten (or (or ( or ...)) etc. here;
-	 * for optimization (since Xapian likes flat trees) */
+	/* process a left-associative chain of factors, separated by
+	 * <OR>/<XOR>. Chains of the same operator are flattened, i.e.
+	 * (or (or a b) c) => (or a b c), since Xapian likes flat trees */
 
 	Sexp fact = factor(tokens, ctx);
-	Sexp or_factors, xor_factors;
 	while (true) {
-		auto factors = std::invoke([&]()->Option<Sexp&> {
-
-				if (tokens.head_symbolp(or_sym))
-					return or_factors;
-				else if (tokens.head_symbolp(xor_sym))
-					return xor_factors;
-				else
-					return Nothing;
-			});
-
-		if (!factors)
+		const Sexp::Symbol* opsym{};
+		if (tokens.head_symbolp(or_sym))
+			opsym = &or_sym;
+		else if (tokens.head_symbolp(xor_sym))
+			opsym = &xor_sym;
+		else
 			break;
 
 		tokens.pop_front();
-		factors->add(factor(tokens, ctx));
-	}
+		Sexp rhs = factor(tokens, ctx);
+		if (rhs.empty())
+			break; /* trailing op; ignore */
 
-	// a bit clumsy...
-
-	if (!or_factors.empty() && xor_factors.empty()) {
-		fact = Sexp{or_sym, std::move(fact)};
-		fact.add_list(std::move(or_factors));
-	} else if (or_factors.empty() && !xor_factors.empty()) {
-		fact = Sexp{xor_sym, std::move(fact)};
-		fact.add_list(std::move(xor_factors));
-	} else if (!or_factors.empty() && !xor_factors.empty()) {
-		fact = Sexp{or_sym, std::move(fact)};
-		fact.add_list(std::move(or_factors));
-		prepend(xor_factors, xor_sym);
-		fact.add(std::move(xor_factors));
+		if (!fact.head_symbolp(*opsym))
+			fact = Sexp{*opsym, std::move(fact)};
+		fact.add(std::move(rhs));
 	}
 
 	return fact;
@@ -294,10 +316,12 @@ Mu::parse_query(const std::string& expr, bool expand)
 	ParseContext context;
 	context.expand = expand;
 
-	if (auto&& items = process_query(expr); !items.listp())
+	auto items = process_query(expr);
+	if (!items.listp())
 		throw std::runtime_error("tokens must be a list-sexp");
-	else
-		return query(items, context);
+
+	TokenStream tokens{items};
+	return query(tokens, context);
 }
 
 
@@ -352,10 +376,15 @@ test_parser_basic()
 		TestCase{R"(a and b and c)", R"((and (_ "a") (_ "b") (_ "c")))"},
 		// a or b
 		TestCase{R"(a or b)", R"((or (_ "a") (_ "b")))"},
+		// or-chains are flattened
+		TestCase{R"(a or b or c)", R"((or (_ "a") (_ "b") (_ "c")))"},
 		// a or b and c
 		TestCase{R"(a or b and c)", R"((or (_ "a") (and (_ "b") (_ "c"))))"},
 		// a and b or c
 		TestCase{R"(a and b or c)", R"((or (and (_ "a") (_ "b")) (_ "c")))"},
+		// mixed or/xor associate to the left
+		TestCase{R"(a or b xor c)", R"((xor (or (_ "a") (_ "b")) (_ "c")))"},
+		TestCase{R"(a xor b or c)", R"((or (xor (_ "a") (_ "b")) (_ "c")))"},
 		// not a
 		TestCase{R"(not a)", R"((not (_ "a")))"},
 		// lone not
@@ -387,12 +416,34 @@ test_parser_recover()
 		TestCase{R"(a and ()", R"((_ "a"))"},
 		// missing end )
 		TestCase{R"(a and (b)", R"((and (_ "a") (_ "b")))"},
+		// trailing operator is dropped
+		TestCase{R"(a or)", R"((_ "a"))"},
+		// quoted operators are matchers, not operators
+		TestCase{R"(foo "and" bar)", R"((and (_ "foo") (_ "and") (_ "bar")))"},
 	};
 
 	for (auto&& test: cases) {
 		auto&& sexp{parse_query(test.first)};
 		assert_equal(sexp.to_string(), test.second);
 	}
+}
+
+static void
+test_parser_pathological()
+{
+	// pathological queries parse (possibly partially) without
+	// crashes or quadratic slow-down.
+
+	std::string parens(10000, '(');
+	parens += "a";
+	parens.append(10000, ')');
+	g_assert_true(parse_query(parens).listp());
+
+	std::string nots;
+	for (auto i = 0; i != 10000; ++i)
+		nots += "not ";
+	nots += "a"; // even number of nots
+	assert_equal(parse_query(nots).to_string(), R"((_ "a"))");
 }
 
 
@@ -475,6 +526,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/query-parser/basic", test_parser_basic);
 	g_test_add_func("/query-parser/recover", test_parser_recover);
+	g_test_add_func("/query-parser/pathological", test_parser_pathological);
 	g_test_add_func("/query-parser/fields", test_parser_fields);
 	g_test_add_func("/query-parser/range", test_parser_range);
 	g_test_add_func("/query-parser/expand", test_parser_expand);

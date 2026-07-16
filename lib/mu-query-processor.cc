@@ -54,7 +54,7 @@ using namespace Mu;
  */
 struct Element {
 	enum struct Bracket { Open, Close} ;
-	enum struct Op      { And, Or, Xor, Not, AndNot };
+	enum struct Op      { And, Or, Xor, Not };
 
 	template<typename ValueType>
 	struct FieldValue {
@@ -95,7 +95,7 @@ struct Element {
 
 	Element(Bracket b): value{b} {}
 	Element(Op op): value{op} {}
-	Element(const std::string& val): value{val} {}
+	Element(const std::string& val, bool q=false): value{val}, quoted{q} {}
 
 	template<typename T>
 	Option<T&> get_opt()  {
@@ -133,8 +133,6 @@ struct Element {
 					return xor_sym;
 				case Op::Not:
 					return not_sym;
-				case Op::AndNot:
-					return and_not_sym;
 				default:
 					throw std::logic_error("invalid op type");
 				}
@@ -155,6 +153,8 @@ struct Element {
 	}
 
 	ValueType value;
+	bool	  quoted{}; /**< the value was (at least partially) quoted;
+			     * quoted values are not promoted to Ops */
 };
 
 using Elements = std::vector<Element>;
@@ -162,60 +162,24 @@ using Elements = std::vector<Element>;
 
 
 /**
- * Remove first character from string and return it.
+ * Get the next element from the string, advancing pos
  *
- * @param[in,out] str a string
- * @param[in,out] pos position in _original_ string
+ * @param str the query string
+ * @param[in,out] pos position where to start scanning
  *
- * @return a char or 0 if there is none.
- */
-static char
-read_char(std::string& str, size_t& pos)
-{
-	if (str.empty())
-		return {};
-
-	auto kar{str.at(0)};
-	str.erase(0, 1);
-	++pos;
-
-	return kar;
-}
-
-/**
- * Restore kar at the beginning of the string
- *
- * @param[in,out] str a string
- * @param[in,out] pos position in _original_ string
- * @param kar a character
- */
-static void
-unread_char(std::string& str, size_t& pos, char kar)
-{
-	str = kar + str;
-	--pos;
-}
-
-
-/**
- * Remove the next element from the string and return it
- *
- * @param[in,out] str a string
- * @param[in,out] pos position in _original_ string *
- *
- * @return an Element or Nothing
+ * @return an Element or Nothing when the input is exhausted
  */
 static Option<Element>
-next_element(std::string& str, size_t& pos)
+next_element(std::string_view str, size_t& pos)
 {
-	bool        quoted{}, escaped{};
+	bool        quoted{}, escaped{}, had_quote{};
 	std::string value{};
 
 	auto is_separator = [](char c) {  return c == ' '|| c == '(' || c == ')'; };
 
-	while (!str.empty()) {
+	while (pos != str.size()) {
 
-		auto kar = read_char(str, pos);
+		auto kar = str[pos++];
 
 		if (kar == '\\') {
 			escaped = !escaped;
@@ -224,8 +188,9 @@ next_element(std::string& str, size_t& pos)
 		}
 
 		if (kar == '"' && !escaped) {
-			if (!escaped && quoted)
-				return Element{value};
+			had_quote = true;
+			if (quoted)
+				return Element{value, had_quote};
 			else {
 				quoted = true;
 				continue;
@@ -234,20 +199,17 @@ next_element(std::string& str, size_t& pos)
 
 		if (!quoted && !escaped && is_separator(kar)) {
 			if (!value.empty()) {
-				unread_char(str, pos, kar);
-				return Element{value};
+				--pos; // leave the separator for next time
+				return Element{value, had_quote};
 			}
-
-			if (quoted || kar == ' ')
-				continue;
 
 			switch (kar) {
 			case '(':
 				return Element{Element::Bracket::Open};
 			case ')':
 				return Element{Element::Bracket::Close};
-			default:
-				break;
+			default: // some space
+				continue;
 			}
 		}
 
@@ -258,7 +220,7 @@ next_element(std::string& str, size_t& pos)
 	if (value.empty())
 		return Nothing;
 	else
-		return Element{value};
+		return Element{value, had_quote};
 }
 
 
@@ -266,7 +228,7 @@ static Option<Element>
 opify(Element&& element)
 {
 	auto&& str{element.get_opt<std::string>()};
-	if (!str)
+	if (!str || element.quoted) // quoted values are not operators
 		return element;
 
 	static const std::unordered_map<std::string, Element::Op> ops = {
@@ -274,7 +236,6 @@ opify(Element&& element)
 		{ "or",  Element::Op::Or},
 		{ "xor", Element::Op::Xor },
 		{ "not", Element::Op::Not },
-		// AndNot only appears during parsing.
 	};
 
 	if (auto&& it = ops.find(utf8_flatten(*str)); it != ops.end())
@@ -296,7 +257,9 @@ basify(Element&& element)
 		return element;
 	}
 
-	const auto fname{str->substr(0, pos)};
+	auto fname{str->substr(0, pos)};
+	for (auto& c: fname) // field names are case-insensitive
+		c = to_ascii_lower(c);
 	if (auto&& field{field_from_name(fname)}; field) {
 		auto val{str->substr(pos + 1)};
 		if (field == Field::Id::Flags) {
@@ -422,15 +385,15 @@ static Elements
 process(const std::string& expr)
 {
 	Elements elements{};
-	size_t offset{0};
+	size_t pos{0};
 
 	/* all control chars become SPC */
 	std::string str{expr};
 	for (auto& c: str)
 		c = is_ascii_cntrl(c) ? ' ' : c;
 
-	while(!str.empty()) {
-		auto&& element = next_element(str, offset)
+	while (pos != str.size()) {
+		auto&& element = next_element(str, pos)
 			.and_then(opify)
 			.and_then(basify)
 			.and_then(regexpify)
@@ -495,7 +458,11 @@ test_processor()
 		// basics
 		TestCase{R"(hello world)", R"(((_ "hello") (_ "world")))"},
 		TestCase{R"(maildir:/"hello world")", R"(((maildir "/hello world")))"},
-		TestCase{R"(flag:deleted)", R"(((_ "flag:deleted")))"} // non-existing flags
+		TestCase{R"(flag:deleted)", R"(((_ "flag:deleted")))"}, // non-existing flags
+		// quoted operators are not operators
+		TestCase{R"(foo "and" bar)", R"(((_ "foo") (_ "and") (_ "bar")))"},
+		// field-names are case-insensitive
+		TestCase{R"(Subject:foo)", R"(((subject "foo")))"}
 	};
 
 	for (auto&& test: cases) {

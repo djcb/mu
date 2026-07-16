@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -152,6 +152,8 @@ range(const Field& field, Sexp&& s)
 		// iso -> time_t
 		r0 = iso_to_lexnum(*r0);
 		r1 = iso_to_lexnum(*r1);
+		if (!r0 || !r1)
+			return Err(Error::Code::InvalidArgument, "invalid date range");
 	} else if (field == Field::Id::Size) {
 		if (!r0->empty())
 			r0 = to_lexnum(::atoll(r0->c_str()));
@@ -213,7 +215,6 @@ parse_logop(const Store& store, Xapian::Query::op op, Sexp&& args, Mu::ParserFla
 
 	switch(op) {
 	case Xapian::Query::OP_AND_NOT:
-		// TODO: optimize AND_NOT
 		if (qs.size() != 1)
 			return Err(Error::Code::InvalidArgument,
 				   "expected single argument for NOT");
@@ -370,10 +371,14 @@ xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
 Result<Xapian::Query>
 Mu::make_xapian_query(const Store& store, const std::string& expr, Mu::ParserFlags flags) noexcept
 {
-	if (any_of(flags & Mu::ParserFlags::XapianParser))
-		return xapian_query_classic(expr, flags);
+	// note: the try-wrapper, since Xapian may throw (e.g. when the
+	// database was modified while we're querying)
+	return xapian_try_result([&]()->Result<Xapian::Query> {
+		if (any_of(flags & Mu::ParserFlags::XapianParser))
+			return Ok(xapian_query_classic(expr, flags));
 
-	return parse(store, Mu::parse_query(expr,  true/*expand*/), flags);
+		return parse(store, Mu::parse_query(expr,  true/*expand*/), flags);
+	});
 }
 
 
