@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -19,12 +19,12 @@
 
 #include "mu-utils.hh"
 #include "mu-option.hh"
-#include "mu-regex.hh"
 
 #include <string>
 #include <array>
 #include <string_view>
 #include <algorithm>
+#include <charconv>
 
 using namespace Mu;
 
@@ -35,7 +35,7 @@ starts_with(std::string_view haystack, std::string_view needle)
 	if (needle.size() > haystack.size())
 		return false;
 
-	for (auto&& c = 0U; c != needle.size(); ++c)
+	for (size_t c{}; c != needle.size(); ++c)
 		if (to_ascii_lower(haystack[c]) != to_ascii_lower(needle[c]))
 			return false;
 
@@ -64,7 +64,9 @@ public:
 	 *
 	 * @param html some html to parse
 	 */
-	Context(const std::string& html): html_{html}, pos_{} {}
+	Context(const std::string& html): html_{html}, pos_{} {
+		raw_scraped_.reserve(html.size()/2);
+	}
 
 	/**
 	 * Are we done with the html blob, i.e, has it been fully scraped?
@@ -188,7 +190,7 @@ private:
 	 *
 	 * @return cleaned up string.
 	 */
-	std::string cleanup(const std::string unclean) const {
+	std::string cleanup(const std::string& unclean) const {
 		// reduce whitespace and avoid too long lines;
 		// makes it easier to debug.
 		bool was_wspace{};
@@ -196,8 +198,7 @@ private:
 		std::string clean;
 		clean.reserve(unclean.size()/2);
 		for(auto&& c: unclean) {
-			auto wspace = c == ' ' || c == '\t' || c == '\n';
-			if (wspace) {
+			if (is_ascii_space(c)) {
 				was_wspace = true;
 				continue;
 			}
@@ -233,12 +234,16 @@ format_as(const Context& ctx)
 }
 
 
+// skip until (and over) the closing quote; pos must be just after the
+// opening quote.
 static void
 skip_quoted(Context& ctx, std::string_view quote)
 {
 	while(!ctx.done()) {
-		if (ctx.looking_at(quote)) // closing quote
+		if (ctx.looking_at(quote)) { // closing quote
+			ctx.advance();
 			return;
+		}
 		ctx.advance();
 	}
 }
@@ -250,13 +255,16 @@ skip_script_style(Context& ctx, std::string_view tag)
 {
 	// <script> or <style> must be ignored
 
-	bool escaped{};
 	bool quoted{}, squoted{};
 	bool inl_comment{};
 	bool endl_comment{};
 
-	auto end_tag_str = mu_format("</{}>", tag);
-	auto end_tag = std::string_view(end_tag_str.data());
+	// '//'-comments exist in javascript but not in css, where '//' may
+	// occur in urls.
+	const auto is_script{matches(tag, "script")};
+
+	const auto end_tag_str = mu_format("</{}>", tag);
+	const std::string_view end_tag{end_tag_str};
 
 	while (!ctx.done()) {
 
@@ -270,46 +278,54 @@ skip_script_style(Context& ctx, std::string_view tag)
 		}
 
 		if (endl_comment) {
-			endl_comment = ctx.looking_at("\n");
+			if (ctx.looking_at("\n"))
+				endl_comment = false;
 			ctx.advance();
 			continue;
 		}
 
-		if (ctx.looking_at("\\")) {
-			escaped = !escaped;
+		if (!quoted && !squoted) {
+
+			if (ctx.looking_at(end_tag)) {
+				ctx.advance(end_tag.size());
+				break; /* we're done, finally! */
+			}
+
+			if (ctx.looking_at("/*")) {
+				inl_comment = true;
+				ctx.advance(2);
+				continue;
+			}
+
+			if (is_script && ctx.looking_at("//")) {
+				endl_comment = true;
+				ctx.advance(2);
+				continue;
+			}
+		}
+
+		if ((quoted || squoted) && ctx.looking_at("\\")) {
+			// skip the escaped character as well
 			ctx.advance();
+			if (!ctx.done())
+				ctx.advance();
 			continue;
 		}
 
-		if (ctx.looking_at("\"") && !escaped && squoted)  {
+		if (ctx.looking_at("\"") && !squoted) {
 			quoted = !quoted;
 			ctx.advance();
 			continue;
 		}
 
-		if (ctx.looking_at("'") && !escaped && !quoted) {
+		if (ctx.looking_at("'") && !quoted) {
 			squoted = !squoted;
 			ctx.advance();
 			continue;
 		}
 
-
-		if (ctx.looking_at("/*")) {
-			inl_comment = true;
-			ctx.advance(2);
-			continue;
-		}
-
-		if (ctx.looking_at("//")) {
-			endl_comment = true;
-			ctx.advance(2);
-			continue;
-		}
-
-		if (!quoted && !squoted && ctx.looking_at(end_tag)) {
-			ctx.advance(end_tag.size());
-			break; /* we're done, finally! */
-		}
+		if (ctx.looking_at("\n")) // strings don't span lines; this guards
+			quoted = squoted = false; // against unterminated quotes
 
 		ctx.advance();
 	}
@@ -345,7 +361,7 @@ static bool // do we need to skip the element completely?
 is_skip_element(std::string_view tagname)
 {
 	constexpr auto skip_tags = std::to_array<const char*>({
-		"script", "style", "head", "meta"
+		"head", "title"
 	});
 	return seq_some(skip_tags, [&](auto&& t){return matches(tagname, t);});
 }
@@ -363,11 +379,24 @@ end_tag(Context& ctx)
 	}
 }
 
-// skip the whole element
+// skip the whole element, until (and over) its matching end-tag. As a guard
+// against a missing end-tag, stop before an opening <body>, so we cannot
+// swallow the message text itself.
 static void
 skip_element(Context& ctx, std::string_view tagname)
 {
-	// do something special?
+	const auto end_tag_str = mu_format("</{}>", tagname);
+	const std::string_view end_tag{end_tag_str};
+
+	while (!ctx.done()) {
+		if (ctx.looking_at(end_tag)) {
+			ctx.advance(end_tag.size());
+			return;
+		}
+		if (ctx.looking_at("<body"))
+			return; // leave it to tag()
+		ctx.advance();
+	}
 }
 
 
@@ -391,21 +420,30 @@ tag(Context& ctx)
 	}
 
 	auto tagname = ctx.eat_head_word();
-	if (tagname == "script" ||tagname == "style") {
+	if (matches(tagname, "script") || matches(tagname, "style")) {
 		skip_script_style(ctx, tagname);
+		ctx.raw_scraped() += ' ';
+		return;
+	} else if (is_skip_element(tagname)) {
+		skip_element(ctx, tagname);
+		ctx.raw_scraped() += ' ';
 		return;
 	}
-	else if (is_skip_element(tagname))
-		skip_element(ctx, tagname);
 
 	const auto needs_sepa = needs_separator(tagname);
 	while (!ctx.done()) {
 
-		if (ctx.looking_at("\""))
+		if (ctx.looking_at("\"")) {
+			ctx.advance();
 			skip_quoted(ctx, "\"");
+			continue;
+		}
 
-		if (ctx.looking_at("'"))
+		if (ctx.looking_at("'")) {
+			ctx.advance();
 			skip_quoted(ctx, "'");
+			continue;
+		}
 
 		if (ctx.looking_at(">")) {
 			ctx.advance();
@@ -417,19 +455,21 @@ tag(Context& ctx)
 	}
 }
 
-
+// handle an html-entity; pos must be just after the '&'. If it does not
+// look like an entity, keep the '&' as literal text.
 static void
 html_escape_char(Context& ctx)
 {
-	// we only care about a few accented chars, and add them unaccented, lowercase, since that's
-	// we do for indexing anyway.
-	constexpr auto escs = std::to_array<const char*>({
+	// accented characters are added unaccented, lowercase, since that's
+	// what we do for indexing anyway; this handles the common
+	// "<base-char><accent-name>" entities, e.g. &aacute; and &Ocirc;
+	constexpr auto accents = std::to_array<const char*>({
+		"acute",
 		"breve",
 		"caron",
 		"circ",
-		"cute",
 		"grave",
-		"horn"/*thorn*/,
+		"horn",
 		"macr",
 		"slash",
 		"strok",
@@ -437,27 +477,78 @@ html_escape_char(Context& ctx)
 		"uml",
 	});
 
-	auto unescape=[escs](std::string_view esc)->char {
-		if (esc.empty())
-			return ' ';
-		auto first{to_ascii_lower(esc.at(0))};
-		auto rest=esc.substr(1);
-		if (seq_some(escs, [&](auto&& e){return starts_with(rest, e);}))
-			return first;
-		else
-			return ' ';
+	struct Named { std::string_view name; std::string_view repl; };
+	constexpr auto named = std::to_array<Named>({
+		{"amp",	  "&"},
+		{"apos",  "'"},
+		{"gt",	  ">"},
+		{"ldquo", "\""},
+		{"lsquo", "'"},
+		{"lt",	  "<"},
+		{"mdash", "-"},
+		{"nbsp",  " "},
+		{"ndash", "-"},
+		{"quot",  "\""},
+		{"rdquo", "\""},
+		{"rsquo", "'"},
+	});
+
+	const auto unescape=[&](std::string_view esc)->std::string {
+
+		if (esc.front() == '#') { // numeric entity, e.g. &#233; or &#xe9;
+			auto num{esc.substr(1)};
+			int base{10};
+			if (!num.empty() && to_ascii_lower(num.front()) == 'x') {
+				num = num.substr(1);
+				base = 16;
+			}
+			gunichar uc{};
+			const auto [ptr, ec] = std::from_chars(
+				num.data(), num.data() + num.size(), uc, base);
+			if (ec == std::errc{} && ptr == num.data() + num.size() &&
+			    uc >= 0x20 && g_unichar_validate(uc)) {
+				char buf[6];
+				return {buf, static_cast<size_t>(
+						g_unichar_to_utf8(uc, buf))};
+			}
+			return " ";
+		}
+
+		for (auto&& n: named)
+			if (matches(esc, n.name))
+				return std::string{n.repl};
+
+		if (seq_some(accents, [&](auto&& a){
+			return starts_with(esc.substr(1), a);}))
+			return std::string(1, to_ascii_lower(esc.front()));
+
+		return " ";
 	};
 
-	size_t start_pos{ctx.position()};
-	while (!ctx.done()) {
-		if (ctx.looking_at(";")) {
-			auto esc = ctx.substr(start_pos, ctx.position() - start_pos);
-			ctx.raw_scraped() += unescape(esc);
-			ctx.advance();
-			return;
+	// find the terminating ';'; entities are short and consist of
+	// alphanumerics or '#'; anything else is a bare '&'.
+	constexpr size_t max_entity_len{10};
+	const auto start_pos{ctx.position()};
+	Option<std::string_view> entity;
+	for (size_t len{}; len <= max_entity_len &&
+		     start_pos + len < ctx.size(); ++len) {
+		const auto c{ctx.html()[start_pos + len]};
+		if (c == ';') {
+			if (len != 0)
+				entity = ctx.substr(start_pos, len);
+			break;
 		}
-		ctx.advance();
+		if (!is_ascii_alnum(c) && c != '#')
+			break;
 	}
+
+	if (!entity) {
+		ctx.raw_scraped() += '&';
+		return;
+	}
+
+	ctx.raw_scraped() += unescape(*entity);
+	ctx.advance(entity->size() + 1); // the entity and its ';'
 }
 
 
@@ -490,17 +581,13 @@ text(Context& ctx)
 	ctx.raw_scraped() += ctx.substr(start_pos, ctx.size() - start_pos);
 }
 
-static Context *CTX{};
-
 std::string
 Mu::html_to_text(const std::string& html)
 {
 	Context ctx{html};
-	CTX = &ctx;
 
 	text(ctx);
 
-	CTX = {};
 	return ctx.scraped();
 }
 
@@ -508,14 +595,14 @@ Mu::html_to_text(const std::string& html)
 #include "mu-test-utils.hh"
 
 static void
-test_1()
+test_basics()
 {
 	static std::vector<std::pair<std::string, std::string>>
 		tests = {
 			{ "<!-- Hello -->A",  "A"   },
 			{ "A<!-- Test -->B", "A B"  },
 			{ "A<i>a</i><b>p</b>", "Aap"},
-			{ "N&ocute;&Ocirc;t", "Noot"},
+			{ "N&oacute;&Ocirc;t", "Noot"},
 			{
 				"foo<!-- bar --><i>c</i>uu<bla>x</bla>"
 				"<!--hello -->world<!--",
@@ -528,12 +615,15 @@ test_1()
 }
 
 static void
-test_2()
+test_quoted()
 {
 	static std::vector<std::pair<std::string, std::string>>
 		tests = {
 			{ R"(<i>hello, <b bar="/b">world!</b>)",
 			  "hello, world!"},
+			// '>' inside a quoted attribute value
+			{ R"(<a href="http://example.com" title="x > y">link</a> text)",
+			  "link text"},
 		};
 
 	for (auto&& test: tests)
@@ -542,7 +632,7 @@ test_2()
 
 
 static void
-test_3()
+test_script_style()
 {
 	static std::vector<std::pair<std::string, std::string>>
 		tests = {
@@ -552,20 +642,77 @@ test_3()
 				}
 			    </script>world!)",
 			  "hello, world!"},
+			// tags are case-insensitive
+			{ "A<SCRIPT>var x = \"hello world\";</SCRIPT>B",
+			  "A B"},
+			// '//'-comment ending in the same line as the end-tag
+			{ "A<script>// it's a comment\nvar x = 1;</script>B",
+			  "A B"},
+			// end-tag inside a string
+			{ "A<script>var s = \"</script>\"; var t = 1;</script>B",
+			  "A B"},
+			{ "A<style>p::before { content: '</style>'; }</style>B",
+			  "A B"},
+			// '//' in css is not a comment
+			{ "A<style>p { background: url(//cdn.example.com/i.png) }</style>B",
+			  "A B"},
 		};
 
 	for (auto&& test: tests)
 		assert_equal(html_to_text(test.first), test.second);
 }
 
+static void
+test_entities() // entities
+{
+	static std::vector<std::pair<std::string, std::string>>
+		tests = {
+			// bare '&' is not an entity; keep the text
+			{ "Tom & Jerry; forever", "Tom & Jerry; forever"},
+			{ "AT&amp;T &lt;3", "AT&T <3"},
+			// accents are dropped
+			{ "p&aacute;gina", "pagina"},
+			// numeric entities, decimal and hex
+			{ "don&#39;t don&#x2019;t", "don't don’t"},
+			{ "caf&#233;", "café"},
+			// invalid numeric entities become a space
+			{ "A&#xfffffff;B&#;C", "A B C"},
+		};
+
+	for (auto&& test: tests)
+		assert_equal(html_to_text(test.first), test.second);
+}
+
+static void
+test_skipped() // skipped elements
+{
+	static std::vector<std::pair<std::string, std::string>>
+		tests = {
+			{ "<html><head><title>Title</title>"
+			  "<meta charset=\"utf-8\"></head>"
+			  "<body>Hello</body></html>",
+			  "Hello"},
+			// missing </head>: don't swallow the body
+			{ "<html><head><meta charset=\"utf-8\">"
+			  "<body>Hello</body></html>",
+			  "Hello"},
+		};
+
+	for (auto&& test: tests)
+		assert_equal(html_to_text(test.first), test.second);
+}
+
+
 int
 main(int argc, char* argv[])
 {
 	mu_test_init(&argc, &argv);
 
-	g_test_add_func("/html-to-text/test-1", test_1);
-	g_test_add_func("/html-to-text/test-2", test_2);
-	g_test_add_func("/html-to-text/test-3", test_3);
+	g_test_add_func("/html-to-text/test-basics", test_basics);
+	g_test_add_func("/html-to-text/test-quoted", test_quoted);
+	g_test_add_func("/html-to-text/test-script-style", test_script_style);
+	g_test_add_func("/html-to-text/test-entities", test_entities);
+	g_test_add_func("/html-to-text/test-skipped", test_skipped);
 
 	return g_test_run();
 }
