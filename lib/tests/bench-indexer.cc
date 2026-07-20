@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,6 +17,7 @@
 **
 */
 #include <glib.h>
+#include <unistd.h>
 #include <string>
 #include <thread>
 #include <vector>
@@ -392,6 +393,9 @@ The archives can be found at:
 https://lists.cs.wisc.edu/archive/htcondor-users/
 --===============0678627779074767862==--)";
 
+static std::string bench_maildirs;
+static std::string bench_store;
+
 static std::string
 message(const Regex& rx, size_t id)
 {
@@ -406,7 +410,15 @@ message(const Regex& rx, size_t id)
 struct TestData {
 	size_t num_maildirs;
 	size_t num_messages;
-	size_t num_threads;
+        size_t num_threads;
+        TempDir tempdir{};
+
+        std::string maildirs() const {
+		return join_paths(tempdir.path(), "maildirs");
+        }
+        std::string storedir() const {
+		return join_paths(tempdir.path(), "store");
+        }
 };
 
 
@@ -414,13 +426,12 @@ static void
 setup(const TestData& tdata)
 {
 	/* create toplevel */
-	auto top_maildir = std::string{BENCH_MAILDIRS};
-	int res = g_mkdir_with_parents(top_maildir.c_str(), 0700);
+	int res = g_mkdir_with_parents(tdata.maildirs().c_str(), 0700);
 	g_assert_cmpuint(res,==, 0);
 
 	/* create maildirs */
 	for (size_t i = 0; i != tdata.num_maildirs; ++i) {
-		const auto mdir = mu_format("{}/maildir-{}", top_maildir, i);
+		const auto mdir = mu_format("{}/maildir-{}", tdata.maildirs(), i);
 		auto res = maildir_mkdir(mdir);
 		g_assert(!!res);
 	}
@@ -428,7 +439,7 @@ setup(const TestData& tdata)
 	/* create messages */
 	for (size_t n = 0; n != tdata.num_messages; ++n) {
 		auto mpath = mu_format("{}/maildir-{}/cur/msg-{}:2,S",
-				    top_maildir, n % tdata.num_maildirs,
+				    tdata.maildirs(), n % tdata.num_maildirs,
 				    n);
 		std::ofstream stream(mpath);
 		auto msg = message(*rx, n);
@@ -438,32 +449,17 @@ setup(const TestData& tdata)
 }
 
 static void
-tear_down()
-{
-	for (auto&& dir : { BENCH_MAILDIRS, BENCH_STORE } ) {
-		if (const auto res = remove_directory(dir); !res)
-			mu_warning("failed to remove {}: {}", dir, res.error().what());
-	}
-}
-
-void
-black_hole(void)
-{
-	return; /* do nothing */
-}
-
-static void
 benchmark_indexer(gconstpointer testdata)
 {
 	using namespace std::chrono_literals;
 	using Clock = std::chrono::steady_clock;
-	const auto tdata = reinterpret_cast<const TestData*>(testdata);
+	auto& tdata = *reinterpret_cast<const TestData*>(testdata);
 
-	setup(*tdata);
-	auto start = Clock::now();
+	setup(tdata);
+	const auto start = Clock::now();
 
 	{
-		auto store{Store::make_new(BENCH_STORE, BENCH_MAILDIRS)};
+		auto store{Store::make_new(tdata.storedir(), tdata.maildirs())};
 		g_assert_true(!!store);
 		Indexer::Config conf{};
 
@@ -472,19 +468,67 @@ benchmark_indexer(gconstpointer testdata)
 		while(store->indexer().is_running()) {
 			std::this_thread::sleep_for(100ms);
 		}
-		g_assert_cmpuint(store->size(),==, tdata->num_messages);
+		g_assert_cmpuint(store->size(), ==, tdata.num_messages);
 	}
 
 	const auto elapsed = Clock::now() - start;
-	std::cout << "indexed " << tdata->num_messages << " messages in "
-		  << tdata->num_maildirs << " maildirs in "
+	std::cout << "indexed " << tdata.num_messages << " messages in "
+		  << tdata.num_maildirs << " maildirs in "
 		  << to_ms(elapsed) << "ms; "
-		  << to_us(elapsed) / tdata->num_messages << " μs/message; "
-		  << static_cast<size_t>(1000*tdata->num_messages / to_ms(elapsed))
+		  << to_us(elapsed) / tdata.num_messages << " μs/message; "
+		  << static_cast<size_t>(1000*tdata.num_messages / to_ms(elapsed))
 		  << " messages/s"
-		  << " (" << tdata->num_threads << " thread(s))\n";
+		  << " (" << tdata.num_threads << " thread(s))\n";
 
-	tear_down();
+	/* rescan the now up-to-date store; there's nothing to (re)index */
+	const auto rescan = [&](bool lazy) {
+		auto store{Store::make(tdata.storedir(), Store::Options::Writable)};
+		g_assert_true(!!store);
+		Indexer::Config conf{};
+		conf.lazy_check = lazy;
+		const auto rstart = Clock::now();
+		auto res = store->indexer().start(conf);
+		g_assert_true(res);
+		while (store->indexer().is_running())
+			std::this_thread::sleep_for(1ms);
+		g_assert_cmpuint(store->size(),==, tdata.num_messages);
+		const auto relapsed = Clock::now() - rstart;
+		std::cout << (lazy ? "lazy-rescanned " : "rescanned ")
+			  << tdata.num_messages << " messages in "
+			  << to_ms(relapsed) << "ms; "
+			  << to_us(relapsed) / tdata.num_messages
+			  << " μs/message\n";
+	};
+	rescan(false/*!lazy*/);
+	rescan(true/*lazy*/);
+
+	/* remove some messages from the file-system, then time a cleanup-only
+	 * run */
+	const size_t num_removed = tdata.num_messages / 10;
+	for (size_t n = 0; n != num_removed; ++n) {
+		const auto mpath = mu_format("{}/maildir-{}/cur/msg-{}:2,S",
+					     tdata.maildirs(),
+					     n % tdata.num_maildirs, n);
+		g_assert_cmpint(::unlink(mpath.c_str()), ==, 0);
+	}
+	{
+		auto store{Store::make(tdata.storedir(), Store::Options::Writable)};
+		g_assert_true(!!store);
+		Indexer::Config conf{};
+		conf.scan = false; /* cleanup-only */
+		const auto cstart = Clock::now();
+		auto res = store->indexer().start(conf);
+		g_assert_true(res);
+		while (store->indexer().is_running())
+			std::this_thread::sleep_for(1ms);
+		g_assert_cmpuint(store->size(),==,
+				 tdata.num_messages - num_removed);
+		const auto celapsed = Clock::now() - cstart;
+		std::cout << "cleaned up " << num_removed << " of "
+			  << tdata.num_messages << " messages in "
+			  << to_ms(celapsed) << "ms; "
+			  << to_us(celapsed) / num_removed << " μs/message\n";
+	}
 }
 
 int
@@ -493,21 +537,19 @@ main(int argc, char *argv[])
 	size_t num_maildirs{}, num_messages{};
 
 	mu_test_init(&argc, &argv);
+	allow_warnings();
 
 	if (g_test_perf()) {
 		num_maildirs = 20;
-		num_messages = 5000;
+		num_messages = 10000;
 	} else {
 		num_maildirs = 10;
-		num_messages = 1000;
+		num_messages = 2000;
 	}
 
-	g_log_set_handler(
-	    NULL,
-	    (GLogLevelFlags)(G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION),
-	    (GLogFunc)black_hole,
-	    NULL);
-
+	/* override the number of messages, e.g. for a stronger signal */
+	if (const auto nmsgs = g_getenv("MU_BENCH_NUM_MESSAGES"); nmsgs)
+		num_messages = ::strtol(nmsgs, NULL, 10);
 
 	size_t thread_num{};
 	const auto tnum = g_getenv("THREAD_NUM");
@@ -517,35 +559,27 @@ main(int argc, char *argv[])
 	if (thread_num != 0) {
 		/* THREAD_NUM specified */
 		static TestData tdata{num_maildirs, num_messages, thread_num};
-		char *name = g_strdup_printf("/bench/indexer/%zu-cores", thread_num);
-		g_test_add_data_func(name, &tdata, benchmark_indexer);
-		g_free(name);
+		const auto name = mu_format("/bench/indexer/{}-cores", thread_num);
+		g_test_add_data_func(name.c_str(), &tdata, benchmark_indexer);
 	} else {
 		/* no THREAD_NUM specified */
-
 		const size_t hw_threads = std::thread::hardware_concurrency();
-
 		{
 			static TestData tdata{num_maildirs, num_messages, 1};
 			g_test_add_data_func("/bench/indexer/1-core", &tdata, benchmark_indexer);
 		}
-
 		if (hw_threads > 2) {
 			static TestData tdata{num_maildirs, num_messages, hw_threads/2};
-			char *name = g_strdup_printf("/bench/indexer/%zu-cores", hw_threads/2);
-			g_test_add_data_func(name, &tdata, benchmark_indexer);
-			g_free(name);
+			const auto name = mu_format("/bench/indexer/{}-cores", hw_threads/2);
+			g_test_add_data_func(name.c_str(), &tdata, benchmark_indexer);
 		}
 
 		if (hw_threads > 1) {
 			static TestData tdata{num_maildirs, num_messages, hw_threads};
-			char *name = g_strdup_printf("/bench/indexer/%zu-cores", hw_threads);
-			g_test_add_data_func(name, &tdata, benchmark_indexer);
-			g_free(name);
+			const auto name = mu_format("/bench/indexer/{}-cores", hw_threads);
+			g_test_add_data_func(name.c_str(), &tdata, benchmark_indexer);
 		}
 	}
-
-	tear_down();
 
 	return g_test_run();
 }

@@ -145,12 +145,8 @@ bench_indexer_exe = executable(
   'bench-indexer',
   'bench-indexer.cc',
   install:false,
-  cpp_args:['-DBENCH_MAILDIRS="' + bench_maildirs + '"',
-            '-DBENCH_STORE="' + bench_store + '"',
-           ],
   dependencies: [lib_mu_dep, glib_dep])
-
-benchmark('bench-indexer', bench_indexer_exe, args: ['-m', 'perf'])
+benchmark('bench-indexer', bench_indexer_exe, timeout:100, args: ['-m', 'perf'])
 
 #
 # below does _not_ pass; it is believed that it's a false alarm.
