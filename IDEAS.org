@@ -52,7 +52,7 @@ future.
   https://github.com/djcb/mu/issues/2527
 
 - Perhaps better support file names with commas.. perhaps temporarily add some
-  invisible unicode to fool crm-separator?
+  invisible unicode to fool CRM-separator?
   https://github.com/djcb/mu/issues/2768
 
 - More general, make the MIME-part handling in the viewer a bit better, we have
@@ -68,6 +68,7 @@ future.
   Gnus supports it. Does not seem trivial to re-use the Gnus code... (see
   ~gnus-summary-work-articles~ etc.).
   https://github.com/djcb/mu/issues/2799
+  https://github.com/djcb/mu/issues/2936
 
 - Add some way to add a quick bookmark for (e.g.)  the current thread
   https://github.com/djcb/mu/issues/2804
@@ -75,15 +76,15 @@ future.
 - Support running mu4e over tramp
   https://github.com/djcb/mu/issues/2815
   Seems this is mostly possible already:
-    1. set mu4e-mu-binary to a shell script that sshes into the mail machine
+    1. set mu4e-mu-binary to a shell script that ssh's into the mail machine
     2. added a custom file-name-handler-alist handler that implements file
-       operations for my mail directory by proxying to tramp
+       operations for my mail directory by proxy'ing to tramp
   But perhaps can be documented.
 
 - Allow for watching notifications externally, perhaps using alert.el
   https://github.com/djcb/mu/issues/2825
 
-- Allow for filling the personal e-mail addresses in the main view,
+- Allow for filling/aligning the personal e-mail addresses in the main view,
   https://github.com/djcb/mu/issues/2901 Note that you can already limit the
   number of addresses or hide them completely.
 
