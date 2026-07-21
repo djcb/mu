@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -17,29 +17,38 @@
 **
 */
 
+#include <algorithm>
+#include <atomic>
+#include <mutex>
+#include <cstdio>
+
 #include "mu-scm-types.hh"
 #include "message/mu-message.hh"
 #include "message/mu-mime-object.hh"
-#include <mutex>
-#include <cstdio>
 
 using namespace Mu;
 using namespace Mu::Scm;
 
 namespace {
 static SCM message_type;
+// weak-value hash table, path -> message foreign-object. Since the values are
+// weak, the cache does not keep message objects alive.
+static SCM message_cache;
 static bool initialized;
 
-std::mutex map_lock;
+std::mutex cache_lock;
+// number of live message objects; incremented on creation, decremented
+// from the finalizer.
+std::atomic<size_t> message_count;
 
-constexpr auto max_message_map_size{512};
+constexpr size_t max_open_messages{512};
 
-struct MessageObject {
-	Message message;
-	SCM foreign_object{};
-};
-using MessageMap = std::unordered_map<std::string, MessageObject>;
-static MessageMap message_map;
+// gc-tickling (see subr_cc_message_make): tickle when the live count
+// reaches gc_threshold; after each tickle, raise the next tickle-point
+// by gc_step (protected by cache_lock).
+constexpr size_t gc_threshold{(8 * max_open_messages) / 10};
+constexpr size_t gc_step{max_open_messages / 16};
+size_t gc_watermark{gc_threshold};
 }
 
 static const Message&
@@ -54,11 +63,10 @@ to_message(SCM scm, const char *func, int pos)
 static void
 finalize_message(SCM scm)
 {
-	std::unique_lock lock{map_lock};
-	const auto msg = reinterpret_cast<const Message*>(scm_foreign_object_ref(scm, 0));
-	//mu_debug("finalizing message @ {}", msg->path());
-	if (const auto n = message_map.erase(msg->path()); n != 1)
-		mu_warning("huh?! deleted {}", n);
+	// the foreign object owns its Message; the cache cleans up by itself
+	// (weak values), so there is nothing to synchronize with here.
+	delete reinterpret_cast<Message*>(scm_foreign_object_ref(scm, 0));
+	--message_count;
 }
 
 static SCM
@@ -66,39 +74,53 @@ subr_cc_message_make(SCM message_path_scm) try {
 
 	constexpr auto func{"cc-message-make"};
 
-	// message objects eat fds, tickle the gc... letting it handle it
-	// automatically is not soon enough. Note: if a script _holds_
-	// references to this many messages, the map cannot shrink and this
-	// triggers a full GC on each call; slow, but better than running
-	// out of fds.
-	if (message_map.size() >= 0.8 * max_message_map_size)
-		scm_gc();
+	const auto path{from_scm<std::string>(message_path_scm, func, 1)};
 
-	std::unique_lock lock{map_lock};
+	std::unique_lock lock{cache_lock};
+
+	// if we already have a live message object for this path, return it.
+	// use a fresh key, so the cache is unaffected by callers mutating
+	// their string afterwards.
+	SCM key{to_scm(path)};
+	if (SCM cached{scm_hash_ref(message_cache, key, SCM_BOOL_F)};
+	    scm_is_true(cached))
+		return cached;
+
+	// we need to create a new message object; these eat fds, so when
+	// nearing the cap, tickle the gc.
+	//
+	// However, if a script _holds_ references to most of them, collecting
+	// cannot lower the count; back off by raising the next tickle-point
+	// (and reset it once the count drops below the threshold again), so
+	// we avoid gc for every call.
+	if (const auto count{message_count.load()}; count < gc_threshold)
+		gc_watermark = gc_threshold;
+	else if (count >= gc_watermark) {
+		scm_gc();
+		gc_watermark = std::min(count + gc_step, max_open_messages);
+	}
 
 	// attempt to give a good error message rather than getting something
 	// from GMime)
-	if (message_map.size() >= max_message_map_size)
+	if (message_count >= max_open_messages)
 		throw ScmError{func, "too many open messages"};
 
-	// if we already have the message in our map, return it.
-	auto path{from_scm<std::string>(message_path_scm, func, 1)};
-	if (const auto it = message_map.find(path); it != message_map.end())
-		return it->second.foreign_object;
-
 	// don't have it yet; attempt to create one
-	if (auto res{Message::make_from_path(path)}; !res) {
+	auto res{Message::make_from_path(path)};
+	if (!res) {
 		mu_printerrln("{}", res.error().what());
 		throw ScmError{func, "failed to create message"};
-	} else {
-		// create a new object, store it in our map and return the foreign ptr.
-		std::pair<std::string, MessageObject> item {path,
-			MessageObject{std::move(*res), {}}};
-		auto it = message_map.emplace(std::move(item));
-		return it.first->second.foreign_object = scm_make_foreign_object_1(
-			message_type,
-			const_cast<Message*>(&it.first->second.message));
 	}
+
+	// the new foreign object owns the Message (finalize_message
+	// deletes it); the cache holds only a weak reference.
+	SCM msg_scm{scm_make_foreign_object_1(
+		message_type, new Message{std::move(*res)})};
+	++message_count;
+	scm_hash_set_x(message_cache, key, msg_scm);
+
+	return msg_scm;
+
 } catch (const ScmError& err) {
 	err.throw_scm();
 }
@@ -214,6 +236,9 @@ Mu::Scm::init_message()
 		make_symbol("message"),
 		scm_list_1(make_symbol("data")),
 		finalize_message);
+
+	message_cache = scm_make_weak_value_hash_table(
+		scm_from_size_t(max_open_messages));
 
 	init_subrs();
 	initialized = true;
