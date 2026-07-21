@@ -80,7 +80,11 @@ make_mime_stream_port_type()
 {
 	auto ptype = scm_make_port_type(const_cast<char*>("mime-stream"), mime_stream_read, {});
 
-	scm_set_port_close(ptype, [](SCM port){g_mime_stream_close(from_scm_port(port));});
+	scm_set_port_close(ptype, [](SCM port){
+		auto stream{from_scm_port(port)};
+		g_mime_stream_close(stream);
+		g_object_unref(stream); // the port owns the stream
+	});
 	scm_set_port_needs_close_on_gc(ptype, true);
 
 	scm_set_port_seek(ptype, mime_stream_seek);
@@ -164,10 +168,10 @@ subr_make_mime_stream_port(SCM mime_part_scm, SCM content_only_scm,
 	GMimeStream *stream{};
 	try {
 		auto part = part_from_scm(mime_part_scm, func, 1);
-		const auto decode{from_scm<bool>(decode_scm,
-						 func, 2)};
 		const auto content_only{from_scm<bool>(content_only_scm,
-						       func, 3)};
+						       func, 2)};
+		const auto decode{from_scm<bool>(decode_scm,
+						 func, 3)};
 		if (decode)
 			stream = get_decoded_stream(part);
 		else

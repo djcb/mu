@@ -46,7 +46,7 @@ static const Message&
 to_message(SCM scm, const char *func, int pos)
 {
 	if (!SCM_IS_A_P(scm, message_type))
-		throw ScmError{ScmError::Id::WrongType, func, pos, scm, "mesagestore"};
+		throw ScmError{ScmError::Id::WrongType, func, pos, scm, "message"};
 
 	return *reinterpret_cast<Message*>(scm_foreign_object_ref(scm, 0));
 }
@@ -67,16 +67,19 @@ subr_cc_message_make(SCM message_path_scm) try {
 	constexpr auto func{"cc-message-make"};
 
 	// message objects eat fds, tickle the gc... letting it handle it
-	// automatically is not soon enough.
+	// automatically is not soon enough. Note: if a script _holds_
+	// references to this many messages, the map cannot shrink and this
+	// triggers a full GC on each call; slow, but better than running
+	// out of fds.
 	if (message_map.size() >= 0.8 * max_message_map_size)
 		scm_gc();
 
 	std::unique_lock lock{map_lock};
 
-	// qttempt to give an good error message rather then getting something
+	// attempt to give a good error message rather than getting something
 	// from GMime)
 	if (message_map.size() >= max_message_map_size)
-		throw ScmError{"cc-make-message", "too many open messages"};
+		throw ScmError{func, "too many open messages"};
 
 	// if we already have the message in our map, return it.
 	auto path{from_scm<std::string>(message_path_scm, func, 1)};
@@ -103,7 +106,7 @@ subr_cc_message_make(SCM message_path_scm) try {
 static SCM
 subr_cc_message_body(SCM message_scm, SCM html_scm) try {
 
-	constexpr auto func{"cc-message-make"};
+	constexpr auto func{"cc-message-body"};
 
 	const auto& message{to_message(message_scm, func, 1)};
 	const auto html{from_scm<bool>(html_scm, func, 2)};

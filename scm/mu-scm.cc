@@ -160,12 +160,12 @@ maybe_remove_socket_path()
 
 	// opportunistic, so no real warnings, but be careful deleting!
 
-	if (const int res = ::stat(sock.c_str(), &statbuf); res != 0) {
-		mu_debug("can't stat '{}'; err={}", sock, -res);
+	if (::stat(sock.c_str(), &statbuf) != 0) {
+		mu_debug("can't stat '{}': {}", sock, ::strerror(errno));
 	} else if ((statbuf.st_mode & S_IFMT) != S_IFSOCK) {
 		mu_debug("{} is not a socket", sock);
-	} else if (const int ulres = ::unlink(sock.c_str()); ulres != 0) {
-		mu_debug("failed to unlink '{}'; err={}", sock, -ulres);
+	} else if (::unlink(sock.c_str()) != 0) {
+		mu_debug("failed to unlink '{}': {}", sock, ::strerror(errno));
 	} else {
 		mu_debug("unlinked {}", sock);
 	}
@@ -308,7 +308,7 @@ test_scm_script()
 
 	MemDb mdb;
 	Config conf{mdb};
-;	conf.set<Config::Id::PersonalAddresses>(
+	conf.set<Config::Id::PersonalAddresses>(
 		std::vector<std::string>{"user@example.com"});
 
 	auto store{Store::make_new(tempdir.path(), MuTestMaildir, conf)};

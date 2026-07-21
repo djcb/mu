@@ -188,18 +188,22 @@ namespace Mu::Scm {
 			if (!pred)
 				throw ScmError{ScmError::Id::WrongType, func, pos, ARG, expected};
 		};
+		// note: use the C predicates (scm_is_string etc.); the Scheme
+		// predicates (scm_string_p etc.) return an SCM boolean, which
+		// is truthy as a C++ bool even when it is #f.
 		using Type = std::remove_const_t<T>; // *not* std::remove_const
 		if constexpr (std::is_same_v<Type, std::string>) {
-			ensure(scm_string_p(ARG), ARG, "string");
-			auto str{scm_to_utf8_string(ARG)};
-			std::string res{str};
+			ensure(scm_is_string(ARG), ARG, "string");
+			size_t len{};
+			auto str{scm_to_utf8_stringn(ARG, &len)};
+			std::string res{str, len};
 			::free(str);
 			return res;
 		} else if constexpr (std::is_same_v<Type, char>) {
-			ensure(scm_char_p(ARG), ARG, "character");
-			return scm_to_char(ARG);
+			ensure(SCM_CHARP(ARG), ARG, "character");
+			return static_cast<char>(SCM_CHAR(ARG));
 		} else if constexpr (std::is_same_v<Type, bool>) {
-			ensure(scm_boolean_p(ARG), ARG, "bool");
+			ensure(scm_is_bool(ARG), ARG, "bool");
 			return scm_to_bool(ARG);
 		} else if constexpr (std::is_same_v<Type, int>) {
 			ensure(scm_is_signed_integer(ARG, std::numeric_limits<int>::min(),
@@ -292,7 +296,7 @@ namespace Mu::Scm {
 	 */
 	template<typename Key, typename Value, typename... KeyVals>
 	static inline SCM alist_add(SCM alist, const Key& key, const Value& val,
-				    KeyVals... keyvals) {
+				    KeyVals&&... keyvals) {
 		SCM res = scm_acons(to_scm(key), to_scm(val), alist);
 		return alist_add(res, std::forward<KeyVals>(keyvals)...);
 	}

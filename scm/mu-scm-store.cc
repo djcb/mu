@@ -167,9 +167,13 @@ subr_cc_store_mfind(SCM store_scm, SCM query_scm, SCM related_scm, SCM skip_dups
 	SCM msgs{SCM_EOL};
 	// iterate in reverse order, so the message get consed
 	// into the list in the right order.
-	for (auto it{qres->end()}; it-- != qres->begin();)
-		if (auto plist{it.document()->get_data()}; !plist.empty())
+	for (auto it{qres->end()}; it-- != qres->begin();) {
+		const auto doc{it.document()};
+		if (!doc)
+			continue; // e.g., removed since the query ran
+		if (auto plist{doc->get_data()}; !plist.empty())
 			msgs = scm_cons(to_scm(plist), msgs);
+	}
 	return msgs;
 
 } catch (const ScmError& err) {
