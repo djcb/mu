@@ -2061,24 +2061,19 @@ You can influence what messages to encrypt or sign using
 
 @node Queuing mail
 @section Queuing mail
+@cindex queuing
 
-If you cannot send mail right now, for example because you are
-currently offline, you can @emph{queue} the mail, and send it when you
-have restored your internet connection. You can control this from
-@ref{Main view}.
+If you cannot send mail right now, for example because you are currently
+offline, you can @emph{queue} the mail, and send it when you have restored your
+internet connection. You can control this from @ref{Main view}.
 
 To allow for queuing, you need to tell @code{smtpmail} where you want to store
-the queued messages. For example:
+the queued messages.
 
-@lisp
-(setq smtpmail-queue-mail t  ;; start in queuing mode
-  smtpmail-queue-dir   "~/Maildir/queue/cur")
-@end lisp
-
-For convenience, we put the queue directory somewhere in our normal
-maildir. If you want to use queued mail, you should create this directory
-before starting @code{mu4e}. The @command{mu mkdir} command may be useful here,
-so for example:
+For convenience, we put the queue directory somewhere in our normal maildir. If
+you want to use queued mail, you should create this directory @emph{before}
+starting @code{mu4e}. The @command{mu mkdir} command may be useful here, so for
+example:
 
 @example
 $ mu mkdir ~/Maildir/queue
@@ -2090,9 +2085,22 @@ directory for indexing, which makes sense since it contains @code{smtpmail}
 meta-data rather than normal messages; see the @t{mu-mkdir} and @t{mu-index}
 man-pages for details.
 
-@emph{Warning}: when you switch on queued-mode, your messages @emph{won't}
-reach their destination until you switch it off again; so, be careful not to
-do this accidentally!
+Then, tell @code{smtpmail} about it; e.g., in your configuration:
+
+@lisp
+(setq smtpmail-queue-mail nil  ;; use t to start in queuing mode
+      smtpmail-queue-dir "~/Maildir/queue/cur"
+      ;; or nil to disable queuing
+)
+@end lisp
+
+Once you are ready to send your messages, you can invoke @kbd{M-x
+smtpmail-send-queued-mail}.
+
+@emph{Warning}: when you switch on queued-mode, your messages @emph{won't} reach
+their destination until you ; so, be careful not to do this
+accidentally! If you want to avoid queued mode completely, you can set
+@code{smtpmail-queue-dir} to @code{nil}.
 
 @node Message signatures
 @section Message signatures

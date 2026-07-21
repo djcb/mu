@@ -347,7 +347,7 @@ for aligning them."
          (mu4e--main-action "\t* [@]Update email & database\n"
                             #'mu4e-update-mail-and-index nil "U")
          ;; show the queue functions if `smtpmail-queue-dir' is defined
-         (if (file-directory-p smtpmail-queue-dir)
+         (if (and smtpmail-queue-dir (file-directory-p (or smtpmail-queue-dir "")))
              (mu4e--main-view-queue)
            "")
          "\n"
@@ -417,8 +417,8 @@ instead."
 (defun mu4e--main-toggle-mail-sending-mode ()
   "Toggle sending mail mode, either queued or direct."
   (interactive)
-  (unless (file-directory-p smtpmail-queue-dir)
-    (mu4e-warn"`smtpmail-queue-dir' does not exist"))
+  (unless (and smtpmail-queue-dir (file-directory-p smtpmail-queue-dir))
+    (mu4e-warn"`smtpmail-queue-dir' is not a valid queue directory"))
   (setq smtpmail-queue-mail (not smtpmail-queue-mail))
   (mu4e-message
    (concat "Outgoing mail will now be "
