@@ -21,47 +21,45 @@
 #include "mu-sexp.hh"
 #include "mu-utils.hh"
 
-#include <atomic>
-#include <sstream>
-#include <array>
+#include <charconv>
 
 using namespace Mu;
+
+/* avoid unbounded recursion (i.e., stack overflow) for pathological input */
+constexpr size_t MaxDepth{1024};
 
 template<typename...T> static Mu::Error
 parsing_error(size_t pos, fmt::format_string<T...> frm, T&&... args)
 {
 	const auto&& msg{fmt::format(frm, std::forward<T>(args)...)};
-	if (pos == 0)
-		return Mu::Error(Error::Code::Parsing, "{}", msg);
-	else
-		return Mu::Error(Error::Code::Parsing, "{}: {}", pos, msg);
+	return Mu::Error(Error::Code::Parsing, "{}: {}", pos, msg);
 }
 
 static size_t
 skip_whitespace(const std::string& s, size_t pos)
 {
-	while (pos != s.size()) {
-		if (s[pos] == ' ' || s[pos] == '\t' || s[pos] == '\n')
-			++pos;
-		else
-			break;
-	}
+	while (pos != s.size() && is_ascii_space(s[pos]))
+		++pos;
+
 	return pos;
 }
 
-static Result<Sexp> parse(const std::string& expr, size_t& pos);
+static Result<Sexp> parse(const std::string& expr, size_t& pos, size_t depth);
 
 static Result<Sexp>
-parse_list(const std::string& expr, size_t& pos)
+parse_list(const std::string& expr, size_t& pos, size_t depth)
 {
 	if (expr[pos] != '(') // sanity check.
-		return Err(parsing_error(pos, "expected: '(' but got '{}", expr[pos]));
+		return Err(parsing_error(pos, "expected: '(' but got '{}'", expr[pos]));
+
+	if (depth >= MaxDepth)
+		return Err(parsing_error(pos, "parentheses nested too deeply"));
 
 	Sexp lst{};
 
 	++pos;
 	while (pos < expr.size() && expr[pos] != ')') {
-		if (auto&& item = parse(expr, pos); item)
+		if (auto&& item = parse(expr, pos, depth + 1); item)
 			lst.add(std::move(*item));
 		else
 			return Err(item.error());
@@ -80,27 +78,30 @@ static Result<Sexp>
 parse_string(const std::string& expr, size_t& pos)
 {
 	if (expr[pos] != '"') // sanity check.
-		return Err(parsing_error(pos, "expected: '\"'' but got '{}", expr[pos]));
+		return Err(parsing_error(pos, "expected: '\"' but got '{}'", expr[pos]));
 
 	bool        escape{};
 	std::string str;
 	for (++pos; pos != expr.size(); ++pos) {
 		auto kar = expr[pos];
-		if (escape && (kar == '"' || kar == '\\')) {
-			str += kar;
+		if (escape) {
+			// follow the elisp reader: '\n', '\t' are special,
+			// any other escaped character stands for itself.
+			switch (kar) {
+			case 'n': str += '\n'; break;
+			case 't': str += '\t'; break;
+			default:  str += kar; break;
+			}
 			escape = false;
-			continue;
-		}
-
-		if (kar == '"')
-			break;
-		else if (kar == '\\')
+		} else if (kar == '\\')
 			escape = true;
+		else if (kar == '"')
+			break;
 		else
 			str += kar;
 	}
 
-	if (escape || expr[pos] != '"')
+	if (escape || pos == expr.size())
 		return Err(parsing_error(pos, "unterminated string '{}'", str));
 
 	++pos;
@@ -111,54 +112,57 @@ parse_string(const std::string& expr, size_t& pos)
 static Result<Sexp>
 parse_integer(const std::string& expr, size_t& pos)
 {
-	if (!isdigit(expr[pos]) && expr[pos] != '-') // sanity check.
-		return Err(parsing_error(pos, "expected: <digit> but got '{}", expr[pos]));
+	if (!is_ascii_digit(expr[pos]) && expr[pos] != '-') // sanity check.
+		return Err(parsing_error(pos, "expected: <digit> but got '{}'", expr[pos]));
 
-	std::string num; // negative number?
-	if (expr[pos] == '-') {
-		num = "-";
-		++pos;
-	}
+	auto end{pos + (expr[pos] == '-' ? 1U : 0U)};
+	while (end != expr.size() && is_ascii_digit(expr[end]))
+		++end;
 
-	for (; isdigit(expr[pos]); ++pos)
-		num += expr[pos];
+	Sexp::Number num{};
+	const auto res{std::from_chars(expr.data() + pos, expr.data() + end, num)};
+	if (res.ec != std::errc{} || res.ptr != expr.data() + end)
+		return Err(parsing_error(pos, "invalid number '{}'",
+					 expr.substr(pos, end - pos)));
 
-	return Ok(Sexp{::atoi(num.c_str())});
+	pos = end;
+	return Ok(Sexp{num});
 }
 
 static Result<Sexp>
 parse_symbol(const std::string& expr, size_t& pos)
 {
-	if (!isalpha(expr[pos]) && expr[pos] != ':') // sanity check.
-		return Err(parsing_error(pos, "expected: <alpha>|: but got '{}", expr[pos]));
+	if (!is_ascii_alpha(expr[pos]) && expr[pos] != ':') // sanity check.
+		return Err(parsing_error(pos, "expected: <alpha>|: but got '{}'", expr[pos]));
 
-	std::string symb(1, expr[pos]);
-	for (++pos; isalnum(expr[pos]) || expr[pos] == '-'; ++pos)
-		symb += expr[pos];
+	const auto start{pos};
+	for (++pos; pos != expr.size() &&
+		     (is_ascii_alnum(expr[pos]) || expr[pos] == '-'); ++pos)
+		;
 
-	return Ok(Sexp{Sexp::Symbol{symb}});
+	return Ok(Sexp{Sexp::Symbol{expr.substr(start, pos - start)}});
 }
 
 static Result<Sexp>
-parse(const std::string& expr, size_t& pos)
+parse(const std::string& expr, size_t& pos, size_t depth)
 {
 	pos = skip_whitespace(expr, pos);
 
 	if (pos == expr.size())
-		return Err(parsing_error(pos, "expected: character '{}", expr[pos]));
+		return Err(parsing_error(pos, "unexpected end of input"));
 
 	const auto kar  = expr[pos];
 	const auto sexp = std::invoke([&]() -> Result<Sexp> {
 		if (kar == '(')
-			return parse_list(expr, pos);
+			return parse_list(expr, pos, depth);
 		else if (kar == '"')
 			return parse_string(expr, pos);
-		else if (isdigit(kar) || kar == '-')
+		else if (is_ascii_digit(kar) || kar == '-')
 			return parse_integer(expr, pos);
-		else if (isalpha(kar) || kar == ':')
+		else if (is_ascii_alpha(kar) || kar == ':')
 			return parse_symbol(expr, pos);
 		else
-			return Err(parsing_error(pos, "unexpected character '{}", kar));
+			return Err(parsing_error(pos, "unexpected character '{}'", kar));
 	});
 
 	if (sexp)
@@ -171,7 +175,7 @@ Result<Sexp>
 Sexp::parse(const std::string& expr)
 {
 	size_t pos{};
-	auto res = ::parse(expr, pos);
+	auto res = ::parse(expr, pos, 0/*depth*/);
 	if (!res)
 		return res;
 	else if (pos != expr.size())
@@ -183,31 +187,39 @@ Sexp::parse(const std::string& expr)
 std::string
 Sexp::to_string(Format fopts) const
 {
-	std::stringstream sstrm;
-	const auto splitp{any_of(fopts & Format::SplitList)};
-	const auto typeinfop{any_of(fopts & Format::TypeInfo)};
+	std::string str;
+	to_string_into(str, fopts);
 
+	return str;
+}
+
+void
+Sexp::to_string_into(std::string& out, Format fopts) const
+{
 	if (listp()) {
-		sstrm << '(';
+		out += '(';
 		bool first{true};
 		for(auto&& elm: list()) {
-			sstrm << (first ? "" : " ") << elm.to_string(fopts);
+			if (!first)
+				out += ' ';
+			elm.to_string_into(out, fopts);
 			first = false;
 		}
-		sstrm << ')';
-		if (splitp)
-			sstrm << '\n';
+		out += ')';
+		if (any_of(fopts & Format::SplitList))
+			out += '\n';
 	} else if (stringp())
-		sstrm << quote(string());
+		out += quote(string());
 	else if (numberp())
-		sstrm << number();
+		out += std::to_string(number());
 	else if (symbolp())
-		sstrm << symbol().name;
+		out += symbol().name;
 
-	if (typeinfop)
-		sstrm << '<' << Sexp::type_name(type())  << '>';
-
-	return sstrm.str();
+	if (any_of(fopts & Format::TypeInfo)) {
+		out += '<';
+		out += Sexp::type_name(type());
+		out += '>';
+	}
 }
 
 // LCOV_EXCL_START
@@ -226,8 +238,15 @@ unix_tstamp(const Sexp& emacs_tstamp)
 std::string
 Sexp::to_json_string(Format fopts) const
 {
-	std::stringstream sstrm;
+	std::string str;
+	to_json_string_into(str, fopts);
 
+	return str;
+}
+
+void
+Sexp::to_json_string_into(std::string& out, Format fopts) const
+{
 	const auto sym_name=[&](const std::string& sym) {
 		if (any_of(fopts & Format::NoColon) && sym[0] == ':')
 			return sym.substr(1); // remove colon
@@ -239,60 +258,64 @@ Sexp::to_json_string(Format fopts) const
 	case Type::List: {
 		// property-lists become JSON objects
 		if (plistp()) {
-			sstrm << "{";
+			out += '{';
 			auto it{list().begin()};
 			bool first{true};
 			while (it != list().end()) {
 				const auto key{it->symbol().name};
-				sstrm << (first ? "" : ",")
-				      << quote(sym_name(key)) << ":";
+				if (!first)
+					out += ',';
+				out += quote(sym_name(key));
+				out += ':';
 				++it;
-				const auto emacs_tstamp{*it};
-				sstrm << emacs_tstamp.to_json_string(fopts);
+				const auto& propval{*it};
+				propval.to_json_string_into(out, fopts);
 				++it;
 				first = false;
 				// special-case: tstamp-fields also get a "unix" value,
 				// which are easier to work with than the "emacs" timestamps
-				if (key == ":date" || key == ":changed")
-					sstrm << "," << quote(sym_name(key) + "-unix")
-					      << ":"
-					      << unix_tstamp(emacs_tstamp);
+				if (key == ":date" || key == ":changed") {
+					out += ',';
+					out += quote(sym_name(key) + "-unix");
+					out += ':';
+					out += std::to_string(unix_tstamp(propval));
+				}
 			}
-			sstrm << "}";
+			out += '}';
 			if (any_of(fopts & Format::SplitList))
-			sstrm << '\n';
+				out += '\n';
 		} else { // other lists become arrays.
-			sstrm << '[';
+			out += '[';
 			bool first{true};
 			for (auto&& child : list()) {
-				sstrm << (first ? "" : ", ") << child.to_json_string(fopts);
+				if (!first)
+					out += ", ";
+				child.to_json_string_into(out, fopts);
 				first = false;
 			}
-			sstrm << ']';
+			out += ']';
 			if (any_of(fopts & Format::SplitList))
-				sstrm << '\n';
+				out += '\n';
 		}
 		break;
 	}
 	case Type::String:
-		sstrm << quote(string());
+		out += quote(string());
 		break;
 	case Type::Symbol:
 		if (nilp())
-			sstrm << "false";
+			out += "false";
 		else if (symbol() == "t")
-			sstrm << "true";
+			out += "true";
 		else
-			sstrm << quote(symbol().name);
+			out += quote(symbol().name);
 		break;
 	case Type::Number:
-		sstrm << number();
+		out += std::to_string(number());
 		break;
 	default:
 		break;
 	}
-
-	return sstrm.str();
 }
 
 
@@ -511,6 +534,21 @@ test_parser()
 	check_parse(R"("foo
 bar")",
 		    "\"foo\nbar\"");
+
+	// escapes: '\n'/'\t' are special; \\ and unknown escapes
+	// stand for the escaped character itself
+	check_parse(R"("hello\nworld")", "\"hello\nworld\"");
+	check_parse(R"("tab\there")", "\"tab\there\"");
+	check_parse(R"("back\\slash")", "\"back\\\\slash\"");
+	check_parse(R"("what\qever")", "\"whatqever\"");
+
+	// full int64 range
+	check_parse("4294967296", "4294967296");
+	check_parse("9223372036854775807", "9223372036854775807");
+	check_parse("-9223372036854775808", "-9223372036854775808");
+
+	// \r\n is whitespace, too
+	check_parse("(foo\r\nbar)", "(foo bar)");
 }
 
 static void
@@ -521,6 +559,19 @@ test_parser_fail()
 	g_assert_false(!!Sexp::parse("("));
 	g_assert_false(!!Sexp::parse(")"));
 	g_assert_false(!!Sexp::parse("(hello (boo))))"));
+
+	// numbers that don't fit an int64, or aren't numbers at all
+	g_assert_false(!!Sexp::parse("99999999999999999999"));
+	g_assert_false(!!Sexp::parse("-"));
+
+	// trailing backslash
+	g_assert_false(!!Sexp::parse(R"("foo\)"));
+
+	// deeply-nested input gives an error, not a stack overflow
+	std::string deep(100000, '(');
+	deep += "a";
+	deep.append(100000, ')');
+	g_assert_false(!!Sexp::parse(deep));
 
 	g_assert_true(Sexp::type_name(static_cast<Sexp::Type>(-1)) == "<error>");
 }

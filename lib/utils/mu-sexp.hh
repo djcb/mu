@@ -25,9 +25,9 @@
 #include <vector>
 #include <string>
 #include <string_view>
-#include <iostream>
 #include <variant>
 #include <ostream>
+#include <type_traits>
 
 #include <utils/mu-result.hh>
 #include <utils/mu-option.hh>
@@ -56,13 +56,20 @@ struct Sexp {
 		operator const std::string&() const {return name; }
 		std::string name;
 
-		bool operator==(const Symbol& rhs) const {
-			return this == &rhs ? true : rhs.name == name;
-		}
-		bool operator!=(const Symbol& rhs) const { return *this == rhs ? false : true; }
+		bool operator==(const Symbol& rhs) const = default;
 	};
 	enum struct Type { List, String, Number, Symbol };
 	using ValueType = std::variant<List, String, Number, Symbol>;
+	// the Type enum and the ValueType variant must be kept in sync,
+	// since type() merely casts the variant-index.
+	static_assert(std::is_same_v<std::variant_alternative_t<
+			      static_cast<size_t>(Type::List), ValueType>, List>);
+	static_assert(std::is_same_v<std::variant_alternative_t<
+			      static_cast<size_t>(Type::String), ValueType>, String>);
+	static_assert(std::is_same_v<std::variant_alternative_t<
+			      static_cast<size_t>(Type::Number), ValueType>, Number>);
+	static_assert(std::is_same_v<std::variant_alternative_t<
+			      static_cast<size_t>(Type::Symbol), ValueType>, Symbol>);
 
 	/**
 	 * Is some Sexp of the given type?
@@ -91,8 +98,8 @@ struct Sexp {
 	 */
 	Sexp():value{List{}} {} // default: an empty list.
 	// Copy & move ctors
-	Sexp(const Sexp& other):value{other.value}{}
-	Sexp(Sexp&& other):value{std::move(other.value)}{}
+	Sexp(const Sexp& other) = default;
+	Sexp(Sexp&& other) = default;
 	// From various types
 	Sexp(const List& lst): value{lst} {}
 	Sexp(List&& lst): value{std::move(lst)} {}
@@ -118,31 +125,9 @@ struct Sexp {
 #pragma GCC diagnostic pop
 	}
 
-	/**
-	 * Copy-assignment
-	 *
-	 * @param rhs another sexp
-	 *
-	 * @return the sexp
-	 */
-	Sexp& operator=(const Sexp& rhs) {
-		if (this != &rhs)
-			value = rhs.value;
-		return *this;
-	}
-
-	/**
-	 * Move-assignment
-	 *
-	 * @param rhs another sexp
-	 *
-	 * @return the sexp
-	 */
-	Sexp& operator=(Sexp&& rhs) {
-		if (this != &rhs)
-			value = std::move(rhs.value);
-		return *this;
-	}
+	// Copy & move assignment
+	Sexp& operator=(const Sexp& rhs) = default;
+	Sexp& operator=(Sexp&& rhs) = default;
 
 	/**
 	 * Get the type of value
@@ -207,7 +192,7 @@ struct Sexp {
 	Sexp& add()              { return *this; }
 
 	template <typename V1, typename V2, typename... Args>
-	Sexp& add(V1&& v1, V2&& v2, Args... args) {
+	Sexp& add(V1&& v1, V2&& v2, Args&&... args) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		return add(std::forward<V1>(v1))
@@ -241,7 +226,7 @@ struct Sexp {
 	bool plistp() const { return listp() && plistp(cbegin(), cend()); }
 	Sexp& put_props() { return *this; } // Final case for template pack.
 	template <class PropType, class SexpType, typename... Args>
-	Sexp& put_props(PropType&& prop, SexpType&& sexp, Args... args) {
+	Sexp& put_props(PropType&& prop, SexpType&& sexp, Args&&... args) {
 		auto&& propname{std::string(prop)};
 		return del_prop(propname)
 			.add(Symbol(std::move(propname)),
@@ -256,7 +241,7 @@ struct Sexp {
 	 *
 	 * @return the property if found, or nothing
 	 */
-	const Option<const Sexp&> get_prop(const std::string& p) const {
+	Option<const Sexp&> get_prop(const std::string& p) const {
 		if (auto&& it = find_prop(p, cbegin(), cend()); it != cend())
 			return *(std::next(it));
 		else
@@ -295,6 +280,9 @@ protected:
 private:
 	iterator find_prop(const std::string& s,iterator b,
 				 iterator e);
+	void to_string_into(std::string& out, Format fopts) const;
+	void to_json_string_into(std::string& out, Format fopts) const;
+
 	ValueType value;
 
 
@@ -308,7 +296,7 @@ MU_ENABLE_BITOPS(Sexp::Format);
 inline Sexp::Symbol
 operator""_sym(const char* str, std::size_t n)
 {
-	return Sexp::Symbol{str};
+	return Sexp::Symbol{std::string{str, n}};
 }
 
 inline std::ostream&
