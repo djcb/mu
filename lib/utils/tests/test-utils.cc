@@ -335,6 +335,46 @@ test_summarize()
 			"fortification by the Bais raja Sathna. ");
 }
 
+static void
+test_ascii_ctype()
+{
+	/* the ascii ctype functions are constexpr and work for any
+	 * integral character type... */
+	static_assert(is_ascii('m'));
+	static_assert(!is_ascii(static_cast<char>(0x80)));
+	static_assert(is_ascii_cntrl('\n'));
+	static_assert(!is_ascii_cntrl(' '));
+	static_assert(is_ascii_blank('\t'));
+	static_assert(!is_ascii_blank('\n'));
+	static_assert(to_ascii_lower('Q') == 'q');
+	static_assert(to_ascii_lower(U'Q') == U'q');
+	static_assert(to_ascii_lower('8') == '8');
+	static_assert(to_ascii_lower('\xc4'/* Ä */) == '\xc4');
+
+	/* ... and, unlike their libc cousins, are well-defined for
+	 * negative chars; check the full range against glib's
+	 * (locale-independent) g_ascii_* versions. */
+	for (int i = -128; i != 128; ++i) {
+		const auto c{static_cast<char>(i)};
+		g_assert_cmpint(is_ascii_cntrl(c), ==, !!g_ascii_iscntrl(c));
+		g_assert_cmpint(is_ascii_alpha(c), ==, !!g_ascii_isalpha(c));
+		g_assert_cmpint(is_ascii_digit(c), ==, !!g_ascii_isdigit(c));
+		g_assert_cmpint(is_ascii_alnum(c), ==, !!g_ascii_isalnum(c));
+		/* NB: unlike isspace(3), g_ascii_isspace excludes VT */
+		g_assert_cmpint(is_ascii_space(c), ==,
+				!!g_ascii_isspace(c) || c == '\v');
+		g_assert_cmpint(is_ascii_punct(c), ==, !!g_ascii_ispunct(c));
+		g_assert_cmpint(to_ascii_lower(c), ==, g_ascii_tolower(c));
+	}
+
+	/* values beyond the char range must not get truncated */
+	const gunichar uc{0x2028/* line separator */};
+	g_assert_false(is_ascii(uc));
+	g_assert_false(is_ascii_cntrl(uc));
+	g_assert_false(is_ascii_punct(uc));
+	g_assert_true(to_ascii_lower(uc) == uc);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -355,6 +395,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/define-bitmap", test_define_bitmap);
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
+	g_test_add_func("/utils/ascii-ctype", test_ascii_ctype);
 
 	return g_test_run();
 }

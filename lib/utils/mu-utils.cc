@@ -269,7 +269,7 @@ Mu::remove_ctrl(const std::string& str)
 	result.reserve(str.length());
 
 	for (auto&& c : str) {
-		if (::iscntrl(c) || c == ' ') {
+		if (is_ascii_cntrl(c) || c == ' ') {
 			if (prev != ' ')
 				result += prev = ' ';
 		} else

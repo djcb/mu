@@ -166,6 +166,133 @@ std::tm mu_time(T t={}, bool use_utc=false) {
 	return time_tm;
 }
 
+/*
+ * Constexpr, locale-independent ASCII versions of some <cctype> functions.
+ *
+ * Unlike their libc counterparts, these are well-defined for _any_
+ * character value; no need for casting to unsigned char at the
+ * call-site (which the libc versions require to avoid UB for negative
+ * char values).
+ */
+
+/**
+ * Is this an ASCII character, i.e., in [0, 0x7f]? Constexpr version
+ * of ::isascii.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii(Char c) noexcept {
+	return static_cast<std::make_unsigned_t<Char>>(c) < 0x80;
+}
+
+/**
+ * Is this an ASCII control character? ASCII version of ::iscntrl.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_cntrl(Char c) noexcept {
+	const auto uc{static_cast<std::make_unsigned_t<Char>>(c)};
+	return uc < 0x20 || uc == 0x7f;
+}
+
+/**
+ * Is this an ASCII alphabetic character, i.e., in [a-zA-Z]?
+ * ASCII version of ::isalpha.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_alpha(Char c) noexcept {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+/**
+ * Is this an ASCII digit, i.e., in [0-9]? ASCII version of ::isdigit.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_digit(Char c) noexcept {
+	return c >= '0' && c <= '9';
+}
+
+/**
+ * Is this an ASCII alphanumeric character, i.e., in [a-zA-Z0-9]?
+ * ASCII version of ::isalnum.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_alnum(Char c) noexcept {
+	return is_ascii_alpha(c) || is_ascii_digit(c);
+}
+
+/**
+ * Is this an ASCII blank character, i.e., SPC or TAB? ASCII version
+ * of ::isblank.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_blank(Char c) noexcept {
+	return c == ' ' || c == '\t';
+}
+
+/**
+ * Is this an ASCII white-space character, i.e., SPC, TAB, LF, VT, FF
+ * or CR? ASCII version of ::isspace.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_space(Char c) noexcept {
+	return c == ' ' || (c >= '\t' && c <= '\r');
+}
+
+/**
+ * Is this an ASCII punctuation character, i.e., a printable character
+ * that is neither alphanumeric nor SPC? ASCII version of ::ispunct.
+ *
+ * @param c some character
+ *
+ * @return true or false
+ */
+template<std::integral Char>
+constexpr bool is_ascii_punct(Char c) noexcept {
+	const auto uc{static_cast<std::make_unsigned_t<Char>>(c)};
+	return uc > 0x20 && uc < 0x7f && !is_ascii_alnum(c);
+}
+
+/**
+ * Get the lower-case version of an ASCII character in [A-Z]; any
+ * other character is returned unchanged. ASCII version of ::tolower.
+ *
+ * @param c some character
+ *
+ * @return the lower-cased character
+ */
+template<std::integral Char>
+constexpr Char to_ascii_lower(Char c) noexcept {
+	return (c >= 'A' && c <= 'Z') ?
+		static_cast<Char>(c + ('a' - 'A')) : c;
+}
+
 using StringVec = std::vector<std::string>;
 
 /**
