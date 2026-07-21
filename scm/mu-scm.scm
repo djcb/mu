@@ -164,21 +164,20 @@ If LST is #f, return #f."
 (define (plist->alist plist)
   "Convert a plist into an alist.
 This is specific for message plists."
-  (let ((alist '()))
-    (plist-for-each
-     (lambda (k v)
-       (let ((key (decolonize-symbol k)))
-	 (set! alist
-	       (append! alist
-			(list (cons key
-				    (cond
-				     ((member key '(from to cc bcc))
-				      (map plist->alist v))
-				     ((member key '(date changed))
-				      (emacs-time->epoch-secs v))
-				     (else v))))))))
-     plist)
-    alist))
+  (let loop ((plist plist) (alist '()))
+    (if (or (null? plist) (null? (cdr plist)))
+	(reverse! alist)
+	(let ((key (decolonize-symbol (car plist)))
+	      (v (cadr plist)))
+	  (loop (cddr plist)
+		(cons (cons key
+			    (cond
+			     ((memq key '(from to cc bcc))
+			      (map plist->alist v))
+			     ((memq key '(date changed))
+			      (emacs-time->epoch-secs v))
+			     (else v)))
+		      alist))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MIME-parts
@@ -220,11 +219,11 @@ field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 
 OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
-  (let* ((alist (mime-part->alist mime-part))
-	 (path (or path (filename mime-part))))
-    ;; we need an fd-based port since we want to support overwrite?
+  (let ((path (or path (filename mime-part))))
+    ;; we need an fd-based port since we want to support overwrite?;
+    ;; without overwrite?, O_EXCL makes open fail for existing files.
     (open path
-	  (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? O_EXCL 0)) #o644)))
+	  (logior O_WRONLY O_CREAT O_TRUNC (if overwrite? 0 O_EXCL)) #o644)))
 
 (define* (write-to-file mime-part #:key (path #f) (overwrite? #f))
   "Write MIME-PART to a file.
@@ -235,16 +234,23 @@ field in the mime-part and if that does not exist, use 'mime-part-<index>' with
 
 OVERWRITE? specifies whether existing files by the same name or overwritten.
 Otherwise, trying to overwrite an existing file raises an error."
-  (let* ((input (make-port mime-part))
-	 (output (make-output-file mime-part
-				   #:path path #:overwrite? overwrite?))
-	 (buf (make-bytevector 4096)) ;; just a guess...
-	 (bytes 0))
-    (while (not (eof-object? bytes)) ;; XXX do this in a more elegant way.
-      (set! bytes (get-bytevector-n! input buf 0 (bytevector-length buf)))
-      (put-bytevector output buf 0 (if (eof-object? bytes) 0 bytes)))
-    (close input)
-    (close output)))
+  (let ((input (make-port mime-part))
+	(output #f))
+    (dynamic-wind
+      (lambda () #f)
+      (lambda ()
+	(set! output (make-output-file mime-part
+				       #:path path #:overwrite? overwrite?))
+	(let ((buf (make-bytevector 4096))) ;; just a guess...
+	  (let loop ((bytes (get-bytevector-n! input buf 0
+					       (bytevector-length buf))))
+	    (unless (eof-object? bytes)
+	      (put-bytevector output buf 0 bytes)
+	      (loop (get-bytevector-n! input buf 0
+				       (bytevector-length buf)))))))
+      (lambda () ;; close ports, even on non-local exit
+	(close input)
+	(when output (close output))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Message
@@ -285,10 +291,10 @@ full message, such as header or body, the cc-message is initialized.")
     (let* ((serialized
 	    (or (slot-ref message 'serialized)
 		(cc-message-plist (slot-ref message 'cc-message))))
-	   ;; parse the serialized message (the mu4e plist)
-	   ;; and convert into alist. We need to _quote_ the
-	   ;; the serialized string before we can parse it.
-	   (alist (plist->alist (eval-string (string-append "'" serialized)))))
+	   ;; parse the serialized message (the mu4e plist) and convert
+	   ;; into an alist. Note: `read', unlike eval, cannot execute
+	   ;; anything.
+	   (alist (plist->alist (call-with-input-string serialized read))))
       (slot-set! message 'alist alist)
       (slot-set! message 'serialized #f))) ;; no longer needed
   (slot-ref message 'alist))
@@ -326,8 +332,7 @@ This is the number of seconds since epoch; #f if not found."
   (assoc-ref (message->alist message) 'changed))
 
 (define-method (path (message <message>))
-  "Get the file-system path for MESSAGE.
-A symbol, either 'high, 'low or 'normal, or #f if not found."
+  "Get the file-system path for MESSAGE or #f if not found."
   (assoc-ref (message->alist message) 'path))
 
 (define-method (priority (message <message>))
@@ -338,7 +343,7 @@ A symbol, either 'high, 'low or 'normal, or #f if not found."
 (define-method (language (message <message>))
   "Get the ISO-639-1 language code for the MESSAGE as a symbol, if detected.
 Return #f otherwise."
-  (let ((lang ( (assoc-ref (message->alist message) 'language))))
+  (let ((lang (assoc-ref (message->alist message) 'language)))
     (if lang
 	(string->symbol lang)
 	#f)))
@@ -353,7 +358,7 @@ Return #f otherwise."
  with the oldest first and the direct parent as the last one. Note, any
 reference (message-id) will appear at most once, duplicates and
 fake-message-id (see impls) are filtered out. If there are no references, return
-#f."
+the empty list."
   (or (assoc-ref (message->alist message) 'references) '()))
 
 (define-method (labels (message <message>))
@@ -376,7 +381,7 @@ This is method is useful to determine the thread a message is in."
 ;;  Flags.
 
 (define-method (flags (message <message>))
-  "Get the size of the MESSAGE in bytes or #f if not available."
+  "Get the list of flags for MESSAGE, or the empty list if there are none."
   (or (assoc-ref (message->alist message) 'flags) '()))
 
 (define-method (flag? (message <message>) flag)
@@ -400,7 +405,7 @@ This is method is useful to determine the thread a message is in."
   (flag? message 'replied))
 
 (define-method (seen? (message <message>))
-  "Does MESSAGE been 'seen' (read)?"
+  "Has MESSAGE been 'seen' (read)?"
   (flag? message 'seen))
 
 (define-method (trashed? (message <message>))
