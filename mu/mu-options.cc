@@ -716,7 +716,7 @@ struct CommandInfo {
 	std::string_view	help;
 
 	// std::function is not constexp-friendly
-	typedef void(*setup_func_t)(CLI::App&, Options&);
+	using setup_func_t = void(*)(CLI::App&, Options&);
 	setup_func_t setup_func{};
 };
 

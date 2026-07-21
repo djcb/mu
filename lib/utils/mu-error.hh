@@ -183,7 +183,7 @@ private:
 	std::string		hint_;
 };
 
-static inline auto
+inline auto
 format_as(const Error& err) {
 	return mu_format("<{} ({}:{})>",
 			 err.what(),

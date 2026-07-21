@@ -106,11 +106,9 @@ Mu::Labels::parse_delta_labels(const std::string& exprs,
 	return Ok(std::move(deltas));
 }
 
-struct cmp_delta_label { // can not yet be a λ in C++17
-	bool operator()(const DeltaLabel& dl1, const DeltaLabel& dl2) const {
-		return dl1.second < dl2.second;
-	}
-};
+using cmp_delta_label = decltype([](const DeltaLabel& dl1, const DeltaLabel& dl2) {
+	return dl1.second < dl2.second;
+});
 std::pair<LabelVec, DeltaLabelVec>
 Mu::Labels::updated_labels(const LabelVec& labels, const DeltaLabelVec& deltas)
 {

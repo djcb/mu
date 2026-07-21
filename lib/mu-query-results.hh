@@ -109,7 +109,7 @@ QueryMatch::has_flag(QueryMatch::Flags flag) const
 }
 
 /* LCOV_EXCL_START */
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, QueryMatch::Flags mflags)
 {
 	if (mflags == QueryMatch::Flags::None) {
@@ -384,7 +384,7 @@ private:
 };
 
 
-static inline auto
+inline auto
 format_as(const QueryResultsIterator& it)
 {
 	return it.path().value_or("<no path>");

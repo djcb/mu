@@ -201,7 +201,7 @@ Mu::read_from_stdin()
  */
 /*LCOV_EXCL_START*/
 static void
-maybe_setsid (G_GNUC_UNUSED gpointer user_data)
+maybe_setsid ([[maybe_unused]] gpointer user_data)
 {
 #if HAVE_SETSID
 	setsid();

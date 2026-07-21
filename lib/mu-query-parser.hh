@@ -28,20 +28,20 @@ namespace Mu {
 /*
  * Some useful symbol-sexps
  */
-static inline const auto	placeholder_sym = "_"_sym;
-static inline const auto	phrase_sym	= "phrase"_sym;
-static inline const auto	regex_sym	= "regex"_sym;
-static inline const auto	range_sym	= "range"_sym;
-static inline const auto	wildcard_sym	= "wildcard"_sym;
+inline const auto	placeholder_sym = "_"_sym;
+inline const auto	phrase_sym	= "phrase"_sym;
+inline const auto	regex_sym	= "regex"_sym;
+inline const auto	range_sym	= "range"_sym;
+inline const auto	wildcard_sym	= "wildcard"_sym;
 
-static inline const auto	open_sym	= "("_sym;
-static inline const auto	close_sym	= ")"_sym;
+inline const auto	open_sym	= "("_sym;
+inline const auto	close_sym	= ")"_sym;
 
-static inline const auto	and_sym		= "and"_sym;
-static inline const auto	or_sym		= "or"_sym;
-static inline const auto	xor_sym		= "xor"_sym;
-static inline const auto	not_sym		= "not"_sym;
-static inline const auto	and_not_sym	= "and-not"_sym;
+inline const auto	and_sym		= "and"_sym;
+inline const auto	or_sym		= "or"_sym;
+inline const auto	xor_sym		= "xor"_sym;
+inline const auto	not_sym		= "not"_sym;
+inline const auto	and_not_sym	= "and-not"_sym;
 
 
 /*

@@ -1020,8 +1020,8 @@ abc
 	const auto id2{m2->message_id()};
 	const auto id3{m3->message_id()};
 
-	g_assert_true(g_str_has_suffix(id2.c_str(), "@mu.id"));
-	g_assert_true(g_str_has_suffix(id3.c_str(), "@mu.id"));
+	g_assert_true(id2.ends_with("@mu.id"));
+	g_assert_true(id3.ends_with("@mu.id"));
 }
 
 

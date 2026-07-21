@@ -132,8 +132,8 @@ struct MetadataIface {
 	 * These are special: handled on the Xapian db level
 	 * rather than Config
 	 */
-	static inline constexpr std::string_view	created_key	= "created";
-	static inline constexpr std::string_view	last_change_key = "last-change";
+	static constexpr std::string_view	created_key	= "created";
+	static constexpr std::string_view	last_change_key = "last-change";
 };
 
 
@@ -534,7 +534,7 @@ format_as(XapianDb::Flavor flavor)
 	}
 }
 
-static inline std::string
+inline std::string
 format_as(const XapianDb& db)
 {
 	return mu_format("{} @ {}", db.description(), db.path());

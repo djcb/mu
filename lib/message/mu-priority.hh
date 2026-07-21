@@ -44,8 +44,8 @@ enum struct Priority : char {
 /**
  * Sequence of all message priorities.
  */
-static constexpr std::array<Priority, 3> AllMessagePriorities = {
-    Priority::Low, Priority::Normal, Priority::High};
+inline constexpr auto AllMessagePriorities = std::to_array({
+	Priority::Low, Priority::Normal, Priority::High});
 
 /**
  * Get the char for some priority
@@ -88,7 +88,7 @@ priority_from_char(char c)
  *
  * @return the priority or none
  */
-static inline Option<Priority>
+inline Option<Priority>
 priority_from_name(std::string_view pname)
 {
 	if (pname == "low" || pname == "l")

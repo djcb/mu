@@ -637,7 +637,7 @@ struct MockQueryResult {
 
 using MockQueryResults = std::vector<MockQueryResult>;
 
-G_GNUC_UNUSED static std::ostream&
+[[maybe_unused]] static std::ostream&
 operator<<(std::ostream& os, const MockQueryResults& qrs)
 {
 	for (auto&& mi : qrs)

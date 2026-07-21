@@ -303,7 +303,7 @@ using StringVec = std::vector<std::string>;
  * @return true or false
  */
 bool contains_unbroken_script(const char* str);
-static inline bool contains_unbroken_script(const std::string& str) {
+inline bool contains_unbroken_script(const std::string& str) {
 	return contains_unbroken_script(str.c_str());
 }
 
@@ -315,7 +315,7 @@ static inline bool contains_unbroken_script(const std::string& str) {
  *
  * @return a utf8-string
  */
-static inline std::string utf8_clean(std::string&& str) {
+inline std::string utf8_clean(std::string&& str) {
 	if (!g_utf8_validate(str.c_str(), static_cast<gssize>(str.length()), {})) {
 		gchar* clean{g_utf8_make_valid(
 				str.c_str(), static_cast<gssize>(str.length()))};
@@ -333,7 +333,7 @@ static inline std::string utf8_clean(std::string&& str) {
  * @return a flattened string
  */
 std::string utf8_flatten(const char* str);
-static inline std::string
+inline std::string
 utf8_flatten(const std::string& s) {
 	return utf8_flatten(s.c_str());
 }
@@ -401,7 +401,7 @@ std::vector<std::string> split(const std::string& str, char sepa);
  */
 [[nodiscard]] std::string join(const std::vector<std::string>& svec,
 			       const std::string& sepa);
-[[nodiscard]] static inline std::string join(const std::vector<std::string>& svec,
+[[nodiscard]] inline std::string join(const std::vector<std::string>& svec,
 					     char sepa) {
 	return join(svec, std::string(1, sepa));
 }
@@ -426,7 +426,7 @@ bool fputs_encoded (const std::string& str, FILE *stream);
  * @return true if printing worked, false otherwise
  */
 template<typename...T>
-static inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) noexcept {
+inline bool mu_print_encoded(fmt::format_string<T...> frm, T&&... args) noexcept {
 	return fputs_encoded(fmt::format(frm, std::forward<T>(args)...),
 			     stdout);
 }
@@ -613,7 +613,7 @@ void set_thread_name(const std::string& name);
  * @return a std::string
  */
 template <typename T>
-static inline std::string
+inline std::string
 to_string(const T& val)
 {
 	std::stringstream sstr;

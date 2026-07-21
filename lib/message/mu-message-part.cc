@@ -224,12 +224,12 @@ MessagePart::looks_like_attachment() const noexcept
 static void
 test_cooked_full()
 {
-	std::array<std::pair<std::string, std::string>, 4> cases = {{
+	auto cases = std::to_array<std::pair<std::string, std::string>>({
 		{ "/hello/world/foo", "foo" },
 		{ "foo:/\n/bar", "bar"},
 		{ "Aap Noot Mies", "Aap-Noot-Mies"},
 		{ "..", "-"}
-	}};
+	});
 
 	for (auto&& test: cases)
 		assert_equal(cook_full(test.first), test.second);
@@ -238,12 +238,12 @@ test_cooked_full()
 static void
 test_cooked_minimal()
 {
-	std::array<std::pair<std::string, std::string>, 4> cases = {{
+	auto cases = std::to_array<std::pair<std::string, std::string>>({
 		{ "/hello/world/foo", "foo" },
 		{ "foo:/\n/bar", "bar"},
 		{ "Aap Noot Mies.doc", "Aap Noot Mies.doc"},
 		{ "..", "-"}
-	}};
+	});
 
 	for (auto&& test: cases)
 		assert_equal(cook_minimal(test.first), test.second);

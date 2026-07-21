@@ -54,9 +54,9 @@ static bool
 looks_like_matcher(const Sexp& sexp)
 {
 	// all the "terminal values" (from the Mu parser's pov)
-	const std::array<Sexp::Symbol, 5> value_syms = {
+	const auto value_syms = std::to_array({
 		placeholder_sym, phrase_sym, regex_sym, range_sym, wildcard_sym
-	};
+	});
 
 	if (!sexp.listp() || sexp.empty() || !sexp.front().symbolp())
 		return false;

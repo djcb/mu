@@ -101,7 +101,7 @@ struct Sexp {
 	Sexp(const char *str): Sexp{std::string{str}} {}
 	Sexp(std::string_view sv): Sexp{std::string{sv}} {}
 
-	template<typename N, typename = std::enable_if_t<std::is_integral_v<N>> >
+	template<std::integral N>
 	Sexp(N n):value{static_cast<Number>(n)} {}
 
 	Sexp(const Symbol& sym): value{sym} {}
@@ -305,13 +305,13 @@ MU_ENABLE_BITOPS(Sexp::Format);
 /**
  * String-literal; allow for ":foo"_sym to be a symbol
  */
-static inline Sexp::Symbol
+inline Sexp::Symbol
 operator""_sym(const char* str, std::size_t n)
 {
 	return Sexp::Symbol{str};
 }
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const Sexp::Type& stype)
 {
 	os << Sexp::type_name(stype);
@@ -319,7 +319,7 @@ operator<<(std::ostream& os, const Sexp::Type& stype)
 }
 
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const Sexp& sexp)
 {
 	os << sexp.to_string();

@@ -111,10 +111,10 @@ run_and_count_matches(const std::string& xpath,
 	return qres->size();
 }
 
-typedef struct {
+struct QResults {
 	const char* query;
 	size_t      count; /* expected number of matches */
-} QResults;
+};
 
 static void
 test_mu_query_01(void)

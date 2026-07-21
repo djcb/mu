@@ -165,13 +165,13 @@ test_mu_msg_multimime()
 static void
 test_mu_msg_flags()
 {
-	std::array<std::pair<std::string, Flags>, 2> tests= {{
+	auto tests = std::to_array<std::pair<std::string, Flags>>({
 			{MU_TESTMAILDIR4 "/multimime!2,FS",
 			 (Flags::Flagged | Flags::Seen |
 			  Flags::HasAttachment)},
 			{MU_TESTMAILDIR4 "/special!2,Sabc",
 			 (Flags::Seen)}
-		}};
+		});
 
 	for (auto&& test: tests) {
 		 auto msg = Message::make_from_path(test.first);
@@ -201,12 +201,12 @@ test_mu_msg_references()
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1305664394.2171_402.cthulhu!2,")
 		.value()};
 
-	std::array<std::string, 4> expected_refs = {
+	auto expected_refs = std::to_array<std::string>({
 		"non-exist-01@msg.id",
 		"non-exist-02@msg.id",
 		"non-exist-03@msg.id",
 		"non-exist-04@msg.id"
-	};
+	});
 
 	assert_equal_seq_str(msg.references(), expected_refs);
 	assert_equal(msg.thread_id(), expected_refs[0]);
@@ -218,14 +218,14 @@ test_mu_msg_references_dups()
 	auto msg{Message::make_from_path(MU_TESTMAILDIR4 "/1252168370_3.14675.cthulhu!2,S")
 		.value()};
 
-	std::array<std::string, 6> expected_refs = {
+	auto expected_refs = std::to_array<std::string>({
 		"439C1136.90504@euler.org",
 		"4399DD94.5070309@euler.org",
 		"20051209233303.GA13812@gauss.org",
 		"439B41ED.2080402@euler.org",
 		"439A1E03.3090604@euler.org",
 		"20051211184308.GB13513@gauss.org"
-	};
+	});
 
 	assert_equal_seq_str(msg.references(), expected_refs);
 	assert_equal(msg.thread_id(), expected_refs[0]);
@@ -237,7 +237,7 @@ test_mu_msg_references_many()
 	auto msg{Message::make_from_path(MU_TESTMAILDIR2 "/bar/cur/181736.eml")
 		.value()};
 
-	std::array<std::string, 11> expected_refs = {
+	auto expected_refs = std::to_array<std::string>({
 		"e9065dac-13c1-4103-9e31-6974ca232a89@t15g2000prt.googlegroups.com",
 		"87hbblwelr.fsf@sapphire.mobileactivedefense.com",
 		"pql248-4va.ln1@wilbur.25thandClement.com",
@@ -249,7 +249,7 @@ test_mu_msg_references_many()
 		"tO8cp.1228$GE6.370@news.usenetserver.com",
 		"ikr6ks$nlf$1@Iltempo.Update.UU.SE",
 		"8ioh48-8mu.ln1@leafnode-msgid.gclare.org.uk"
-	};
+	});
 
 	assert_equal_seq_str(msg.references(), expected_refs);
 	assert_equal(msg.thread_id(), expected_refs[0]);
@@ -268,12 +268,12 @@ test_mu_msg_tags()
 	g_assert_true(msg.priority() == Priority::High);
 	g_assert_cmpuint(msg.date(), ==, 1217530645);
 
-	std::array<std::string, 4> expected_tags = {
+	auto expected_tags = std::to_array<std::string>({
 		"Paradise",
 		"losT",
 		"john",
 		"milton"
-	};
+	});
 	assert_equal_seq_str(msg.tags(), expected_tags);
 }
 
@@ -368,7 +368,7 @@ k+ZGGoQ0v8b7RwmyskMAAAAAAAAAAAAA
 }
 
 
-G_GNUC_UNUSED static gboolean
+[[maybe_unused]] static gboolean
 ignore_error(const char* log_domain, GLogLevelFlags log_level, const gchar* msg, gpointer user_data)
 {
 	return FALSE; /* don't abort */

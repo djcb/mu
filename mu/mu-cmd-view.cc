@@ -121,7 +121,7 @@ body_or_summary(const Message& message, const Options& opts)
 		print_field("Summary", summ, color);
 	} else {
 		mu_print_encoded("{}", body);
-		if (!g_str_has_suffix(body.c_str(), "\n"))
+		if (!body.ends_with('\n'))
 			mu_println("");
 	}
 }

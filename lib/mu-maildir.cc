@@ -71,7 +71,7 @@ create_maildir(const std::string& path, mode_t mode)
 	if (path.empty())
 		return Err(Error{Error::Code::File, "path must not be empty"});
 
-	std::array<std::string,3> subdirs = {"new", "cur", "tmp"};
+	const auto subdirs = std::to_array<std::string>({"new", "cur", "tmp"});
 	for (auto&& subdir: subdirs) {
 
 		const auto fullpath{join_paths(path, subdir)};
@@ -274,7 +274,7 @@ msg_move_verify(const std::string& src, const std::string& dst)
 // valgrind warning in tests
 /* use GIO to move files; this is slower than rename() so only use
  * this when needed: when moving across filesystems */
-G_GNUC_UNUSED static Mu::Result<void>
+[[maybe_unused]] static Mu::Result<void>
 msg_move_g_file(const std::string& src, const std::string& dst)
 {
 	GFile *srcfile{g_file_new_for_path(src.c_str())};
@@ -296,7 +296,7 @@ msg_move_g_file(const std::string& src, const std::string& dst)
 
 /* use mv to move files; this is slower than rename() so only use this when
  * needed: when moving across filesystems */
-G_GNUC_UNUSED static Mu::Result<void>
+[[maybe_unused]] static Mu::Result<void>
 msg_move_mv_file(const std::string& src, const std::string& dst)
 {
 	static const auto mv_path{program_in_path("mv")};
@@ -407,7 +407,7 @@ check_determine_target_params (const std::string& old_path,
 				"target maildir must be empty or start with / ({})",
 				target_maildir});
 
-	if (old_path.find(root_maildir_path) != 0)
+	if (!old_path.starts_with(root_maildir_path))
 		return Err(Error{Error::Code::File,
 				"old-path must be below root-maildir ({}) ({})",
 				old_path, root_maildir_path});

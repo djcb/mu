@@ -177,12 +177,12 @@ range(const Field& field, Sexp&& s)
 
 
 using OpPair = std::pair<const std::string_view, Xapian::Query::op>;
-static constexpr std::array<OpPair, 4> LogOpPairs = {{
+static constexpr auto LogOpPairs = std::to_array<OpPair>({
 		{ "and", Xapian::Query::OP_AND },
 		{ "or", Xapian::Query::OP_OR },
 		{ "xor", Xapian::Query::OP_XOR },
 		{ "not", Xapian::Query::OP_AND_NOT }
-	}};
+	});
 
 static Option<Xapian::Query::op>
 find_log_op(const std::string& opname)

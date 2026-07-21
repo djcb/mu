@@ -55,7 +55,7 @@ unwrap(Option<T>&& res)
  * @return option with either the string or nothing if str was NULL.
  */
 Option<std::string>
-static inline to_string_opt(const char* str) {
+inline to_string_opt(const char* str) {
 	if (str)
 		return std::string{str};
 	else

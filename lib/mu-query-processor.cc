@@ -93,18 +93,8 @@ struct Element {
 		Range
 		>;
 
-	// helper
-	template <typename T, typename U>
-	struct decay_equiv:
-		std::is_same<typename std::decay<T>::type, U>::type {};
-
 	Element(Bracket b): value{b} {}
 	Element(Op op): value{op} {}
-
-	template<typename T,
-		 typename std::enable_if<std::is_base_of<class FieldValue<T>, T>::value>::type = 0>
-	Element(const std::string& field, const T& val): value{T{field, val}} {}
-
 	Element(const std::string& val): value{val} {}
 
 	template<typename T>

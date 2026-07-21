@@ -75,7 +75,7 @@ Mu::base_message_dir_file(const std::string& path)
 	constexpr auto newdir{"/new"};
 
 	const auto dname{dirname(path)};
-	bool is_new{!!g_str_has_suffix(dname.c_str(), newdir)};
+	bool is_new{dname.ends_with(newdir)};
 
 	std::string mdir{dname.substr(0, dname.size() - 4)};
 	return Ok(DirFile{std::move(mdir), basename(path), is_new});
@@ -118,9 +118,9 @@ Mu::flags_from_path(const std::string& path)
 static void
 test_maildir_from_path()
 {
-	std::array<std::tuple<std::string, std::string, std::string>, 1> test_cases = {{
+	auto test_cases = std::to_array<std::tuple<std::string, std::string, std::string>>({
 		{ "/home/foo/Maildir/hello/cur/msg123", "/home/foo/Maildir", "/hello" }
-	}};
+	});
 
 	for(auto&& tcase: test_cases)  {
 		const auto res{maildir_from_path(std::get<0>(tcase), std::get<1>(tcase))};
@@ -140,10 +140,10 @@ test_base_message_dir_file()
 		const std::string path;
 		DirFile expected;
 	};
-	std::array<TestCase, 1> test_cases = {{
+	auto test_cases = std::to_array<TestCase>({
 			{ "/home/djcb/Maildir/foo/cur/msg:2,S",
 			  { "/home/djcb/Maildir/foo", "msg:2,S", false } }
-		}};
+		});
 	for(auto&& tcase: test_cases)  {
 		const auto res{base_message_dir_file(tcase.path)};
 		assert_valid_result(res);
@@ -156,7 +156,7 @@ test_base_message_dir_file()
 static void
 test_flags_from_path()
 {
-	std::array<std::pair<std::string, Flags>, 5> test_cases = {{
+	auto test_cases = std::to_array<std::pair<std::string, Flags>>({
 		{"/home/foo/Maildir/test/cur/123456:2,FSR",
 		 (Flags::Replied | Flags::Seen | Flags::Flagged)},
 		{"/home/foo/Maildir/test/new/123456", Flags::New},
@@ -166,7 +166,7 @@ test_flags_from_path()
 		{"/home/foo/Maildir/test/cur/123456:2,DTP",
 		 (Flags::Draft | Flags::Trashed | Flags::Passed)},
 		{"/home/foo/Maildir/test/cur/123456:2,S", Flags::Seen}
-	}};
+	});
 
 	for (auto&& tcase: test_cases) {
 		auto res{flags_from_path(tcase.first)};

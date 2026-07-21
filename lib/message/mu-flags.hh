@@ -112,7 +112,7 @@ struct MessageFlagInfo {
 /**
  * Array of all flag information.
  */
-constexpr std::array<MessageFlagInfo, 14> AllMessageFlagInfos = {{
+inline constexpr auto AllMessageFlagInfos = std::to_array<MessageFlagInfo>({
 	MessageFlagInfo{Flags::Draft,        'D', "draft",	MessageFlagCategory::Mailfile,
 	    "Draft (in progress)"
 	},
@@ -155,7 +155,7 @@ constexpr std::array<MessageFlagInfo, 14> AllMessageFlagInfos = {{
 	MessageFlagInfo{Flags::Calendar, 'c', "calendar",	MessageFlagCategory::Content,
 		"Calendar invitation"
     },
-}};
+});
 
 
 /**
@@ -409,7 +409,7 @@ std::string to_string(Flags flags);
  *
  * @return string as a sequence of message-flag shortcuts
  */
-static inline auto format_as(const Flags& flags) {
+inline auto format_as(const Flags& flags) {
 	return to_string(flags);
 }
 

@@ -512,7 +512,7 @@ private:
 }; // Message
 MU_ENABLE_BITOPS(Message::Options);
 
-static inline auto
+inline auto
 format_as(const Message& msg) {
 	return msg.path();
 }

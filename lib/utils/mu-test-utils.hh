@@ -86,7 +86,7 @@ bool set_en_us_utf8_locale();
  *
  * @return number of newlines
  */
-static inline size_t count_nl(const std::string& s) {
+inline size_t count_nl(const std::string& s) {
 	return std::count(s.begin(), s.end(), '\n');
 }
 
@@ -167,7 +167,7 @@ private:
 	const bool autodelete_;
 };
 
-static inline auto format_as(const TempDir& td) {
+inline auto format_as(const TempDir& td) {
 	return td.path();
 }
 

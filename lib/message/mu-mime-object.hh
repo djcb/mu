@@ -449,8 +449,8 @@ private:
 	}
 };
 
-constexpr std::array<std::pair<MimeCertificate::PubkeyAlgo, std::string_view>, 11>
-AllPubkeyAlgos = {{
+inline constexpr auto
+AllPubkeyAlgos = std::to_array<std::pair<MimeCertificate::PubkeyAlgo, std::string_view>>({
 		{ MimeCertificate::PubkeyAlgo::Default,	"default"},
 		{ MimeCertificate::PubkeyAlgo::Rsa,	"rsa"},
 		{ MimeCertificate::PubkeyAlgo::RsaE,	"rsa-encryption-only"},
@@ -462,14 +462,14 @@ AllPubkeyAlgos = {{
 		{ MimeCertificate::PubkeyAlgo::EcDsa,	"elliptic-curve+dsa"},
 		{ MimeCertificate::PubkeyAlgo::EcDh,	"elliptic-curve+diffie-helman"},
 		{ MimeCertificate::PubkeyAlgo::EdDsa,	"elliptic-curve+dsa-2"}
-		}};
+		});
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::PubkeyAlgo algo) {
 	return to_string_view_opt(AllPubkeyAlgos, algo);
 }
 
-constexpr std::array<std::pair<MimeCertificate::DigestAlgo, std::string_view>, 15>
-AllDigestAlgos = {{
+inline constexpr auto
+AllDigestAlgos = std::to_array<std::pair<MimeCertificate::DigestAlgo, std::string_view>>({
 		{ MimeCertificate::DigestAlgo::Default,		"default"},
 		{ MimeCertificate::DigestAlgo::Md5,		"md5"},
 		{ MimeCertificate::DigestAlgo::Sha1,		"sha1"},
@@ -485,35 +485,35 @@ AllDigestAlgos = {{
 		{ MimeCertificate::DigestAlgo::Crc32,		"crc32"},
 		{ MimeCertificate::DigestAlgo::Crc32Rfc1510,	"crc32-rfc1510"},
 		{ MimeCertificate::DigestAlgo::Crc32Rfc2440,	"crc32-rfc2440"},
-	}};
+	});
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::DigestAlgo algo) {
 	return to_string_view_opt(AllDigestAlgos, algo);
 }
 
-constexpr std::array<std::pair<MimeCertificate::Trust, std::string_view>, 6>
-AllTrusts = {{
+inline constexpr auto
+AllTrusts = std::to_array<std::pair<MimeCertificate::Trust, std::string_view>>({
 		{ MimeCertificate::Trust::Unknown,	"unknown" },
 		{ MimeCertificate::Trust::Undefined,	"undefined" },
 		{ MimeCertificate::Trust::Never,	"never" },
 		{ MimeCertificate::Trust::Marginal,	"marginal" },
 		{ MimeCertificate::Trust::TrustFull,	"trust-full" },
 		{ MimeCertificate::Trust::TrustUltimate,"trust-ultimate" },
-	}};
+	});
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Trust trust) {
 	return to_string_view_opt(AllTrusts, trust);
 }
 
-constexpr std::array<std::pair<MimeCertificate::Validity, std::string_view>, 6>
-AllValidities = {{
+inline constexpr auto
+AllValidities = std::to_array<std::pair<MimeCertificate::Validity, std::string_view>>({
 		{ MimeCertificate::Validity::Unknown,	"unknown" },
 		{ MimeCertificate::Validity::Undefined, "undefined" },
 		{ MimeCertificate::Validity::Never,	"never" },
 		{ MimeCertificate::Validity::Marginal,	"marginal" },
 		{ MimeCertificate::Validity::Full,	"full" },
 		{ MimeCertificate::Validity::Ultimate,	"ultimate" },
-	}};
+	});
 
 constexpr Option<std::string_view> to_string_view_opt(MimeCertificate::Validity val) {
 	return to_string_view_opt(AllValidities, val);
@@ -566,8 +566,8 @@ private:
 	}
 };
 
-constexpr std::array<std::pair<MimeSignature::Status, std::string_view>, 12>
-AllMimeSignatureStatuses= {{
+inline constexpr auto
+AllMimeSignatureStatuses = std::to_array<std::pair<MimeSignature::Status, std::string_view>>({
 		{ MimeSignature::Status::Valid,         "valid" },
 		{ MimeSignature::Status::Green,         "green" },
 		{ MimeSignature::Status::Red,		"red" },
@@ -580,10 +580,10 @@ AllMimeSignatureStatuses= {{
 		{ MimeSignature::Status::BadPolicy,	"bad-policy" },
 		{ MimeSignature::Status::SysError,	"sys-error" },
 		{ MimeSignature::Status::TofuConflict,	"tofu-confict" },
-	}};
+	});
 MU_ENABLE_BITOPS(MimeSignature::Status);
 
-static inline std::string to_string(MimeSignature::Status status) {
+inline std::string to_string(MimeSignature::Status status) {
 	std::string str;
 	for (auto&& item: AllMimeSignatureStatuses) {
 		if (none_of(item.first & status))
@@ -649,8 +649,8 @@ private:
 	}
 };
 
-constexpr std::array<std::pair<MimeDecryptResult::CipherAlgo, std::string_view>, 12>
-AllCipherAlgos= {{
+inline constexpr auto
+AllCipherAlgos = std::to_array<std::pair<MimeDecryptResult::CipherAlgo, std::string_view>>({
 		{MimeDecryptResult::CipherAlgo::Default,	"default"},
 		{MimeDecryptResult::CipherAlgo::Idea,		"idea"},
 		{MimeDecryptResult::CipherAlgo::Des3,		"3des"},
@@ -663,7 +663,7 @@ AllCipherAlgos= {{
 		{MimeDecryptResult::CipherAlgo::Camellia128,	"camellia128"},
 		{MimeDecryptResult::CipherAlgo::Camellia192,	"camellia192"},
 		{MimeDecryptResult::CipherAlgo::Camellia256,	"camellia256"},
-	}};
+	});
 
 constexpr Option<std::string_view> to_string_view_opt(MimeDecryptResult::CipherAlgo algo) {
 	return to_string_view_opt(AllCipherAlgos, algo);

@@ -212,16 +212,15 @@ struct Field {
 };
 
 // equality
-static inline constexpr bool operator==(const Field& f1, const Field& f2) { return f1.id == f2.id; }
-static inline constexpr bool operator==(const Field& f1, const Field::Id id) { return f1.id == id; }
-
+constexpr bool operator==(const Field& f1, const Field& f2) { return f1.id == f2.id; }
+constexpr bool operator==(const Field& f1, const Field::Id id) { return f1.id == id; }
 
 MU_ENABLE_BITOPS(Field::Flag);
 
 /**
  * Sequence of _all_ message fields
  */
-static constexpr std::array<Field, Field::id_size()>
+inline constexpr std::array<Field, Field::id_size()>
     Fields = {
 	{
 	    {
@@ -530,13 +529,13 @@ constexpr Option<Field> field_find_if(Pred&& pred) {
  *
  * @return the message-field or Nothing
  */
-static inline
+inline
 Option<Field> field_from_shortcut(char shortcut) {
 	return field_find_if([&](auto&& field){
 		return field.shortcut == shortcut;
 	});
 }
-static inline
+inline
 Option<Field> field_from_name(const std::string& name) {
 	switch(name.length()) {
 	case 0:
@@ -595,8 +594,7 @@ bool field_is_combi (const std::string& name);
  *
  * @return Field::Id  or nullopt
  */
-static inline
-Option<Field> field_from_number(size_t id)
+constexpr Option<Field> field_from_number(size_t id)
 {
 	if (id >= static_cast<size_t>(Field::Id::_count_))
 		return Nothing;

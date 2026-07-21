@@ -68,7 +68,7 @@ get_info(std::string&& path, const std::string& prefix)
 	std::string line;
 	while (std::getline(file, line)) {
 
-		if (line.find(prefix) != 0)
+		if (!line.starts_with(prefix))
 			continue;
 
 		line = line.substr(prefix.length());

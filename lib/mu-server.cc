@@ -682,7 +682,6 @@ struct FindProps {
 	Field::Id sort_field_id{Field::Id::Date};
 	QueryFlags flags{QueryFlags::SkipUnreadable};
 };
-// XXX: once we move to C++20, use designated initializers
 
 
 static const std::pair<QueryFlags, std::string> flags_props[] = {
@@ -702,20 +701,17 @@ static const std::pair<QueryFlags, std::string> flags_props[] = {
 static FindProps
 determine_find_props(const Command& cmd)
 {
-	FindProps props{};
+	const auto batch_size{cmd.number_arg(":batch-size").value_or(200)};
+	if (batch_size < 1)
+		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", batch_size};
 
-	props.query = cmd.string_arg(":query").value_or("");
-	props.batch_size = cmd.number_arg(":batch-size").value_or(200);
-	if (props.batch_size < 1)
-		throw Error{Error::Code::InvalidArgument, "invalid batch-size {}", props.batch_size};
-
-	props.maxnum = cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/;
-	if (props.maxnum < -1)
-		throw Error{Error::Code::InvalidArgument, "invalid max-num {}", props.maxnum};
+	const auto maxnum{cmd.number_arg(":maxnum").value_or(-1) /*unlimited*/};
+	if (maxnum < -1)
+		throw Error{Error::Code::InvalidArgument, "invalid max-num {}", maxnum};
 
 	const auto threads{cmd.boolean_arg(":threads")};
 	// complicated!
-	props.sort_field_id = std::invoke([&]()->Field::Id {
+	const auto sort_field_id = std::invoke([&]()->Field::Id {
 		if (const auto arg = cmd.symbol_arg(":sortfield"); !arg)
 			return Field::Id::Date;
 		else if (arg->length() < 2)
@@ -735,12 +731,19 @@ determine_find_props(const Command& cmd)
 			return field->id;
 	});
 
+	auto flags{QueryFlags::SkipUnreadable};
 	for (const auto& item: flags_props) {
 		if (cmd.boolean_arg(item.second))
-			props.flags |= item.first;
+			flags |= item.first;
 	}
 
-	return props;
+	return FindProps{
+		.query		= cmd.string_arg(":query").value_or(""),
+		.batch_size	= batch_size,
+		.maxnum		= maxnum,
+		.sort_field_id	= sort_field_id,
+		.flags		= flags,
+	};
 }
 
 /**

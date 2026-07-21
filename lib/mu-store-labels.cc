@@ -202,11 +202,11 @@ Mu::import_labels(Mu::Store& store, const std::string& path, bool dry_run, bool 
 
 	while (std::getline(input, line)) {
 
-		if (line.find(path_key) ==  0)
+		if (line.starts_with(path_key))
 			current_path = line.substr(path_key.length());
-		else if (line.find(message_id_key) == 0)
+		else if (line.starts_with(message_id_key))
 			current_msgid = line.substr(message_id_key.length());
-		else if (line.find(labels_key) == 0) {
+		else if (line.starts_with(labels_key)) {
 			current_labels = split(line.substr(labels_key.length()), ',');
 			if (!current_labels.empty())
 				import_labels_for_message(store, dry_run, level,

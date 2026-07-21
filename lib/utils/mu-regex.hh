@@ -178,7 +178,7 @@ private:
 	GRegex *rx_{};
 };
 
-static inline std::string format_as(const Regex& rx) {
+inline std::string format_as(const Regex& rx) {
 	if (auto&& grx{rx.g_regex()}; !grx)
 		return "//";
 	else

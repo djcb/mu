@@ -265,7 +265,7 @@ private:
 };
 
 /* LCOV_EXCL_START */
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const CommandHandler::ArgInfo& info)
 {
 	os << info.type << " (" << (info.required ? "required" : "optional") << ")";
@@ -274,7 +274,7 @@ operator<<(std::ostream& os, const CommandHandler::ArgInfo& info)
 }
 /* LCOV_EXCL_STOP */
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const CommandHandler::CommandInfo& info)
 {
 	for (auto&& arg : info.args)
@@ -284,7 +284,7 @@ operator<<(std::ostream& os, const CommandHandler::CommandInfo& info)
 	return os;
 }
 
-static inline std::ostream&
+inline std::ostream&
 operator<<(std::ostream& os, const CommandHandler::CommandInfoMap& map)
 {
 	for (auto&& c : map)

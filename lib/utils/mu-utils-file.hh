@@ -151,7 +151,7 @@ std::string runtime_path(RuntimePath path, const std::string& muhome="");
  *
  * @return the path
  */
-static inline std::string join_paths() { return {}; }
+inline std::string join_paths() { return {}; }
 template<typename S> std::string join_paths_(S&& s) { return std::string{s}; }
 template<typename	S, typename...Args>
 std::string join_paths_(S&& s, Args...args) {

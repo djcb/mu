@@ -222,7 +222,7 @@ private:
 };
 
 
-G_GNUC_UNUSED static auto
+[[maybe_unused]] static auto
 format_as(const Context& ctx)
 {
 	return mu_format("<{}:{}: '{}'>",
@@ -335,18 +335,18 @@ comment(Context& ctx)
 static bool // do we need a SPC separator for this tag?
 needs_separator(std::string_view tagname)
 {
-	constexpr std::array<const char*, 7> nosep_tags = {
+	constexpr auto nosep_tags = std::to_array<const char*>({
 		"b", "em", "i", "s", "strike", "tt", "u"
-	};
+	});
 	return !seq_some(nosep_tags, [&](auto&& t){return matches(tagname, t);});
 }
 
 static bool // do we need to skip the element completely?
 is_skip_element(std::string_view tagname)
 {
-	constexpr std::array<const char*, 4> skip_tags = {
+	constexpr auto skip_tags = std::to_array<const char*>({
 		"script", "style", "head", "meta"
-	};
+	});
 	return seq_some(skip_tags, [&](auto&& t){return matches(tagname, t);});
 }
 
@@ -423,7 +423,7 @@ html_escape_char(Context& ctx)
 {
 	// we only care about a few accented chars, and add them unaccented, lowercase, since that's
 	// we do for indexing anyway.
-	constexpr std::array<const char*, 11> escs = {
+	constexpr auto escs = std::to_array<const char*>({
 		"breve",
 		"caron",
 		"circ",
@@ -435,7 +435,7 @@ html_escape_char(Context& ctx)
 		"strok",
 		"tilde",
 		"uml",
-	};
+	});
 
 	auto unescape=[escs](std::string_view esc)->char {
 		if (esc.empty())

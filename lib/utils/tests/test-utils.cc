@@ -104,7 +104,7 @@ test_date_ymwdhMs()
 	};
 
 
-	const std::array<testcase, 7> cases = {{
+	const auto cases = std::to_array<testcase>({
 		{"7s", 7, 1},
 		{"3M", 3 * 60, 1},
 		{"3h", 3 * 60 * 60, 1},
@@ -112,7 +112,7 @@ test_date_ymwdhMs()
 		{"2w", 2 * 7 * 24 * 60 * 60, 3600 + 1},
 		{"2y", 2 * 365 * 24 * 60 * 60, 24 * 3600 + 1},
 		{"3m", 3 * 30 * 24 * 60 * 60, 3 * 24 * 3600 + 1}
-		}};
+		});
 
 	for (auto&& tcase: cases) {
 		const auto date = parse_date_time(tcase.expr, true);
@@ -132,14 +132,14 @@ test_date_ymwdhMs()
 static void
 test_parse_size()
 {
-	constexpr std::array<std::tuple<const char*, bool, int64_t>, 6> cases = {{
+	constexpr auto cases = std::to_array<std::tuple<const char*, bool, int64_t>>({
 			{ "456", false, 456 },
 			{ "", false, G_MAXINT64 },
 			{ "", true, 0 },
 			{ "2K", false, 2048 },
 			{ "2M", true, 2097152 },
 			{ "5G", true, 5368709120 }
-		}};
+		});
 	for(auto&& test: cases) {
 		g_assert_cmpint(parse_size(std::get<0>(test), std::get<1>(test))
 				.value_or(-1), ==, std::get<2>(test));
@@ -154,7 +154,7 @@ test_utf8_clean()
 {
 	assert_equal(utf8_clean("James Holden"), "James Holden");
 
-	const std::array<char, 3> invalid_bytes ={ 'a' , static_cast<char>(0xff), 'c'};
+	const auto invalid_bytes = std::to_array({ 'a' , static_cast<char>(0xff), 'c'});
 	std::string invalid{invalid_bytes.data(), invalid_bytes.size()};
 
 	g_assert_false(g_utf8_validate(invalid.c_str(), invalid.length(), nullptr));

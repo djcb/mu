@@ -281,8 +281,8 @@ Message::has_mime_message() const
 static Priority
 get_priority(const MimeMessage& mime_msg)
 {
-	constexpr std::array<std::pair<std::string_view, Priority>, 10>
-		prio_alist = {{
+	constexpr auto prio_alist =
+		std::to_array<std::pair<std::string_view, Priority>>({
 			{"high",	Priority::High},
 			{"1",	Priority::High},
 			{"2",	Priority::High},
@@ -295,7 +295,7 @@ get_priority(const MimeMessage& mime_msg)
 			{"bulk",	Priority::Low},
 			{"4",	Priority::Low},
 			{"5",	Priority::Low}
-		}};
+		});
 
 	const auto opt_str = mime_msg.header("Precedence")
 		.disjunction(mime_msg.header("X-Priority"))
@@ -316,9 +316,9 @@ get_priority(const MimeMessage& mime_msg)
 static std::vector<std::string>
 extract_tags(const MimeMessage& mime_msg)
 {
-	constexpr std::array<std::pair<const char*, char>, 3> tag_headers = {{
+	constexpr auto tag_headers = std::to_array<std::pair<const char*, char>>({
 		{"X-Label", ' '}, {"X-Keywords", ','}, {"Keywords", ','}
-	}};
+	});
 
 	std::vector<std::string> tags;
 	seq_for_each(tag_headers, [&](auto&& item) {
