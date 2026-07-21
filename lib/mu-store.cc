@@ -757,28 +757,6 @@ Store::label_map() const
 }
 
 std::size_t
-Store::for_each_message_path(Store::ForEachMessageFunc msg_func) const
-{
-	size_t n{};
-
-	xapian_try([&] {
-		std::lock_guard guard{priv_->lock_};
-		auto enq{xapian_db().enquire()};
-
-		enq.set_query(Xapian::Query::MatchAll);
-		enq.set_cutoff(0, 0);
-
-		Xapian::MSet matches(enq.get_mset(0, xapian_db().size()));
-		constexpr auto path_no{field_from_id(Field::Id::Path).value_no()};
-		for (auto&& it = matches.begin(); it != matches.end(); ++it, ++n)
-			if (!msg_func(*it, it.get_document().get_value(path_no)))
-				break;
-	});
-
-	return n;
-}
-
-std::size_t
 Store::for_each_term(Field::Id field_id, Store::ForEachTermFunc func) const
 {
 	return xapian_db().all_terms(field_from_id(field_id).xapian_term(), func);

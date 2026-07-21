@@ -359,7 +359,7 @@ public:
 	Result<Xapian::docid> add_document(const Xapian::Document& doc) {
 		return xapian_try_result([&]{
 			auto&& id{wdb().add_document(doc)};
-			set_timestamp(MetadataIface::last_change_key);
+			dirty_ = true;
 			maybe_commit();
 			return Ok(std::move(id));
 		});
@@ -379,7 +379,7 @@ public:
 			 const Xapian::Document& doc) {
 		return xapian_try_result([&]{
 			auto&& id{wdb().replace_document(term, doc)};
-			set_timestamp(MetadataIface::last_change_key);
+			dirty_ = true;
 			maybe_commit();
 			return Ok(std::move(id));
 		});
@@ -389,7 +389,7 @@ public:
 			 const Xapian::Document& doc) {
 		return xapian_try_result([&]{
 			wdb().replace_document(id, doc);
-			set_timestamp(MetadataIface::last_change_key);
+			dirty_ = true;
 			maybe_commit();
 			return Ok(std::move(id));
 		});
@@ -405,7 +405,7 @@ public:
 	Result<void> delete_document(const std::string& term) {
 		return xapian_try_result([&]{
 			wdb().delete_document(term);
-			set_timestamp(MetadataIface::last_change_key);
+			dirty_ = true;
 			maybe_commit();
 			return Ok();
 		});
@@ -413,7 +413,7 @@ public:
 	Result<void> delete_document(Xapian::docid id) {
 		return xapian_try_result([&]{
 			wdb().delete_document(id);
-			set_timestamp(MetadataIface::last_change_key);
+			dirty_ = true;
 			maybe_commit();
 			return Ok();
 		});
@@ -486,6 +486,11 @@ private:
 				 "forced={}", changes_,
 				 in_transaction() ? "yes" : "no",
 				 force ? "yes" : "no");
+			// record the last doc change as part of commit
+			if (dirty_) {
+				set_timestamp(MetadataIface::last_change_key);
+				dirty_ = false;
+			}
 			if (in_transaction()) {
 				db.commit_transaction();
 				in_transaction_ = {};
@@ -515,6 +520,7 @@ private:
 	std::string path_;
 	DbType db_;
 	size_t changes_{};
+	bool dirty_{}; /* document changes not yet timestamped? */
 	bool in_transaction_{};
 	size_t batch_size_;
 };

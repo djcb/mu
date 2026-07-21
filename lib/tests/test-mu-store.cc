@@ -347,6 +347,9 @@ World!
 	//      term != msg2->document().xapian_document().termlist_end(); ++term)
 	//	g_message(">>> %s", (*term).c_str());
 
+	// last-change is recorded as part of a commit.
+	store->xapian_db().request_commit(true/*force*/);
+
 	const auto stats{store->statistics()};
 	g_assert_cmpuint(stats.size,==,store->size());
 	g_assert_cmpuint(stats.last_index,==,0);

@@ -26,8 +26,6 @@
 #include <vector>
 #include <thread>
 #include <atomic>
-#include <unordered_map>
-#include <unordered_set>
 #include <chrono>
 #include <string_view>
 #include <ranges>
@@ -109,12 +107,15 @@ struct Indexer::Private {
 
 	void maybe_start_worker();
 
+	void prefetch_path_terms(bool for_cleanup);
+	bool mark_seen(const std::string& path);
+	void mark_seen_dir(const std::string& dir_path);
+
 	void scan_worker();
 
 	bool add_message(const std::string& path);
 
-	void cleanup_from_scratch();
-	void cleanup_incremental();
+	void cleanup();
 	bool start(const Indexer::Config& conf, bool block);
 	bool stop();
 
@@ -148,11 +149,70 @@ struct Indexer::Private {
 
 	uint64_t last_index_{};
 
-	// pathnames we've seen traversing the maildir hierarchy.  entries
-	// with a trailing slash are maildir directories we've skipped as
-	// up-to-date.
-	std::vector<std::string> seen_maildir_paths_;
+	using PathTerm = std::pair<std::string, bool>;
+        std::vector<PathTerm> db_path_terms_;
+        /**< all path-terms in the store (at scan-start),
+	in Xapian's (ascending) and a seen marker */
+	bool			use_db_path_terms_{};
 };
+
+void
+Indexer::Private::prefetch_path_terms(bool for_cleanup)
+{
+	use_db_path_terms_ = false;
+	db_path_terms_.clear();
+
+	// The in-memory path-terms serve two purposes:
+	//
+	// i. checking whether some message is already in the store
+	//    without db access
+	// ii. unless we need it for cleanup: whatever
+	//    is left unmarked after scanning is an orphan.
+	if (!for_cleanup && conf_.lazy_check)
+		return;
+
+	db_path_terms_.reserve(store_.size());
+	store_.for_each_term(Field::Id::Path, [&](const std::string& term) {
+		db_path_terms_.emplace_back(term, false/*!seen*/);
+		return true;
+	});
+	use_db_path_terms_ = true;
+
+	mu_debug("prefetched {} path-term(s)", db_path_terms_.size());
+}
+
+bool
+Indexer::Private::mark_seen(const std::string& path)
+{
+	if (!use_db_path_terms_)
+		return false;
+
+	// N.B. Xapian yields terms in ascending byte-lexicographic order, so
+	// db_path_terms_ is sorted and we can binary-search.
+	const auto term{field_from_id(Field::Id::Path).xapian_term(path)};
+	const auto it{std::ranges::lower_bound(db_path_terms_, term, {},
+					       &PathTerm::first)};
+	if (it == db_path_terms_.end() || it->first != term)
+		return false; // not in the store.
+
+	it->second = true;
+	return true;
+}
+
+void
+Indexer::Private::mark_seen_dir(const std::string& dir_path)
+{
+	if (!use_db_path_terms_)
+		return;
+
+	// mark all store messages under dir_path as seen
+	const auto prefix{field_from_id(Field::Id::Path)
+			.xapian_term(dir_path + "/")};
+	for (auto it = std::ranges::lower_bound(db_path_terms_, prefix, {},
+						&PathTerm::first);
+	     it != db_path_terms_.end() && it->first.starts_with(prefix); ++it)
+		it->second = true;
+}
 
 bool
 Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
@@ -179,7 +239,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		    htype == Scanner::HandleType::EnterNewCur) {
 			mu_debug("skip {} (seems up-to-date: {:%FT%T} >= {:%FT%T})",
 				 fullpath, mu_time(dirstamp_), mu_time(statbuf->st_ctime));
-			seen_maildir_paths_.emplace_back(fullpath + "/");
+			mark_seen_dir(fullpath);
 			return false;
 		}
 
@@ -196,7 +256,7 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 			auto noupdate = ::access((fullpath + "/.noupdate").c_str(), F_OK) == 0;
 			if (noupdate) {
 				mu_debug("skip {} (has .noupdate)", fullpath);
-				seen_maildir_paths_.emplace_back(fullpath + "/");
+				mark_seen_dir(fullpath);
 				return false;
 			}
 		}
@@ -205,13 +265,21 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		return true;
 	}
 	case Scanner::HandleType::LeaveDir: {
-		handle_item({fullpath, WorkItem::Type::Dir});
+		// don't touch dirstamps in a cleanup-only run: nothing was
+		// indexed, so the dir is not to be considered up-to-date.
+		if (conf_.scan)
+			handle_item({fullpath, WorkItem::Type::Dir});
 		return true;
 	}
 
 	case Scanner::HandleType::File: {
 		++progress_.checked;
-		seen_maildir_paths_.push_back(fullpath);
+		// this file is present in the file-system; also remember
+		// whether it is in the store already.
+		const auto in_store{mark_seen(fullpath)};
+
+		if (!conf_.scan)
+			return false; // cleanup-only run; only mark.
 
 		if (conf_.lazy_check && static_cast<uint64_t>(statbuf->st_ctime) < last_index_) {
 			// in lazy mode, ignore the file if it has not changed
@@ -225,7 +293,8 @@ Indexer::Private::handler(const std::string& fullpath, struct stat* statbuf,
 		}
 		// if the message is not in the db yet, or not up-to-date, queue
 		// it for updating/inserting.
-		if (statbuf->st_ctime <= dirstamp_ && store_.contains_message(fullpath))
+		if (statbuf->st_ctime <= dirstamp_ &&
+		    (use_db_path_terms_ ? in_store : store_.contains_message(fullpath)))
 			return false;
 
 		handle_item({fullpath, WorkItem::Type::File});
@@ -288,128 +357,21 @@ Indexer::Private::handle_item(WorkItem&& item)
 }
 
 void
-Indexer::Private::cleanup_from_scratch()
-{
-	mu_debug("starting cleanup without using scan results");
-
-	std::vector<Store::Id> orphans; // store messages without files.
-
-	using DirFiles = std::unordered_set<std::string>;
-	std::unordered_map<std::string, DirFiles> dir_cache;
-
-	// get a set of file names in this directory.
-	const auto get_dir_files = [](const std::string& path) -> DirFiles {
-		DirFiles ret;
-		if (auto dir{::opendir(path.c_str())}; dir) {
-			dirent* dentry{};
-			while ((dentry = ::readdir(dir))) {
-				ret.emplace(dentry->d_name);
-			}
-			::closedir(dir);
-		}
-
-		return ret;
-	};
-
-	// is the file present in our set?
-	const auto is_file_present = [&](const std::string& path) -> bool {
-		std::string dir = dirname(path);
-		auto [it, inserted] = dir_cache.try_emplace(dir);
-		DirFiles& dir_files = it->second;
-		if (inserted) {
-			dir_files = get_dir_files(dir);
-		}
-		return dir_files.find(basename(path)) != dir_files.end();
-	};
-
-	store_.for_each_message_path([&](Store::Id id, const std::string& path) {
-		if (!is_file_present(path)) {
-			mu_debug("cannot read {} (id={}); queuing for removal from store",
-				 path, id);
-			orphans.emplace_back(id);
-		}
-
-		return state_ == IndexState::Cleaning;
-	});
-
-	if (orphans.empty())
-		mu_debug("nothing to clean up");
-	else {
-		mu_debug("removing {} stale message(s) from store", orphans.size());
-		store_.remove_messages(orphans);
-		progress_.removed += orphans.size();
-	}
-}
-
-void
-Indexer::Private::cleanup_incremental()
+Indexer::Private::cleanup()
 {
 	mu_debug("starting cleanup after scan");
 
-	// Sort the seen paths into the same order Xapian will give its terms to us
-	std::vector<std::string> fs_terms;
-	fs_terms.reserve(seen_maildir_paths_.size());
-	for (std::string_view fullpath : seen_maildir_paths_)
-		fs_terms.emplace_back(field_from_id(Field::Id::Path).xapian_term(fullpath));
-	std::ranges::sort(fs_terms);
-
-	// Discard duplicates from fs_terms in case two paths collided to one term, e.g. over
-	// case.  That shouldn't happen, but be correct-ish if it does.
-	auto [new_end, old_end] = std::ranges::unique(fs_terms);
-	if (new_end != old_end) {
-		mu_warning("collisions under term normalization: using regular cleanup");
-		cleanup_from_scratch();
-		return;
-	}
-
-	fs_terms.erase(new_end, old_end);
-	seen_maildir_paths_.clear();
-
-	// Walk through all the path terms.  If the DB has a path term that we didn't see in our
-	// filesystem walk above, add it the orphans list for removal from the DB.  If we were in
-	// lazy scan mode, we may have skipped some directories entirely: these are represented by
-	// entries in fs_terms with a trailing slash.  When we see one, we deem all DB entries
-	// that have the skip entry as a prefix as present.
-
-	size_t fs_terms_pos = 0;
-	auto current_fs_term = [&]() -> std::string_view {
-		if (fs_terms_pos < fs_terms.size())
-			return fs_terms[fs_terms_pos];
-		// N.B. '~' compares greater than the start of any field shortcut, so use it as an
-		// after-the-end sentinel.
-		return "~";
-	};
-
+	// during the scan, each file (and each wholesale-skipped
+	// directory) marked its path-term; whatever is left unmarked is
+	// an orphan: a message in the store without a file in the maildir.
+	//
+	// N.B. this snapshot was taken at scan-start, so messages that
+	// appeared in the store _during_ the scan are not in it, and thus
+	// cannot be orphaned by mistake.
 	std::vector<std::string> orphan_terms;
-
-	auto handle_db_term = [&](std::string_view db_term) {
-		for (;;) {
-			std::string_view fs_term = current_fs_term();
-			bool is_wildcard = fs_term.ends_with('/');
-			if (is_wildcard && db_term.starts_with(fs_term)) {
-				return true;
-			}
-			int cmp = db_term.compare(fs_term);
-			if (cmp < 0) {
-				mu_debug("orphan in db={} but not fs={}", db_term, fs_term);
-				orphan_terms.emplace_back(db_term);
-				return true;
-			}
-
-			if (cmp == 0) {
-				++fs_terms_pos;
-				return true;
-			}
-
-			++fs_terms_pos;
-			// FS has an entry not in the DB.  If not a directory, we should have
-			// indexed it.
-			if (!is_wildcard)
-				mu_warning("unexpectedly unindexed message: {}", fs_term);
-		}
-	};
-
-	store_.for_each_term(Field::Id::Path, handle_db_term);
+	for (auto&& [term, seen] : db_path_terms_)
+		if (!seen)
+			orphan_terms.emplace_back(std::move(term));
 
 	if (orphan_terms.empty())
 		mu_debug("nothing to clean up");
@@ -430,10 +392,13 @@ void
 Indexer::Private::scan_worker()
 {
 	progress_.reset();
-	seen_maildir_paths_.clear();
 	started_ = time(NULL);
 
-	if (conf_.scan) {
+	// cleanup gets its orphans by marking the in-memory path-terms
+	// during the file-system scan, so we need the scanner even for a
+	// cleanup-only run.
+	if (conf_.scan || conf_.cleanup) {
+		prefetch_path_terms(conf_.cleanup);
 		mu_debug("starting scanner");
 		if (!scanner_.start()) { // blocks.
 			mu_warning("failed to start scanner");
@@ -443,51 +408,23 @@ Indexer::Private::scan_worker()
 		mu_debug("scanner finished");
 	}
 
-	enum class CleanupKind {
-		None,
-		FromScratch,
-		Incremental,
-	};
-
-	CleanupKind cleanup_kind = CleanupKind::Incremental;
 	bool aborted = state_ == IndexState::Aborting;
-
-	if (cleanup_kind >= CleanupKind::None && !conf_.cleanup) {
-		mu_debug("cleanup: not running as requested");
-		cleanup_kind = CleanupKind::None;
-	}
-
-	if (cleanup_kind > CleanupKind::None && aborted) {
-		mu_debug("cleanup: disabling because indexer aborted");
-		cleanup_kind = CleanupKind::None;
-	}
-
-	if (cleanup_kind >= CleanupKind::Incremental &&
-	   g_getenv("MU_NO_INCREMENTAL_CLEANUP")) {
-		mu_debug("cleanup: not using incremental: MU_NO_INCREMENTAL_CLEANUP in environ");
-		cleanup_kind = CleanupKind::FromScratch;
-	}
-
-	if (cleanup_kind >= CleanupKind::Incremental && !conf_.scan) {
-		mu_debug("cleanup: not using incremental: scan not done");
-		cleanup_kind = CleanupKind::FromScratch;
-	}
 
 	state_.change_to(IndexState::Cleaning);
 
-	switch (cleanup_kind) {
-	case CleanupKind::None:
-		break;
-	case CleanupKind::FromScratch:
-		cleanup_from_scratch();
-		break;
-	case CleanupKind::Incremental:
-		cleanup_incremental();
-		break;
-	}
+	if (!conf_.cleanup)
+		mu_debug("cleanup: not running as requested");
+	else if (aborted)
+		mu_debug("cleanup: disabling because indexer aborted");
+	else
+		cleanup();
+
+	// release the in-memory path-terms.
+	use_db_path_terms_ = false;
+	db_path_terms_	   = {};
 
 	aborted = state_ == IndexState::Aborting;
-	if (!aborted) {
+	if (!aborted && conf_.scan) {
 		// Store started time, not ending time, so that next time we run we know to scan
 		// anything that appeared during our scan.
 		store_.config().set<Mu::Config::Id::LastIndex>(started_.value());
@@ -507,7 +444,11 @@ Indexer::Private::start(const Indexer::Config& conf, bool block)
 
 	conf_ = conf;
 
-	if (store_.empty() && conf_.lazy_check) {
+	// refresh: the indexer may be re-used for multiple runs, and the
+	// add_document fast-path is only valid while the store is empty.
+	was_empty_ = store_.empty();
+
+	if (was_empty_ && conf_.lazy_check) {
 		mu_debug("turn off lazy check since we have an empty store");
 		conf_.lazy_check = false;
 	}
@@ -768,6 +709,23 @@ test_index_cleanup()
 	g_assert_false(idx.is_running());
 	g_assert_true(idx.stop());
 	g_assert_cmpuint(store->size(),==, 13);
+
+	// remove another message
+	{
+		auto mpath = join_paths(mdir, "bar", "cur", "mail5");
+		auto res = run_command({"rm", mpath});
+		assert_valid_result(res);
+		g_assert_cmpuint(res->exit_code,==, 0);
+	}
+
+	// cleanup-only run (no scan); message is gone from store.
+	conf.scan = false;
+	g_assert_true(idx.start(conf));
+	while (idx.is_running())
+		g_usleep(10000);
+	g_assert_false(idx.is_running());
+	g_assert_true(idx.stop());
+	g_assert_cmpuint(store->size(),==, 12);
 }
 
 

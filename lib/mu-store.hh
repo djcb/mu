@@ -414,26 +414,6 @@ public:
 	LabelsCache::Map label_map() const;
 
 	/**
-	 * Prototype for the ForEachMessageFunc
-	 *
-	 * @param id :t store Id for the message
-	 * @param path: the absolute path to the message
-	 *
-	 * @return true if for_each should continue; false to quit
-	 */
-	using ForEachMessageFunc = std::function<bool(Id, const std::string&)>;
-
-	/**
-	 * Call @param func for each document in the store. This takes a lock on
-	 * the store, so the func should _not_ call any other Store:: methods.
-	 *
-	 * @param func a Callable invoked for each message.
-	 *
-	 * @return the number of times func was invoked
-	 */
-	size_t for_each_message_path(ForEachMessageFunc func) const;
-
-	/**
 	 * Prototype for the ForEachTermFunc
 	 *
 	 * @param term:
