@@ -83,14 +83,16 @@ Field::xapian_term(const std::string& s) const
 	if (s.empty())
 		return res;
 
-	res.reserve(s.size() + 10);
-	/* slightly optimized common pure-ascii. */
-	if (G_LIKELY(g_str_is_ascii(s.c_str()))) {
-		res += s;
-		for (auto i = 1U; i != res.length(); ++i)
-			res[i] = g_ascii_tolower(res[i]);
-	} else
-		res += utf8_flatten(s);
+	res.reserve(s.size() + 1);
+	/* optimized common pure-ascii case */
+	for (auto&& c: s) {
+		if (G_UNLIKELY(!is_ascii(c))) { /* non-ascii after all */
+			res.erase(1U);
+			res += utf8_flatten(s);
+			break;
+		}
+		res.push_back(to_ascii_lower(c));
+	}
 
 	if (G_UNLIKELY(res.size() > MaxTermLength))
 		res.erase(MaxTermLength);

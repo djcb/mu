@@ -105,8 +105,7 @@ struct MessageFlagInfo {
 	 * @return lower-case shortcut
 	 */
 	constexpr char shortcut_lower() const {
-		return shortcut >= 'A' && shortcut <= 'Z' ?
-			shortcut +  ('a' - 'A') : shortcut;
+		return to_ascii_lower(shortcut);
 	}
 };
 

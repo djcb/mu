@@ -111,8 +111,9 @@ struct OutputStream {
 	void unlink () {
 		if (fname_.empty())
 			return;
-		if (auto&&res{::unlink(fname_.c_str())}; res != 0)
-			mu_warning("failed to unlink '{}'", ::strerror(res));
+		if (::unlink(fname_.c_str()) != 0)
+			mu_warning("failed to unlink '{}': {}", fname_,
+				   ::strerror(errno));
 		else
 			mu_debug("unlinked output-stream {}", fname_);
 	}

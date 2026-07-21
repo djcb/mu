@@ -50,11 +50,11 @@ Mu::Labels::validate_label(const std::string &label)
 		if (g_unichar_isalnum(uc))
 			continue; // alphanum is okay
 
-		if (::iscntrl(uc))
+		if (is_ascii_cntrl(uc))
 			return Err(Error{Error::Code::InvalidArgument,
 					"control character {} not allowed in label",
 					static_cast<int>(uc)});
-		if (::isblank(uc))
+		if (is_ascii_blank(uc))
 			return Err(Error{Error::Code::InvalidArgument,
 					"blank character {} not allowed in label",
 					static_cast<int>(uc)});

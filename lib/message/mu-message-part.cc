@@ -49,7 +49,8 @@ cook(const std::string& fname, const std::vector<char>& forbidden)
 	clean.reserve(fname.length());
 
 	for (auto& c: basename(fname))
-		if (seq_some(forbidden,[&](char fc){return ::iscntrl(c) || c == fc;}))
+		if (seq_some(forbidden,[&](char fc){
+			return is_ascii_cntrl(c) || c == fc;}))
 			clean += '-';
 		else
 			clean += c;

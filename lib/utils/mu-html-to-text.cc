@@ -36,7 +36,7 @@ starts_with(std::string_view haystack, std::string_view needle)
 		return false;
 
 	for (auto&& c = 0U; c != needle.size(); ++c)
-		if (::tolower(haystack[c]) != ::tolower(needle[c]))
+		if (to_ascii_lower(haystack[c]) != to_ascii_lower(needle[c]))
 			return false;
 
 	return true;
@@ -143,7 +143,7 @@ public:
 	std::string_view eat_head_word() {
 		size_t start_pos{pos_};
 		while (!done()) {
-			if (!::isalpha(html_.at(pos_)))
+			if (!is_ascii_alpha(html_.at(pos_)))
 				break;
 			++pos_;
 		}
@@ -440,7 +440,7 @@ html_escape_char(Context& ctx)
 	auto unescape=[escs](std::string_view esc)->char {
 		if (esc.empty())
 			return ' ';
-		auto first{static_cast<char>(::tolower(esc.at(0)))};
+		auto first{to_ascii_lower(esc.at(0))};
 		auto rest=esc.substr(1);
 		if (seq_some(escs, [&](auto&& e){return starts_with(rest, e);}))
 			return first;

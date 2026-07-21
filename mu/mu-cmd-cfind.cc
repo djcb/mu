@@ -58,7 +58,7 @@ guess_nick(const Contact& contact)
 	auto cleanup = [](const std::string& str) {
 		std::string clean;
 		for (auto& c: str) // XXX: support non-ascii
-			if (!::ispunct(c) && !::isspace(c))
+			if (!is_ascii_punct(c) && !is_ascii_space(c))
 				clean += c;
 		return clean;
 	};

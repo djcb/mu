@@ -437,7 +437,7 @@ process(const std::string& expr)
 	/* all control chars become SPC */
 	std::string str{expr};
 	for (auto& c: str)
-		c = ::iscntrl(c) ? ' ' : c;
+		c = is_ascii_cntrl(c) ? ' ' : c;
 
 	while(!str.empty()) {
 		auto&& element = next_element(str, offset)
