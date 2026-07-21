@@ -29,7 +29,7 @@
 #include "mu-cmd.hh"
 #include "mu-server.hh"
 
-#if BUILD_SCM
+#ifdef BUILD_SCM
 #include "scm/mu-scm.hh"
 #endif/*BUILD_SCM*/
 
@@ -111,8 +111,6 @@ report_error(const Mu::Error& err) noexcept
 static void
 maybe_setup_readline(const Mu::Options& opts)
 {
-	tty = ::isatty(::fileno(stdout));
-
 	// Note, the readline stuff is inactive unless on a tty.
 	const auto histpath{opts.runtime_path(RuntimePath::Cache) + "/history"};
 	setup_readline(histpath, 50);
@@ -160,6 +158,10 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	// empty when we're not listening
 	const auto socket_path = maybe_listen_path(*store, opts);
 
+	// determine this before any server output, so it holds for
+	// --eval/--commands as well.
+	tty = ::isatty(::fileno(stdout));
+
 	Server::Options sopts{opts.server.allow_temp_file, socket_path};
 	Server server{*store, sopts, output_stdout};
 
@@ -172,7 +174,7 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	mu_println(";; Welcome to the " PACKAGE_STRING " command-server{}",
 		   opts.debug ? " (debug-mode)" : "");
 	if (!socket_path.empty())
-	mu_println(";; SCM socket listening on {}", socket_path);
+		mu_println(";; SCM socket listening on {}", socket_path);
 	mu_println(";; Use (help) to get a list of commands, (quit) to quit.");
 
 	bool do_quit{};

@@ -93,15 +93,18 @@ struct OutputStream {
 	operator std::ostream&() { return out(); }
 
 	/**
-	 * Get the output as a string, either something like, either a lisp form
-	 * or a the full path to a temp file containing the same.
+	 * Get the output as a string: either a lisp form, or the (quoted) full
+	 * path to a temp file containing the same. In the latter case, first
+	 * flush, so the full contents are visible to readers of that file.
 	 *
 	 * @return lisp form or path
 	 */
-	std::string to_string() const {
-		return std::holds_alternative<std::ostringstream>(out_) ?
-			std::get<std::ostringstream>(out_).str() :
-			quote(fname_);
+	std::string to_string() {
+		if (std::holds_alternative<std::ostringstream>(out_))
+			return std::get<std::ostringstream>(out_).str();
+
+		out().flush();
+		return quote(fname_);
 	}
 
 	/**
@@ -151,7 +154,6 @@ struct Server::Private {
 	const Store&      store() const { return store_; }
 	Indexer&          indexer() { have_indexer_ = true; return store().indexer(); }
 	void              do_index(const Indexer::Config& conf);
-	//CommandMap&       command_map() const { return command_map_; }
 
 	//
 	// invoke
@@ -208,8 +210,6 @@ private:
 		else
 			return OutputStream{};
 	}
-
-	std::ofstream make_temp_file_stream(std::string& fname) const;
 
 	Store&			store_;
 	Server::Options         options_;
@@ -293,7 +293,6 @@ Server::Private::make_command_map()
 	using	ArgMap	    = CommandHandler::ArgMap;
 	using	ArgInfo	    = CommandHandler::ArgInfo;
 	using	Type	    = Sexp::Type;
-	using	Type	    = Sexp::Type;
 
 	cmap.emplace(
 	    "add",
@@ -373,7 +372,7 @@ Server::Private::make_command_map()
 		    {":no-view",
 		     ArgInfo{Type::Symbol, false, "if set, do not hint at updating the view"}},
 		},
-		"move messages and/or change their flags",
+		"add or remove labels for a message",
 		[&](const auto& params) { label_handler(params); }});
 	cmap.emplace(
 	    "mkdir",
@@ -425,7 +424,7 @@ Server::Private::make_command_map()
 		ArgMap{{":docid",
 			ArgInfo{Type::Number, false, "document-id for the message to remove"}},
 			{":path",
-			ArgInfo{Type::String, false, "document-id for the message to remove"}}
+			ArgInfo{Type::String, false, "path to the message to remove"}}
 		},
 		"remove a message from filesystem and database, using either :docid or :path",
 		[&](const auto& params) { remove_handler(params); }});
@@ -655,9 +654,12 @@ Server::Private::output_results(const QueryResults& qres, size_t batch_size) con
 		++batch_n;
 
 		if (n % batch_size == 0) {
-			// batch complete
+			// batch complete. the client determines the size of the
+			// _first_ batch (so it can quickly display something);
+			// any further batches use a larger fixed size.
+			constexpr size_t SubsequentBatchSize{5000};
 			mu_print(out, ")");
-			batch_size = 5000;
+			batch_size = SubsequentBatchSize;
 			output(mu_format("(:headers {})", out.to_string()));
 			batch_n = 0;
 			// start a new batch
@@ -902,7 +904,7 @@ Server::Private::label_handler(const Command& cmd)
 {
 	const auto labels{*cmd.string_arg(":labels")};
 	const auto docid{*cmd.number_arg(":docid")};
-	const auto no_view{cmd.boolean_arg(":noupdate")};
+	const auto no_view{cmd.boolean_arg(":no-view")};
 
 	auto msg = store().find_message(docid)
 		.or_else([&]{throw Error{Error::Code::InvalidArgument,
@@ -933,10 +935,13 @@ Server::Private::label_handler(const Command& cmd)
 void
 Server::Private::mkdir_handler(const Command& cmd)
 {
-	const auto path{cmd.string_arg(":path").value_or("<error>")};
+	// canonicalize the path, so the root-maildir check below cannot be
+	// side-stepped with '..' components.
+	const auto path{canonicalize_filename(cmd.string_arg(":path").value_or("<error>"))};
 	const auto update{cmd.boolean_arg(":update")};
 
-	if (path.find(store().root_maildir()) != 0)
+	const auto& root{store().root_maildir()};
+	if (path != root && !path.starts_with(root + "/"))
 		throw Error{Error::Code::File, "maildir is not below root-maildir"};
 
 	if (auto&& res = maildir_mkdir(path, 0755, false); !res)
@@ -1042,21 +1047,16 @@ Server::Private::move_handler(const Command& cmd)
 	auto       maildir{cmd.string_arg(":maildir").value_or("")};
 	const auto flagopt{cmd.string_arg(":flags")};
 	const auto rename{cmd.boolean_arg(":rename")};
-	const auto no_view{cmd.boolean_arg(":noupdate")};
+	const auto no_view{cmd.boolean_arg(":no-view")};
 	const auto docids{determine_docids(store(), cmd)};
 
 	if (docids.empty()) {
-		if (!!cmd.string_arg(":msgid")) {
-			// msgid not found: no problem.
-			mu_debug("no move: '{}' not found",
-				 *cmd.string_arg(":msgid"));
-			return;
-		}
-		// however, if we wanted to be move by msgid, it's worth raising
-		// an error.
-			throw Mu::Error{Error::Code::Store,
-				"message not found in store (docid={})",
-				cmd.number_arg(":docid").value_or(0)};
+		// only reachable in the :msgid case (determine_docids always
+		// yields the docid otherwise); that is opportunistic, so an
+		// unknown msgid is not an error.
+		mu_debug("no move: '{}' not found",
+			 cmd.string_arg(":msgid").value_or(""));
+		return;
 	} else if (docids.size() > 1) {
 		if (!maildir.empty()) // ie. duplicate message-ids.
 			throw Mu::Error{Error::Code::Store,
@@ -1146,8 +1146,11 @@ Server::Private::remove_handler(const Command& cmd)
 	Store::Id docid{};
 	if (docid = docid_opt.value_or(0); docid != 0)
 		path = path_from_docid(store(), docid);
-	else
+	else {
 		path = path_opt.value();
+		// so we can tell the client _which_ message was removed
+		docid = store().find_message_id(path).value_or(0);
+	}
 
 	if (::unlink(path.c_str()) != 0 && errno != ENOENT)
 		throw Error(Error::Code::File,
