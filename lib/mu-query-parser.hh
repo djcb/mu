@@ -103,7 +103,7 @@ Sexp parse_query(const std::string& expr, bool expand=false);
  */
 enum struct ParserFlags {
 	None	      = 0 << 0,
-	SupportNgrams = 1 << 0, /**< Support Xapian's Ngrams for CJK etc. handling */
+	NgramsEnabled = 1 << 0, /**< Support Xapian's Ngrams for CJK etc. handling */
 	XapianParser  = 1 << 1, /**< For testing only, use Xapian's
 				 * built-in QueryParser; this is not
 				 * fully compatible with mu, only useful

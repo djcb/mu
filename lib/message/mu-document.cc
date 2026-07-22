@@ -79,7 +79,7 @@ make_term_generator(Xapian::Document& doc, Document::Options opts)
 {
 	Xapian::TermGenerator termgen;
 
-	if (any_of(opts & Document::Options::SupportNgrams))
+	if (any_of(opts & Document::Options::NgramsEnabled))
 		termgen.set_flags(Xapian::TermGenerator::FLAG_NGRAMS);
 
 	termgen.set_document(doc);

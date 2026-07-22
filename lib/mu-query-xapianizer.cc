@@ -256,7 +256,7 @@ parse_field_matcher(const Store& store, const Field& field,
 static Result<Xapian::Query>
 parse_basic(const Field &field, Sexp &&vals, Mu::ParserFlags flags)
 {
-	auto ngrams = any_of(flags & ParserFlags::SupportNgrams);
+	auto ngrams = any_of(flags & ParserFlags::NgramsEnabled);
 	if (!vals.stringp())
 		return Err(Error::Code::InvalidArgument, "expected string");
 
@@ -360,7 +360,7 @@ xapian_query_classic(const std::string& expr, Mu::ParserFlags flags)
 		Xapian::QueryParser::FLAG_BOOLEAN |
 		Xapian::QueryParser::FLAG_WILDCARD;
 
-	if (any_of(flags & ParserFlags::SupportNgrams))
+	if (any_of(flags & ParserFlags::NgramsEnabled))
 		xflags |= Xapian::QueryParser::FLAG_NGRAMS;
 
 	xqp.set_default_op(Xapian::Query::OP_AND);

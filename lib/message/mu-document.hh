@@ -43,7 +43,7 @@ class Document {
 public:
 	enum struct Options {
 		None	      = 0,
-		SupportNgrams = 1 << 0,     /**< Support ngrams, as used in
+		NgramsEnabled = 1 << 0,     /**< Support ngrams, as used in
 					     * CJK and other languages. */
 	};
 

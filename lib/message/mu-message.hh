@@ -52,7 +52,7 @@ public:
 						   * access) */
 		AllowRelativePath = 1 << 2,	/**< Allow relative paths for filename
 						   * in make_from_path */
-		SupportNgrams     = 1 << 3,     /**< Support ngrams, as used in
+		NgramsEnabled     = 1 << 3,     /**< Support ngrams, as used in
 						 * CJK and other languages. */
 	};
 

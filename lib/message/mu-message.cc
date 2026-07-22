@@ -78,8 +78,8 @@ struct Message::Private {
 
 private:
 	Document::Options doc_opts(Message::Options mopts) {
-		return any_of(opts & Message::Options::SupportNgrams) ?
-			Document::Options::SupportNgrams :
+		return any_of(opts & Message::Options::NgramsEnabled) ?
+			Document::Options::NgramsEnabled :
 			Document::Options::None;
 	}
 };

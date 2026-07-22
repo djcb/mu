@@ -28,8 +28,8 @@ using namespace Mu;
 struct Query::Private {
 	explicit Private(const Store& store) :
 		store_{store},
-		parser_flags_{any_of(store_.message_options() & Message::Options::SupportNgrams) ?
-		ParserFlags::SupportNgrams : ParserFlags::None} {}
+		parser_flags_{any_of(store_.message_options() & Message::Options::NgramsEnabled) ?
+		ParserFlags::NgramsEnabled : ParserFlags::None} {}
 
 	Xapian::Enquire make_enquire(const std::string& expr, Field::Id sortfield_id,
 				     QueryFlags qflags) const;
@@ -253,7 +253,7 @@ Query::run(const std::string& expr, Field::Id sortfield_id,
 			  expr,
 			  any_of(qflags & QueryFlags::IncludeRelated) ? "yes" : "no",
 			  any_of(qflags & QueryFlags::Threading) ? "yes" : "no",
-			  any_of(priv_->parser_flags_ & ParserFlags::SupportNgrams) ? "yes" : "no",
+			  any_of(priv_->parser_flags_ & ParserFlags::NgramsEnabled) ? "yes" : "no",
 			  maxnum == 0 ? std::string{"∞"} : std::to_string(maxnum))};
 
 	return xapian_try_result([&]{
