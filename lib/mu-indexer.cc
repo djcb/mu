@@ -95,7 +95,7 @@ struct Indexer::Private {
 			   store.root_maildir(), store.path(),
 			   store.config().get<Mu::Config::Id::BatchSize>(),
 			   was_empty_,
-			   store.config().get<Mu::Config::Id::SupportNgrams>());
+			   store.config().get<Mu::Config::Id::NgramsEnabled>());
 	}
 
 	~Private() {

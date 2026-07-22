@@ -110,8 +110,8 @@ struct Store::Private {
 	}
 
 	Message::Options make_message_options(const Config& conf) {
-		if (conf.get<Config::Id::SupportNgrams>())
-			return Message::Options::SupportNgrams;
+		if (conf.get<Config::Id::NgramsEnabled>())
+			return Message::Options::NgramsEnabled;
 		else
 			return Message::Options::None;
 	}
@@ -369,8 +369,8 @@ Store::add_message(Message& msg, bool is_new)
 		return Err(res.error());
 
 	// we shouldn't mix ngrams/non-ngrams messages.
-	if (any_of(msg.options() & Message::Options::SupportNgrams) !=
-	    any_of(message_options() & Message::Options::SupportNgrams))
+	if (any_of(msg.options() & Message::Options::NgramsEnabled) !=
+	    any_of(message_options() & Message::Options::NgramsEnabled))
 		return Err(Error::Code::InvalidArgument, "incompatible message options");
 
 	/* add contacts from this message to cache; this cache

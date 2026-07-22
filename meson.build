@@ -259,6 +259,7 @@ if not get_option('cld2').disabled() and cld2_dep.found()
   config_h_data.set('HAVE_CLD2', 1)
 else
   message('CLD2 not found or disabled; no support for language detection')
+  config_h_data.set('HAVE_CLD2', 0)
 endif
 
 #
@@ -339,6 +340,8 @@ if guile_dep.found()
   if not get_option('scm').disabled()
     config_h_data.set('BUILD_SCM', 1)
     subdir('scm')
+  else
+    config_h_data.set('BUILD_SCM', 0)
   endif
 
   # old-style guile-support (deprecated)

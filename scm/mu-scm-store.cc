@@ -56,7 +56,7 @@ subr_cc_store_alist(SCM store_scm) try {
 			   (MuConfig::Flags::Internal | MuConfig::Flags::Runtime)))
 			continue;
 
-		const auto str{conf.get_str(prop)};
+		const auto str{conf.as_display_string(prop)};
 		if (str.empty())
 			continue;
 

@@ -210,35 +210,28 @@ topic_flags(const Options& opts)
 static Result<void>
 topic_store(const Mu::Store& store, const Options& opts)
 {
-	auto tstamp = [](::time_t t)->std::string {
-		if (t == 0)
-			return "never";
-		else
-			return mu_format("{:%c}", mu_time(t));
-	};
-
 	Table info;
 	const auto conf{store.config()};
-	info.add_row({"property", "value"});
-	info.add_row({"maildir", store.root_maildir()});
-	info.add_row({"database-path", store.path()});
-	info.add_row({"schema-version",
-			mu_format("{}", conf.get<Config::Id::SchemaVersion>())});
-	info.add_row({"max-message-size", mu_format("{}", conf.get<Config::Id::MaxMessageSize>())});
-	info.add_row({"batch-size", mu_format("{}", conf.get<Config::Id::BatchSize>())});
-	info.add_row({"created", tstamp(conf.get<Config::Id::Created>())});
-
-	for (auto&& c : conf.get<Config::Id::PersonalAddresses>())
-		info.add_row({"personal-address", c});
-	for (auto&& c : conf.get<Config::Id::IgnoredAddresses>())
-		info.add_row({"ignored-address", c});
-
-	info.add_row({"messages in store", mu_format("{}", store.size())});
-	info.add_row({"support-ngrams",  conf.get<Config::Id::SupportNgrams>() ? "yes" : "no"});
-
-	info.add_row({"last-change", tstamp(store.statistics().last_change)});
-	info.add_row({"last-index",  tstamp(store.statistics().last_index)});
-
+	info.add_row({"property", "value", "description"});
+	info.add_row({"database-path", store.path(), "Path to xapian database"});
+	info.add_row({"message-number", mu_format("{}", store.size()),
+		      "Number of messages in store"});
+	for (const auto& prop: Config::properties) {
+		if (any_of(prop.flags & (Property::Flags::System|Property::Flags::Internal)))
+			continue;
+		switch(prop.id) {
+		case Config::Id::PersonalAddresses:
+		case Config::Id::IgnoredAddresses: {
+			const auto addrs{conf.decode<Config::Type::StringList>(conf.as_raw_string(prop))};
+			for (auto& addr: addrs) {
+				info.add_row({std::string{prop.name}, addr, std::string{prop.description}});
+			}
+		} break;
+		default:
+			info.add_row({std::string{prop.name},conf.as_display_string(prop),
+				      std::string{prop.description}});
+		}
+	}
 	if (!opts.nocolor)
 		colorify(info, opts);
 
@@ -257,58 +250,19 @@ topic_maildirs(const Mu::Store& store, const Options& opts)
 }
 
 static Result<void>
-topic_mu(const Options& opts)
+topic_mu(const Mu::Store& store, const Options& opts)
 {
-	Table info;
 
-	using namespace tabulate;
+	Table info;
+	const auto conf{store.config()};
 
 	info.add_row({"property", "value", "description"});
-	info.add_row({"mu-version", std::string{VERSION}, "Mu runtime version"});
-	info.add_row({"xapian-version", Xapian::version_string(), "Xapian runtime version"});
-	info.add_row({"gmime-version",
-			mu_format("{}.{}.{}", gmime_major_version, gmime_minor_version,
-				  gmime_micro_version), "GMime runtime version"});
-	info.add_row({"glib-version",
-			mu_format("{}.{}.{}", glib_major_version, glib_minor_version,
-				  glib_micro_version), "GLib runtime version"});
-	info.add_row({"schema-version", mu_format("{}", MU_STORE_SCHEMA_VERSION),
-			"Version of mu's database schema"});
-
-	info.add_row({"cld2-support",
-#if HAVE_CLD2
-			"yes"
-#else
-			"no"
-#endif
-		, "Support searching by language-code?"});
-
-	info.add_row({"guile-support",
-#if BUILD_GUILE
-			"yes"
-#else
-			"no"
-#endif /*BUILD_GUILE*/
-		, "GNU Guile 3.x support (old)?"});
-
-	info.add_row({"scm-support",
-#if BUILD_SCM
-			"yes"
-#else
-			"no"
-#endif /*BUILD_SCM*/
-		, "GNU Guile 3.x support (new)?"});
-
-
-
-
-	info.add_row({"readline-support",
-#if HAVE_LIBREADLINE
-			"yes"
-#else
-			"no"
-#endif
-		, "Better 'mu server' REPL for debugging"});
+	for (const auto& prop: Config::properties) {
+		if (any_of(prop.flags & Property::Flags::System)) {
+			info.add_row({std::string{prop.name}, conf.as_display_string(prop),
+				      std::string{prop.description}});
+		}
+	}
 
 	if (!opts.nocolor)
 		colorify(info, opts);
@@ -337,9 +291,9 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 		std::cout << std::endl;
 		topic_flags(opts);
 	} else if (topic == "mu") {
-		return topic_mu(opts);
+		return topic_mu(store, opts);
 	} else {
-		topic_mu(opts);
+		topic_mu(store, opts);
 
 		MaybeAnsi col{!opts.nocolor};
 		using Color = MaybeAnsi::Color;

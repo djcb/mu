@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -31,42 +31,54 @@
 
 #include "mu-xapian-db.hh"
 
+#include <glib.h>
+#include <gmime/gmime.h>
+
 #include <utils/mu-utils.hh>
 #include <utils/mu-result.hh>
 #include <utils/mu-option.hh>
 
+#include <config.h>
+
 namespace Mu {
 
 struct Property {
-	enum struct Id {
-		BatchSize,		/**< Xapian batch-size */
-		Contacts,		/**< Cache of contact information */
-		Created,		/**< Time of creation */
-		IgnoredAddresses,	/**< Email addresses ignored for the contacts-cache */
-		Labels,                 /**< Serialized label information. */
-		LastChange,		/**< Time of last change */
-		LastIndex,		/**< Time of last index */
-		MaxMessageSize,		/**< Maximum message size (in bytes) */
-		PersonalAddresses,	/**< List of personal e-mail addresses */
-		RootMaildir,		/**< Root maildir path */
-		SchemaVersion,		/**< Xapian DB schema version */
-		SupportNgrams,		/**< Support ngrams for indexing & querying
-					 *  for e.g. CJK languages */
-		/* <private> */
-		_count_		/* Number of Ids */
+        enum struct Id {
+                // store properties, i.e. properties associated with
+                // some store object (and store in the database), either
+                // at init time or updated during runtime.
+                BatchSize,         /**< Xapian batch-size */
+                Contacts,          /**< Cache of contact information */
+                Created,           /**< Time of creation */
+                IgnoredAddresses,  /**< Email addresses ignored for the
+                                      contacts-cache */
+                Labels,            /**< Serialized label information. */
+                LastChange,        /**< Time of last change */
+                LastIndex,         /**< Time of last index */
+                MaxMessageSize,    /**< Maximum message size (in bytes) */
+                PersonalAddresses, /**< List of personal e-mail addresses */
+                RootMaildir,       /**< Root maildir path */
+                SchemaVersion,     /**< Xapian DB schema version */
+                NgramsEnabled,     /**< Support ngrams for indexing & querying
+                                    *  for e.g. CJK languages */
+                // build/system properties
+                MuVersion,     /**< Mu version */
+                XapianVersion, /**< Xapian runtime version */
+                GlibVersion,   /**< GLib version */
+		GmimeVersion,  /**< GMime version */
+                ScmEnabled,    /**< Built with SCM (Guile) support */
+                LanguageEnabled /**< Built with language-detection support */
 	};
 
-	static constexpr size_t id_size = static_cast<size_t>(Id::_count_);
-	/**< Number of Property::Ids */
-
-	enum struct Flags {
-		None	     = 0,	/**< Nothing in particular */
-		ReadOnly     = 1 << 0, /**< Property is read-only for external use
-					* (but can change from within the store) */
-		Configurable = 1 << 1,	/**< A user-configurable parameter; name
-					 * starts with 'conf-' */
-		Internal     = 1 << 2,	/**< Mu-internal field */
-		Runtime      = 1 << 3,  /**< May change at runtime */
+        enum struct Flags {
+                None     = 0,      /**< Nothing in particular */
+                ReadOnly = 1 << 0, /**< Property is read-only for external use
+                                    * (but can change from within the store) */
+                Configurable = 1 << 1, /**< A user-configurable parameter; name
+                                        * starts with 'conf-' */
+                Internal = 1 << 2,     /**< Mu-internal field */
+                Runtime  = 1 << 3,     /**< May change at runtime */
+                System = 1 << 4,     /**< System property; read-only */
 	};
 	enum struct Type {
 		Boolean,        /**< Some boolean value */
@@ -78,12 +90,13 @@ struct Property {
 	};
 
 	using Value = std::variant<int64_t, std::string, std::vector<std::string> >;
+	using DefaultValue = std::string(*)(); /**< Function that returns a string_view */
 
 	Id			id;
 	Type			type;
 	Flags			flags;
 	std::string_view	name;
-	std::string_view        default_val;
+	DefaultValue            default_val;
 	std::string_view	description;
 };
 
@@ -96,14 +109,17 @@ public:
 	using	Flags = Property::Flags;
 	using	Value = Property::Value;
 
-	static constexpr std::array<Property, Property::id_size>
-	properties    = {{
+	/**
+	 * Properties specific to the store.
+	 */
+        static constexpr auto properties = std::to_array<Property>({
+		// store-properties
 		{
 			Id::BatchSize,
 			Type::Number,
 			Flags::Configurable,
 			"batch-size",
-			"50000",
+			[]()->std::string {return "50000";},
 			"Maximum number of changes in a database transaction"
 		},
 		{
@@ -131,7 +147,6 @@ public:
 			"E-mail addresses ignored  for the contacts-cache, "
 			"literal or /regexp/"
 		},
-
 		{
 			Id::Labels,
 			Type::String,
@@ -162,7 +177,7 @@ public:
 			Type::Number,
 			Flags::Configurable,
 			"max-message-size",
-			"100000000", // default max: 100M bytes
+			[]()->std::string {return "100000000";}, // default max: 100M bytes
 			"Maximum message size (in bytes); bigger messages are skipped"
 		},
 		{
@@ -190,14 +205,66 @@ public:
 			"Version of the Xapian database schema"
 		},
 		{
-			Id::SupportNgrams,
+			Id::NgramsEnabled,
 			Type::Boolean,
 			Flags::Configurable,
-			"support-ngrams",
+			"ngrams-enabled",
 			{},
 			"Support n-grams for working with CJK and other languages"
 		},
-	}};
+
+		// system properties
+		{
+			Id::MuVersion,
+			Type::String,
+			Flags::System,
+			"mu-version",
+			[]()->std::string {return VERSION;},
+			"mu version string"
+		},
+		{
+			Id::XapianVersion,
+			Type::String,
+			Flags::System,
+			"xapian-version",
+			[]()->std::string {return Xapian::version_string();},
+			"Xapian runtime version string"
+		},
+		{
+			Id::GlibVersion,
+			Type::String,
+			Flags::System,
+			"glib-version",
+			[]()->std::string{return mu_format("{}.{}.{}", glib_major_version, glib_minor_version,
+							   glib_micro_version);},
+			"GLib runtime version string"
+		},
+		{
+			Id::GmimeVersion,
+			Type::String,
+			Flags::System,
+			"gmime-version",
+			[]()->std::string {return mu_format("{}.{}.{}", gmime_major_version, gmime_minor_version,
+								  gmime_micro_version);},
+			"GMime runtime version string"
+		},
+		{
+			Id::ScmEnabled,
+			Type::Boolean,
+			Flags::System,
+			"scm-enabled",
+			[]()->std::string { return mu_format("{}", BUILD_GUILE); },
+			"Is SCM/Guile supported?"
+		},
+		{
+			Id::LanguageEnabled,
+			Type::Boolean,
+			Flags::System,
+			"language-enabled",
+			[]()->std::string { return mu_format("{}", HAVE_CLD2); },
+			"Is language detection/searching supported?"
+		},
+	});
 
 	/**
 	 * Construct a new Config object.
@@ -210,7 +277,7 @@ public:
 	/**
 	 * Get the property by its id
 	 *
-	 * @param id a property id (!= Id::_count_)
+	 * @param id a property id
 	 *
 	 * @return the property
 	 */
@@ -236,33 +303,18 @@ public:
 
 
 	/**
-	 * Get the string-value for prop.
-	 *
-	 * For internal use
-	 *
-	 * @param prop some property
-	 *
-	 * @return a string
-	 */
-	std::string get_str(const Property& prop) const {
-		const auto str = cstore_.metadata(std::string{prop.name});
-		return str.empty() ? std::string{prop.default_val} : str;
-	}
-
-
-	/**
 	 * Get the property value decoded based on the type
 	 *
-	 * @param prop_id a property id
+	 * @param str the raw string value
 	 *
-	 * @return the value or Nothing
+	 * @return the value
 	 */
 	template<Type type>
-	static constexpr auto decode(const std::string& str)  {
+	static auto decode(const std::string& str)  {
 		if constexpr (type == Type::Number)
 			return static_cast<size_t>(str.empty() ? 0 : std::atoll(str.c_str()));
-		if constexpr (type == Type::Boolean)
-			return static_cast<size_t>(str.empty() ? false :
+		else if constexpr (type == Type::Boolean)
+			return static_cast<bool>(str.empty() ? false :
 						   std::atol(str.c_str()) != 0);
 		else if constexpr (type == Type::Timestamp)
 			return static_cast<int64_t>(str.empty() ? 0 : std::atoll(str.c_str()));
@@ -273,6 +325,62 @@ public:
 		throw std::logic_error("invalid type");
 	}
 
+	/**
+	 * Get default value for the property, or Nothing if it does not have one.
+	 *
+	 * @param prop some property
+	 *
+	 * @return string or nothing
+	 */
+	static Option<std::string> default_value(const Property& prop) {
+		if (!prop.default_val)
+			return Nothing;
+		else
+			return prop.default_val();
+	}
+
+	/**
+	 * Get the raw string-value for some property
+	 *
+	 * @param prop some property
+	 *
+	 * @return a string
+	 */
+	std::string as_raw_string(const Property& prop) const {
+		// system properties are _not_ stored in the db.
+		if (any_of(prop.flags & Property::Flags::System)) {
+			return default_value(prop).value_or("");
+		} else {
+			if (const auto str = cstore_.metadata(std::string{prop.name}); !str.empty())
+				return str;
+			else
+				return default_value(prop).value_or("");
+		}
+	}
+
+	/**
+	 * Get the string-value for some property (for display)
+	 *
+	 * @param prop some property
+	 *
+	 * @return a string
+	 */
+	std::string as_display_string(const Property& prop) const {
+		// system properties are _not_ stored in the db.
+		const auto str{as_raw_string(prop)};
+		switch (prop.type) {
+		case Type::Boolean:
+			return decode<Type::Boolean>(str) ? "yes" : "no";
+		case Type::StringList:
+			return mu_format("{}", mu_join(decode<Type::StringList>(str), ", "));
+		case Type::Timestamp: {
+			const auto t{decode<Type::Timestamp>(str)};
+			return t == 0 ? "never" : mu_format("{:%c}", mu_time(t));
+		}
+		default:
+			return str;
+		}
+	}
 
 
 	/**
@@ -285,7 +393,7 @@ public:
 	template<Id ID>
 	auto get() const {
 		constexpr auto& prop{property<ID>()};
-		return decode<prop.type>(get_str(prop));
+		return decode<prop.type>(as_raw_string(prop));
 	}
 
 	/**
@@ -299,9 +407,10 @@ public:
 	template<Id ID, typename T>
 	Result<void> set(const T& val) {
 		constexpr auto&& prop{property<ID>()};
+		if (any_of(prop.flags & Property::Flags::System))
+			return Err(Error::Code::AccessDenied, "cannot write system property");
 		if (read_only())
-			return Err(Error::Code::AccessDenied,
-				   "cannot write to read-only db");
+			return Err(Error::Code::AccessDenied, "cannot write to read-only db");
 
 		const auto strval = std::invoke([&]{
 			if constexpr (prop.type == Type::Number || prop.type == Type::Timestamp)
@@ -337,7 +446,7 @@ public:
 		for (auto&& prop: properties) {
 			if (any_of(prop.flags & Flags::Configurable)) {
 				const auto&& key{std::string{prop.name}};
-				if (auto&& val{src.cstore_.metadata(key)}; !val.empty())
+				if (const auto& val{src.cstore_.metadata(key)}; !val.empty())
 					cstore_.set_metadata(key, std::string{val});
 			}
 		}

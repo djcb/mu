@@ -1043,7 +1043,7 @@ https://trac.xapian.org/ticket/719
 
 	MemDb mdb;
 	Config conf{mdb};
-	conf.set<Config::Id::SupportNgrams>(true);
+	conf.set<Config::Id::NgramsEnabled>(true);
 
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, conf)};

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,7 +26,6 @@ validate_props()
 {
 	size_t id{0};
 	for (auto&& prop: Config::properties) {
-
 		// ids must match
 		if (static_cast<size_t>(prop.id) != id)
 			return false;
@@ -79,7 +78,7 @@ test_basic()
 	}
 
 	{
-		g_assert_true(Config::property<Id::BatchSize>().default_val == "50000");
+		g_assert_true(!!Config::property<Id::BatchSize>().default_val);
 		g_assert_cmpuint(conf_db.get<Id::BatchSize>(),==,50000);
 
 		assert_valid_result(conf_db.set<Id::BatchSize>(123456));
