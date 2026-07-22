@@ -96,9 +96,19 @@ namespace Mu::Scm {
 	// https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2593r0.html
 	template<typename T> struct always_false : std::false_type {};
 
-	template<typename T> constexpr bool is_char_array_v =
-		std::is_array_v<T> &&
-		std::is_same_v<std::remove_extent_t<T>, char>;
+        template <typename T>
+        concept IsCharArray =
+            std::is_array_v<T> && std::is_same_v<std::remove_extent_t<T>, char>;
+        /**< Is this is a char-array? */
+
+        template <typename T>
+        concept IsSignedIntegral = std::is_integral_v<T> && std::is_signed_v<T>;
+	/**< Is this a signed integral type? */
+
+        template <typename T>
+        concept IsUnsignedIntegral =
+            std::is_integral_v<T> && std::is_unsigned_v<T>;
+	/**< Is this an unsigned integral type? */
 
 
 	/**
@@ -158,11 +168,11 @@ namespace Mu::Scm {
 	 */
 	template<typename T>
 	SCM make_symbol(const T& val){
-		using Type = std::remove_const_t<T>; // *not* std::remove_const
+		using Type = std::remove_cvref_t<T>;
 		if constexpr (std::is_same_v<Type, std::string> ||
 			      std::is_same_v<Type, std::string_view>)
 			return scm_from_utf8_symboln(val.data(), val.size());
-		else if constexpr (is_char_array_v<Type>|| std::is_same_v<Type, const char*>)
+		else if constexpr (IsCharArray<T> || std::is_same_v<Type, const char*>)
 			return scm_from_utf8_symbol(val);
 		else {
 			static_assert(always_false<Type>::value, "source type not supported");
@@ -184,15 +194,17 @@ namespace Mu::Scm {
 	 */
 	template<typename T>
 	T from_scm(SCM ARG, const char *func, int pos) {
-		const auto ensure=[&](bool pred, SCM ARG, const char *expected) {
+		const auto ensure = [&](bool pred, SCM ARG, const char *expected) {
 			if (!pred)
 				throw ScmError{ScmError::Id::WrongType, func, pos, ARG, expected};
 		};
 		// note: use the C predicates (scm_is_string etc.); the Scheme
 		// predicates (scm_string_p etc.) return an SCM boolean, which
 		// is truthy as a C++ bool even when it is #f.
-		using Type = std::remove_const_t<T>; // *not* std::remove_const
-		if constexpr (std::is_same_v<Type, std::string>) {
+		using Type = std::remove_cvref_t<T>;
+		if constexpr (std::is_same_v<Type, SCM>) {
+			return ARG;
+		} else if constexpr (std::is_same_v<Type, std::string>) {
 			ensure(scm_is_string(ARG), ARG, "string");
 			size_t len{};
 			auto str{scm_to_utf8_stringn(ARG, &len)};
@@ -205,23 +217,23 @@ namespace Mu::Scm {
 		} else if constexpr (std::is_same_v<Type, bool>) {
 			ensure(scm_is_bool(ARG), ARG, "bool");
 			return scm_to_bool(ARG);
-		} else if constexpr (std::is_same_v<Type, int>) {
-			ensure(scm_is_signed_integer(ARG, std::numeric_limits<int>::min(),
-							   std::numeric_limits<int>::max()),
-				   ARG, "integer");
+		} else if constexpr (IsSignedIntegral<Type>) {
+			ensure(scm_is_signed_integer(ARG, std::numeric_limits<Type>::min(),
+						     std::numeric_limits<Type>::max()),
+			       ARG, "integer");
 			return scm_to_int(ARG);
-		} else if constexpr (std::is_same_v<Type, uint>) {
-			ensure(scm_is_unsigned_integer(ARG, std::numeric_limits<uint>::min(),
-					   std::numeric_limits<uint>::max()),
-				   ARG,  "unsigned");
+		} else if constexpr (IsUnsignedIntegral<Type>) {
+			ensure(scm_is_unsigned_integer(ARG, std::numeric_limits<Type>::min(),
+						       std::numeric_limits<Type>::max()),
+			       ARG,  "unsigned");
 			return scm_to_uint(ARG);
-		} else if constexpr (std::is_same_v<Type, SCM>) {
-			return ARG;
-		} else {
+		} else  {
 			static_assert(always_false<Type>::value, "target type not supported");
 			return {};
 		}
 	}
+
+
 	/**
 	 * Like from_SCM, but if ARG is boolean false, return default value.
 	 *
@@ -245,11 +257,11 @@ namespace Mu::Scm {
 	 */
 	template<typename T>
 	SCM to_scm(const T& val) {
-		using Type = std::remove_const_t<T>;
+		using Type = std::remove_cvref_t<T>;
 		if constexpr (std::is_same_v<Type, std::string> ||
 			      std::is_same_v<Type, std::string_view>)
 			return scm_from_utf8_stringn(val.data(), val.size());
-		else if constexpr (is_char_array_v<Type>|| std::is_same_v<Type, const char*>)
+		else if constexpr (IsCharArray<Type>|| std::is_same_v<Type, const char*>)
 			return scm_from_utf8_string(val);
 		else if constexpr (std::is_same_v<Type, std::vector<std::string>>) {
 			SCM lst{SCM_EOL};

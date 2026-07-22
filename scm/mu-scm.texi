@@ -478,6 +478,11 @@ Example:
      (root-maildir . "/home/user/Maildir") (schema-version . 500))
 @end lisp
 
+Some of the fields are constant for the lifetime of the store, while others such
+as the @code{last-change} may change between calls.
+
+All date fields are encoded as Unix seconds-since-epoch.
+
 More fields may be added.
 
 @deffn {Scheme Procedure} root-maildir

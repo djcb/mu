@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -50,16 +50,11 @@ subr_cc_store_alist(SCM store_scm) try {
 
 	for (const auto& prop: Mu::Config::properties) {
 
-		// don't expose internal values & values that may change during
-		// runtime
-		if (any_of(prop.flags &
-			   (MuConfig::Flags::Internal | MuConfig::Flags::Runtime)))
+		// don't expose internal/system values
+		if (any_of(prop.flags & (MuConfig::Flags::Internal|MuConfig::Flags::System)))
 			continue;
 
 		const auto str{conf.as_display_string(prop)};
-		if (str.empty())
-			continue;
-
 		const auto name{make_symbol(prop.name)};
 		const auto val = std::invoke([&]() {
 			switch (prop.type) {
