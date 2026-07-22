@@ -108,6 +108,10 @@
     (test-equal '((email . "anon@example.com") (name . "Mickey Mouse"))
       (car  (assoc-ref alist 'from)))
 
+    ;; language
+    (test-equal (language msg)
+      (if (assoc-ref (configuration) 'language-enabled?) 'en nil))
+
     ;; cc, bc, labels
     (test-equal '() (cc msg))
     (test-equal '() (bcc msg))

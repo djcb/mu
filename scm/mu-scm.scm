@@ -1,4 +1,4 @@
-;; Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -100,8 +100,10 @@
 	    ;; Other
 
 	    ;; misc
-	    %options
-	    ;;	    %preferences
+            options
+            configuration
+
+            %options  ;; deprecated, use (options)
 
 	    ;; logging
 	    debug
@@ -621,9 +623,20 @@ init'. Uses the default-store."
 ;;
 ;; The alist maps symbols to values; a value of #f indicates that the value is at
 ;; its default.
-%options ;; defined in c++
+%options ;; defined in c++ (public, but deprecated)
 (set-documentation! '%options
 		    "Alist with the command-line parameters.")
+(define (options)
+  "Get an alist with the options that \"mu\" started with. That as, command-line
+   arguments, defaults, environment."
+  %options)
+
+%configuration ;; defined in c++
+(set-documentation! '%configuration
+		    "Alist with the mu system configuration parameters.")
+(define (configuration)
+  "Alist with the mu system configuration parameters.."
+  %configuration)
 
 (define %preferences
   '( (short-date  . "%F %T")
@@ -683,7 +696,6 @@ UTC time.
 	(let ((t (if utc? (gmtime time-t) (localtime time-t))))
 	  (strftime format t))
 	#f)))
-
 
 ;; Logging to mu's log
 

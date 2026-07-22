@@ -55,7 +55,8 @@ subr_cc_store_alist(SCM store_scm) try {
 			continue;
 
 		const auto str{conf.as_display_string(prop)};
-		const auto name{make_symbol(prop.name)};
+		const auto name{make_symbol(mu_format("{}{}", prop.name,
+						      prop.type == Type::Boolean ? "?" : ""))};
 		const auto val = std::invoke([&]() {
 			switch (prop.type) {
 			case Type::Number:

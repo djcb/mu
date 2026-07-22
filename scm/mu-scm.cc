@@ -32,6 +32,8 @@
 
 #include "mu-scm-types.hh"
 
+#include "mu-config.hh"
+
 #ifdef HAVE_PTHREAD_SETNAME_NP
 #include <pthread.h>
 #endif
@@ -44,7 +46,7 @@ SCM mu_mod; // The mu module
 }
 
 /**
- * Create a plist for the relevant option items
+ * Create an alist for the relevant option items (i.e., command-line parameters)
  *
  * @param opts
  */
@@ -52,16 +54,51 @@ static void
 init_options(const Options& opts)
 {
 	SCM scm_opts = alist_add(SCM_EOL,
-				 make_symbol("verbose"), opts.verbose,
-				 make_symbol("debug"), opts.debug,
-				 make_symbol("quiet"), opts.quiet);
+				 make_symbol("verbose?"), opts.verbose,
+				 make_symbol("debug?"), opts.debug,
+				 make_symbol("quiet?"), opts.quiet);
 
 	if (opts.muhome.empty())
 		scm_opts = alist_add(scm_opts, make_symbol("mu-home"), SCM_BOOL_F);
 	else
 		scm_opts = alist_add(scm_opts, make_symbol("mu-home"), opts.muhome);
 
-	scm_c_define("%options", scm_opts);
+
+	scm_c_define("%options", scm_reverse_x(scm_opts, SCM_EOL));
+}
+
+/**
+ * Create an alist for the relevant system-configuration parameters
+ */
+static void
+init_configuration()
+{
+	SCM conf{SCM_EOL};
+
+	for (const auto& prop: Config::properties) {
+
+		if (none_of(prop.flags & Property::Flags::System))
+			continue;
+
+	        const auto val{Config::default_value(prop)};
+		if (!val)
+			continue;
+
+		switch(prop.type) {
+		case Config::Type::Boolean:
+			conf = alist_add(conf, make_symbol(mu_format("{}?", prop.name, "?")),
+					 Config::decode<Config::Type::Boolean>(*val));
+			break;
+		case Config::Type::String:
+			conf = alist_add(conf, make_symbol(prop.name), *val);
+			break;
+		default:
+			// other types are not used here yet.
+			break;
+		}
+        }
+
+	scm_c_define("%configuration", scm_reverse_x(conf, SCM_EOL));
 }
 
 static void
@@ -179,6 +216,7 @@ init_module_mu(void* data)
 	const ModMuData& conf{*reinterpret_cast<ModMuData*>(data)};
 
 	init_options(conf.opts);
+	init_configuration();
 	init_misc();
 	init_subrs();
 

@@ -126,22 +126,20 @@ optional.
 To build @t{mu} with SCM support, first you need to ensure you have installed
 the required Guile development packages. The details of getting those vary
 across environments / distributions, e.g.: on Fedora (as root):
-
 @example
 # dnf install guile30-devel
 @end example
-
-or on Debian/Ubuntu:
+or on Debian/Ubuntu and derivatives:
 @example
 $ sudo apt install guile-3.0-dev
 @end example
 
-With those packages in place, you can (re)build @t{mu} and @t{mu-scm} should be
-built automatically if you did @emph{not} explicitly disable it.
+With those packages in place, a (re)build @t{mu} and @t{mu-scm} should
+automatically build the SCM-support, unless you explicitly disabled it.
 
-Parts of @t{mu-scm} depend on @t{mu} being @emph{installed}, not just built;
-however, you can still use it un-installed as well by setting an environment
-variable @t{MU_SCM_DIR} to the source-directory, e.g.
+By default,@t{mu-scm} expects @t{mu} being @emph{installed}, not just
+@emph{built}; however, you can still use it un-installed as well by setting the
+environment variable @t{MU_SCM_DIR} to the path to the source-directory, e.g.
 @t{/home/user/sources/mu/scm}.
 
 @node Starting the REPL
@@ -150,7 +148,9 @@ variable @t{MU_SCM_DIR} to the source-directory, e.g.
 After installing @t{mu}, you can check the output of @command{mu info}. If
 @t{mu-scm} is available, in the table you should find a line:
 @example
-| scm-support      | yes     | GNU Guile 3.x support (new)?          |
++------------------+-------------+--------------------------------------------+
+| scm-enabled      | yes         | Is SCM/Guile supported?                    |
++------------------+-------------+--------------------------------------------+
 @end example
 
 You can then start an interactive shell, also known as the
@@ -488,8 +488,8 @@ More fields may be added.
 @deffn {Scheme Procedure} root-maildir
 @end deffn
 
-Get the root maildir directory, that is, the root of under the directory under
-which all messages reside.
+Get the root maildir directory, that is, the root directory under which all
+messages reside.
 
 This is equivalent to @code{(assoc-ref (store->alist) 'root-maildir)}.
 
@@ -946,22 +946,34 @@ For example:
 @c Get the message's s-expression.
 
 @c @t{mu} caches an s-expression for each message; this was designed as an
-@c optimization for @code{mu4e}, but @t{mu-scm} uses it as well. The details of this
-@c s-expression (a property-list) are internal to @t{mu} (so do not base your next
-@c billion-dollar startup on it), but it can be useful for development and
-@c debugging.
+@c optimization for @code{mu4e}, but @t{mu-scm} uses it as well. The details of
+@c this s-expression (a property-list) are internal to @t{mu} (so do not base
+@c your next billion-dollar startup on it), but it can be useful for development
+@c and debugging.
 
 @node Miscellaneous
 @section Miscellaneous
 
-@defvar %options
-@end defvar
-
-An association-list (alist) of general options passed to @command{mu scm} or
-their default values.
+@deffn {Scheme Procedure} options
+@end deffn
+Get an association-list (alist) of general options passed to @command{mu scm} or
+their default values. This might look something like:
 @lisp
- %options
-=> ((mu-home . #f) (quiet . #f) (debug . #f) (verbose . #f))
+(options)
+=> ((verbose? . #f) (debug? . #f) (quiet? . #f) (mu-home . #f))
+@end lisp
+
+Other options may be added.
+
+@deffn {Scheme Procedure} configuration
+@end deffn
+
+An association-list (alist) of the @t{mu} system configuration. This might look
+something like:
+@lisp
+(configuration)
+((mu-version . "1.14.3") (xapian-version . "1.4.30") (glib-version . "2.88.2")
+ (gmime-version . "3.2.15") (scm-enabled? . #t) (language-enabled? . #t))
 @end lisp
 
 @c @defvar %preferences
