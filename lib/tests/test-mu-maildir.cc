@@ -31,6 +31,7 @@
 #include "utils/mu-utils.hh"
 #include "utils/mu-utils-file.hh"
 #include "utils/mu-result.hh"
+#include "utils/mu-regex.hh"
 
 using namespace Mu;
 
@@ -135,7 +136,7 @@ test_maildir_mkdir_05(void)
 [[maybe_unused]] static void
 assert_matches_regexp(const char* str, const char* rx)
 {
-	if (!g_regex_match_simple(rx, str, (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {
+	if (const auto rex{Regex::make(rx)}; !rex || !rex->matches(str)) {
 		if (g_test_verbose())
 			g_print("%s does not match %s", str, rx);
 		g_assert(0);

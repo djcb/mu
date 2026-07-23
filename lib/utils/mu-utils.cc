@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2017-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -44,6 +44,7 @@
 #include <glib/gprintf.h>
 
 #include "mu-utils.hh"
+#include "mu-regex.hh"
 #include "mu-unbroken.hh"
 
 #include "mu-error.hh"
@@ -538,60 +539,61 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 Option<int64_t>
 Mu::parse_size(const std::string& val, bool is_first)
 {
-	int64_t		size{-1};
-	std::string	str;
-	GRegex*		rx;
-	GMatchInfo*	minfo;
-
 	/* one-sided ranges */
 	if (val.empty())
 		return is_first ? 0 : std::numeric_limits<int64_t>::max();
 
-	rx = g_regex_new("^(\\d+)(b|k|kb|m|mb|g|gb)?$",
-			 G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
-	minfo = NULL;
-	if (g_regex_match(rx, val.c_str(), (GRegexMatchFlags)0, &minfo)) {
+	static const auto rx =
+		unwrap(Regex::make("^(\\d+)(b|k|kb|m|mb|g|gb)?$", G_REGEX_CASELESS));
 
-		char*  s = g_match_info_fetch(minfo, 1);
-		size = atoll(s); // check overflow?
-		g_free(s);
+	const auto groups{rx.match_groups(val)};
+	if (!groups)
+		return Nothing;
 
-		s = g_match_info_fetch(minfo, 2);
-		switch (s ? g_ascii_tolower(s[0]) : 0) {
-		case 'k': size *= 1024; break;
-		case 'm': size *= (1024 * 1024); break;
-		case 'g': size *= (1024 * 1024 * 1024); break;
-		default: break;
-		}
+	int64_t size{::atoll(groups->at(1).c_str())}; // check overflow?
 
-		g_free(s);
+	const auto& unit{groups->at(2)};
+	switch (unit.empty() ? 0 : g_ascii_tolower(unit.at(0))) {
+	case 'k': size *= 1024; break;
+	case 'm': size *= (1024 * 1024); break;
+	case 'g': size *= (1024 * 1024 * 1024); break;
+	default: break;
 	}
-
-	g_regex_unref(rx);
-	g_match_info_unref(minfo);
 
 	if (size < 0)
 		return Nothing;
 	else
 		return size;
-
 }
 
 std::string
 Mu::to_lexnum(int64_t val)
 {
 	char buf[18]; /* 1 byte prefix + hex + \0 */
-	buf[0] = 'f' + ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64, val);
+	const auto len = ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64,
+				    static_cast<uint64_t>(val));
+	/* an uppercase prefix marks a negative value (see mu-utils.hh);
+	 * uppercase sorts before lowercase, so negative values sort before
+	 * the positive ones. */
+	buf[0] = (val < 0 ? 'F' : 'f') + len;
 	return buf;
 }
 
 int64_t
 Mu::from_lexnum(const std::string& str)
 {
-	int64_t val{};
-	std::from_chars(str.c_str() + 1, str.c_str() + str.size(), val, 16);
+	uint64_t val{};
+	if (str.empty())
+		return 0;
 
-	return val;
+	const auto res = std::from_chars(str.c_str() + 1,
+					 str.c_str() + str.size(), val, 16);
+	if (res.ec != std::errc{})
+		return 0;
+
+	/* negative values are the two's-complement representation, so
+	 * simply cast back. */
+	return static_cast<int64_t>(val);
 }
 
 bool

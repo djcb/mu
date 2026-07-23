@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,12 +20,6 @@
 #include "mu-priority.hh"
 
 using namespace Mu;
-
-std::string
-Mu::to_string(Priority prio)
-{
-	return std::string{priority_name(prio)};
-}
 
 /*
  * tests... also build as runtime-tests, so we can get coverage info

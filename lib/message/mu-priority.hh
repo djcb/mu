@@ -122,32 +122,18 @@ priority_name(Priority prio)
 }
 
 /**
- * Get the name for a given priority (backward compatibility)
- *
- * @return the name
- */
-constexpr const char*
-priority_name_c_str(Priority prio)
-{
-	switch (prio) {
-	case Priority::Low:
-		return "low";
-	case Priority::High:
-		return "high";
-	case Priority::Normal:
-	default:
-		return "normal";
-	}
-}
-
-/**
  * Get a the message priority as a string
  *
  * @param prio priority
  *
  * @return a string
  */
-std::string to_string(Priority prio);
+constexpr std::string
+to_string(Priority prio)
+{
+	return std::string{priority_name(prio)};
+}
+
 
 } // namespace Mu
 

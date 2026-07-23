@@ -62,6 +62,69 @@ test_regex_match2()
 
 
 static void
+test_regex_match_groups()
+{
+	{
+		auto rx = Regex::make("^(\\d+)-(\\w+)$");
+		assert_valid_result(rx);
+
+		const auto groups{rx->match_groups("123-abc")};
+		g_assert_true(!!groups);
+		g_assert_cmpuint(groups->size(), ==, 3);
+		assert_equal(groups->at(0), "123-abc");
+		assert_equal(groups->at(1), "123");
+		assert_equal(groups->at(2), "abc");
+
+		// no match -> Nothing
+		g_assert_false(!!rx->match_groups("nope"));
+	}
+
+	{ // always capture-count + 1 elements; a trailing group that
+	  // did not participate is an empty string
+		auto rx = Regex::make("^(\\d+)(k|m|g)?$", G_REGEX_CASELESS);
+		assert_valid_result(rx);
+
+		const auto groups{rx->match_groups("512")};
+		g_assert_true(!!groups);
+		g_assert_cmpuint(groups->size(), ==, 3);
+		assert_equal(groups->at(1), "512");
+		assert_equal(groups->at(2), "");
+
+		const auto groups2{rx->match_groups("512K")};
+		g_assert_true(!!groups2);
+		g_assert_cmpuint(groups2->size(), ==, 3);
+		assert_equal(groups2->at(2), "K");
+	}
+
+	{ // a non-participating group in the middle
+		auto rx = Regex::make("^(?:(a)|(b))(c)$");
+		assert_valid_result(rx);
+
+		const auto groups{rx->match_groups("bc")};
+		g_assert_true(!!groups);
+		g_assert_cmpuint(groups->size(), ==, 4);
+		assert_equal(groups->at(1), "");
+		assert_equal(groups->at(2), "b");
+		assert_equal(groups->at(3), "c");
+	}
+
+	{ // no capture groups at all -> just the full match
+		auto rx = Regex::make("b.c");
+		assert_valid_result(rx);
+
+		const auto groups{rx->match_groups("abxcd")};
+		g_assert_true(!!groups);
+		g_assert_cmpuint(groups->size(), ==, 1);
+		assert_equal(groups->at(0), "bxc");
+	}
+
+	{ // unset rx matches nothing
+		Regex rx;
+		g_assert_false(!!rx.match_groups("foo"));
+	}
+}
+
+static void
 test_regex_replace()
 {
 	{
@@ -105,6 +168,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/regex/match", test_regex_match);
 	g_test_add_func("/regex/match2", test_regex_match2);
+	g_test_add_func("/regex/match-groups", test_regex_match_groups);
 	g_test_add_func("/regex/replace", test_regex_replace);
 	g_test_add_func("/regex/fail", test_regex_fail);
 

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -30,10 +30,6 @@ namespace Mu {
  * PCRE rather than std::regex because it is much faster.
  */
 struct Regex {
-#if !GLIB_CHECK_VERSION(2,74,0) /* backward compat */
-#define G_REGEX_DEFAULT	      (static_cast<GRegexCompileFlags>(0))
-#define G_REGEX_MATCH_DEFAULT (static_cast<GRegexMatchFlags>(0))
-#endif
 	/**
 	 * Trivial constructor
 	 *
@@ -142,6 +138,42 @@ struct Regex {
 			return g_regex_match(rx_, str.c_str(), mflags, nullptr);
 		// strangely, valgrind reports some memory error related to
 		// the str.c_str(). It *seems* like a false alarm.
+	}
+
+	/**
+	 * Match this regexp against the given string and return the captured
+	 * groups.
+	 *
+	 * Element 0 is the full match, element n corresponds with the n-th
+	 * capture group in the pattern. The result always has capture-count +
+	 * 1 elements; groups that did not participate in the match are empty
+	 * strings.
+	 *
+	 * @param str string to match
+	 * @param mflags match flags
+	 *
+	 * @return the captured groups, or Nothing if there was no match (or no
+	 * valid regexp)
+	 */
+	Option<std::vector<std::string>>
+	match_groups(const std::string& str,
+		     GRegexMatchFlags mflags=G_REGEX_MATCH_DEFAULT) const {
+		GMatchInfo *minfo{};
+		if (!rx_ || !g_regex_match(rx_, str.c_str(), mflags, &minfo)) {
+			g_clear_pointer(&minfo, g_match_info_unref);
+			return Nothing;
+		}
+
+		std::vector<std::string> groups;
+		groups.reserve(g_regex_get_capture_count(rx_) + 1);
+		for (int i = 0; i != g_regex_get_capture_count(rx_) + 1; ++i) {
+			auto&& grp{g_match_info_fetch(minfo, i)};
+			groups.emplace_back(grp ? grp : "");
+			g_free(grp);
+		}
+		g_match_info_unref(minfo);
+
+		return Some(std::move(groups));
 	}
 
 	/**

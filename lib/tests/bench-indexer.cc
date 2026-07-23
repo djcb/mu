@@ -402,9 +402,7 @@ message(const Regex& rx, size_t id)
 	char buf[16];
 	::snprintf(buf, sizeof(buf), "%zu", id);
 
-	return to_string_gchar(
-		g_regex_replace(rx, test_msg, -1, 0, buf,
-				G_REGEX_MATCH_DEFAULT, {}));
+	return unwrap(rx.replace(test_msg, buf));
 }
 
 struct TestData {

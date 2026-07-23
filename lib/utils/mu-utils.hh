@@ -677,16 +677,27 @@ inline std::string shell_quote(const std::string& str) {
 
 
 /*
- * Lexnums are lexicographically sortable string representations of non-negative
- * integers. Start with 'f' + length of hex-representation number, followed by
- * the hex representation itself. So,
+ * Lexnums are lexicographically sortable string representations of integers.
+ *
+ * Non-negative values start with 'f' + length of the hex-representation,
+ * followed by the hex representation itself. So,
  *
  * 0  -> 'g0'
  * 1  -> 'g1'
  * 10 -> 'ga'
  * 16 -> 'h10'
  *
- * etc.
+ * etc. Negative values use the corresponding uppercase prefix, followed by the
+ * hex of their two's-complement representation (always 16 digits, hence always
+ * 'V'). Since uppercase sorts before lowercase in ASCII, and the
+ * two's-complement hex of negative values increases with the value, all lexnums
+ * sort in numerical order. So,
+ *
+ * -1 -> 'Vffffffffffffffff'
+ * -2 -> 'Vfffffffffffffffe'
+ *
+ * So, this is not quite optimimal (length-wise) for negative values; but at least
+ * they are supported now (they are rare).
  */
 std::string to_lexnum(int64_t val);
 int64_t from_lexnum(const std::string& str);

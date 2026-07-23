@@ -37,9 +37,9 @@ Mu::Labels::validate_label(const std::string &label)
 
 	const auto cstr{label.c_str()};
 
-	// labels must be at least two characters and not start with a
-	// dash. these limitations are there to avoid confusion with
-	// command-line parameters.
+	// labels must not start with '+' or '-'; this limitation is
+	// there to avoid confusion with delta-labels / command-line
+	// parameters.
 	if (cstr[0] == '-' || cstr[0] == '+')
 		return Err(Error{Error::Code::InvalidArgument,
 				 "labels cannot start with '+' or '-' ({})", label});

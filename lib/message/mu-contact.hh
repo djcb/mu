@@ -24,12 +24,12 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <cctype>
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
 
 #include <utils/mu-option.hh>
+#include <utils/mu-utils.hh>
 #include "mu-fields.hh"
 
 namespace Mu {
@@ -47,9 +47,9 @@ struct Contact {
 	 * @param type contact field type
 	 * @param message_date data for the message for this contact
 	 */
-	Contact(const std::string& email, const std::string& name = {},
+	Contact(std::string email, std::string name = {},
 		Type type = {}, int64_t message_date ={})
-		: email{email}, name{name}, type{type},
+		: email{std::move(email)}, name{std::move(name)}, type{type},
 		  message_date{message_date}, personal{}, frequency{1}, tstamp{}
 		{ cleanup_name(); }
 
@@ -63,10 +63,10 @@ struct Contact {
 	 * @param freq how often was this contact seen?
 	 * @param tstamp timestamp for last change
 	 */
-	Contact(const std::string& email, const std::string& name,
+	Contact(std::string email, std::string name,
 		int64_t message_date, bool personal, size_t freq,
 		int64_t tstamp)
-	    : email{email}, name{name}, type{},
+	    : email{std::move(email)}, name{std::move(name)}, type{},
 	      message_date{message_date}, personal{personal}, frequency{freq},
 	      tstamp{tstamp}
 	{ cleanup_name(); }
@@ -84,14 +84,6 @@ struct Contact {
 	std::string display_name() const;
 
 	/**
-	 * Does the contact contain a valid email address as per
-	 *   https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
-	 * ?
-	 * @return true or false
-	 */
-	bool has_valid_email() const;
-
-	/**
 	 * Operator==; based on the e-mail address only
 	 *
 	 * @param rhs some other Contact
@@ -100,16 +92,6 @@ struct Contact {
 	 */
 	bool operator== (const Contact& rhs) const noexcept {
 		return email == rhs.email;
-	}
-	/**
-	 * Operator!=
-	 *
-	 * @param rhs some other Contact
-	 *
-	 * @return true or false.
-	 */
-	bool operator!= (const Contact& rhs) const noexcept {
-		return !(*this == rhs);
 	}
 
 	static constexpr int64_t RecentOffset{15 * 24 * 3600};
@@ -184,7 +166,7 @@ struct Contact {
 private:
 	void cleanup_name() { // replace control characters by spaces.
 		for (auto& c: name)
-			if (iscntrl(c))
+			if (is_ascii_cntrl(c))
 				c = ' ';
 	}
 

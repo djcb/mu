@@ -18,6 +18,7 @@
 */
 
 #include <vector>
+#include <limits>
 #include <glib.h>
 
 #include <iostream>
@@ -302,6 +303,24 @@ test_to_from_lexnum()
 	g_assert_cmpuint(from_lexnum(to_lexnum(0)), ==, 0);
 	g_assert_cmpuint(from_lexnum(to_lexnum(7777)), ==, 7777);
 	g_assert_cmpuint(from_lexnum(to_lexnum(9876543)), ==, 9876543);
+
+	/* negative values have an uppercase prefix and thus sort before all
+	 * positive values, in numerical order */
+	assert_equal(to_lexnum(-1), "Vffffffffffffffff");
+	g_assert_cmpint(from_lexnum(to_lexnum(-1)), ==, -1);
+	g_assert_cmpint(from_lexnum(to_lexnum(-12345)), ==, -12345);
+	g_assert_true(to_lexnum(-2) < to_lexnum(-1));
+	g_assert_true(to_lexnum(-1) < to_lexnum(0));
+	g_assert_true(to_lexnum(-12345) < to_lexnum(12345));
+
+	constexpr auto int64_min = std::numeric_limits<int64_t>::min();
+	constexpr auto int64_max = std::numeric_limits<int64_t>::max();
+	g_assert_cmpint(from_lexnum(to_lexnum(int64_min)), ==, int64_min);
+	g_assert_cmpint(from_lexnum(to_lexnum(int64_max)), ==, int64_max);
+	g_assert_true(to_lexnum(int64_min) < to_lexnum(-1));
+	g_assert_true(to_lexnum(0) < to_lexnum(int64_max));
+
+	g_assert_cmpint(from_lexnum(""), ==, 0);
 }
 
 static void

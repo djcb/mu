@@ -1,4 +1,4 @@
-/** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+/** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -165,7 +165,10 @@ public:
 	 *
 	 * @return message s-expression string
 	 */
-	std::string sexp_str() const { return xdoc_.get_data(); }
+	std::string sexp_str() const {
+		/* xapian_document() flushes any dirty cached sexp first */
+		return xapian_document().get_data();
+	}
 
 	/**
 	 * Generically adds an optional value, if set, to the document
@@ -242,6 +245,7 @@ public:
 private:
 	template<typename SexpType> void sexp_put_prop(const Field& field, SexpType&& val);
 	void sexp_remove_prop(const Field& field);
+	void add_search_term(const Field& field, const std::string& val);
 
 	Sexp& cached_sexp() const {
 		if (cached_sexp_.empty())
@@ -251,9 +255,13 @@ private:
 	}
 
 	mutable Xapian::Document	xdoc_;
-	Options				options_;
-	mutable Sexp			cached_sexp_;
+        Options                         options_;
+        mutable Sexp			cached_sexp_;
 	mutable bool			dirty_sexp_{};	/* xdoc's sexp is outdated */
+	Xapian::termcount		termpos_{};	/* next index term-position;
+							 * tracked so phrases cannot
+							 * match across unrelated
+							 * texts */
 };
 MU_ENABLE_BITOPS(Document::Options);
 

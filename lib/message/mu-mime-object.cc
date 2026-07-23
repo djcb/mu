@@ -31,14 +31,13 @@
 using namespace Mu;
 
 
-
 /* note, we do the gmime initialization here rather than in mu-runtime, because this way
  * we don't need mu-runtime for simple cases -- such as our unit tests. Also note that we
  * need gmime init even for the doc backend, as we use the address parsing functions also
  * there. */
 
 void
-Mu::init_gmime(void)
+Mu::init_gmime()
 {
 	// fast path.
 	static bool gmime_initialized = false;
@@ -83,7 +82,6 @@ Mu::address_rfc2047(const Contact& contact)
 	return encoded;
 }
 
-
 /*
  * MimeObject
  */
@@ -171,7 +169,7 @@ MimeObject::to_string_opt() const noexcept
 	}
 
 	std::string buffer;
-	buffer.resize(written + 1);
+	buffer.resize(written);
 	stream.reset();
 
 	auto bytes{g_mime_stream_read(GMIME_STREAM(stream.object()),
@@ -179,13 +177,11 @@ MimeObject::to_string_opt() const noexcept
 	if (bytes < 0)
 		return Nothing;
 
-	buffer.data()[written]='\0';
-	buffer.resize(written);
+	buffer.resize(bytes);
 
 	return buffer;
 }
 
-
 /*
  * MimeCryptoContext
  */
@@ -207,7 +203,16 @@ MimeCryptoContext::import_keys(MimeStream& stream)
 void
 MimeCryptoContext::set_request_password(PasswordRequestFunc pw_func)
 {
-	static auto request_func = pw_func;
+	/* store the function with the crypto-context object, so each context
+	 * gets its own and the lifetimes match up. */
+	static constexpr auto pw_func_key{"mu-password-request-func"};
+
+	g_object_set_data_full(
+		object(), pw_func_key,
+		new PasswordRequestFunc{std::move(pw_func)},
+		[](gpointer data) {
+			delete static_cast<PasswordRequestFunc*>(data);
+		});
 
 	g_mime_crypto_context_set_request_password(
 		self(),
@@ -217,20 +222,29 @@ MimeCryptoContext::set_request_password(PasswordRequestFunc pw_func)
 		   gboolean reprompt,
 		   GMimeStream *response,
 		   GError **err) -> gboolean {
-			MimeStream mstream{MimeStream::make_from_stream(response)};
+			const auto pw_func{static_cast<PasswordRequestFunc*>(
+				g_object_get_data(G_OBJECT(ctx), pw_func_key))};
+			if (!pw_func) {
+				g_set_error(err, G_IO_ERROR, G_IO_ERROR_FAILED,
+					    "no password-request function");
+				return FALSE;
+			}
 
-			auto res = request_func(MimeCryptoContext(ctx),
-						std::string{user_id ? user_id : ""},
-						std::string{prompt ? prompt : ""},
-						!!reprompt,
-						mstream);
+			/* response is owned by the caller (transfer-none) */
+			MimeStream mstream{
+				MimeStream::make_from_borrowed_stream(response)};
+
+			auto res = (*pw_func)(MimeCryptoContext{ctx},
+					      std::string{user_id ? user_id : ""},
+					      std::string{prompt ? prompt : ""},
+					      !!reprompt,
+					      mstream);
 			if (res)
 				return TRUE;
 
 			res.error().fill_g_error(err);
 			return FALSE;
 		});
-
 }
 
 Result<void>
@@ -238,14 +252,15 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 {
 	/* setup clean environment for testing; inspired by gmime */
 
-	g_setenv ("GNUPGHOME", join_paths(testpath, ".gnupg").c_str(), 1);
+	const auto gpghome{join_paths(testpath, ".gnupg")};
+	g_setenv ("GNUPGHOME", gpghome.c_str(), 1);
 
 	/* disable environment variables that gpg-agent uses for pinentry */
 	g_unsetenv ("DBUS_SESSION_BUS_ADDRESS");
 	g_unsetenv ("DISPLAY");
 	g_unsetenv ("GPG_TTY");
 
-	if (g_mkdir_with_parents((testpath + "/.gnupg").c_str(), 0700) != 0)
+	if (g_mkdir_with_parents(gpghome.c_str(), 0700) != 0)
 		return Err(Error::Code::File,
 			   "failed to create gnupg dir; err={}", errno);
 
@@ -253,7 +268,7 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 		-> Result<void> {
 
 		GError *err{};
-		std::string path{mu_format("{}/{}", testpath, fname)};
+		std::string path{join_paths(gpghome, fname)};
 		if (!g_file_set_contents(path.c_str(), data.c_str(), data.size(), &err))
 			return Err(Error::Code::File, &err, "failed to write {}", path);
 		else
@@ -263,13 +278,12 @@ MimeCryptoContext::setup_gpg_test(const std::string& testpath)
 	// some more elegant way?
 	if (auto&& res = write_gpgfile("gpg.conf", "pinentry-mode loopback\n"); !res)
 		return res;
-	if (auto&& res = write_gpgfile("gpgsm.conf", "disable-crl-checks\n"))
+	if (auto&& res = write_gpgfile("gpgsm.conf", "disable-crl-checks\n"); !res)
 		return res;
 
 	return Ok();
 }
 
-
 /*
  * MimeMessage
  */
@@ -372,6 +386,35 @@ all_contacts(const MimeMessage& msg)
 	return contacts;
 }
 
+static void
+add_contacts(InternetAddressList *addrs, Contact::Type ctype,
+	     int64_t msgtime, Contacts& contacts)
+{
+	const auto lst_len{internet_address_list_length(addrs)};
+	contacts.reserve(contacts.size() + lst_len);
+	for (auto i = 0; i != lst_len; ++i) {
+
+		const auto addr{internet_address_list_get_address(addrs, i)};
+		if (INTERNET_ADDRESS_IS_GROUP(addr)) {
+			/* an RFC 5322 group address; recurse into its members */
+			if (auto members{internet_address_group_get_members(
+					INTERNET_ADDRESS_GROUP(addr))}; members)
+				add_contacts(members, ctype, msgtime, contacts);
+			continue;
+		}
+
+		if (G_UNLIKELY(!INTERNET_ADDRESS_IS_MAILBOX(addr)))
+			continue;
+		const auto name{internet_address_get_name(addr)};
+		const auto email{internet_address_mailbox_get_addr (
+				INTERNET_ADDRESS_MAILBOX(addr))};
+		if (G_UNLIKELY(!email))
+			continue;
+
+		contacts.emplace_back(email, name ? name : "", ctype, msgtime);
+	}
+}
+
 Mu::Contacts
 MimeMessage::contacts(Contact::Type ctype) const noexcept
 {
@@ -387,24 +430,8 @@ MimeMessage::contacts(Contact::Type ctype) const noexcept
 	if (!addrs)
 		return {};
 
-	const auto msgtime{date().value_or(0)};
-
 	Contacts contacts;
-	auto lst_len{internet_address_list_length(addrs)};
-	contacts.reserve(lst_len);
-	for (auto i = 0; i != lst_len; ++i) {
-
-		const auto addr{internet_address_list_get_address(addrs, i)};
-		const auto name{internet_address_get_name(addr)};
-		if (G_UNLIKELY(!INTERNET_ADDRESS_IS_MAILBOX(addr)))
-			continue;
-		const auto email{internet_address_mailbox_get_addr (
-				INTERNET_ADDRESS_MAILBOX(addr))};
-		if (G_UNLIKELY(!email))
-			continue;
-
-		contacts.emplace_back(email, name ? name : "", ctype, msgtime);
-	}
+	add_contacts(addrs, ctype, date().value_or(0), contacts);
 
 	return contacts;
 }
@@ -444,7 +471,7 @@ MimeMessage::references() const noexcept
 
 		GMimeReferences *mime_refs{g_mime_references_parse({}, hdr->c_str())};
 		if (!mime_refs)
-			break;
+			continue; /* try the next header */
 
 		refs.reserve(refs.size() + g_mime_references_length(mime_refs));
 
@@ -473,8 +500,6 @@ MimeMessage::for_each(const ForEachFunc& func) const noexcept
 		}, &cbd);
 }
 
-
-
 /*
  * MimePart
  */
@@ -530,7 +555,7 @@ MimePart::to_string() const noexcept
 	}
 
 	std::string buffer;
-	buffer.resize(buflen + 1);
+	buffer.resize(buflen);
 	g_mime_stream_reset(stream);
 
 	auto bytes{g_mime_stream_read(stream, buffer.data(), buflen)};
@@ -538,7 +563,7 @@ MimePart::to_string() const noexcept
 	if (bytes < 0)
 		return Nothing;
 
-	buffer.resize(bytes + 1);
+	buffer.resize(bytes);
 
 	return buffer;
 }
@@ -546,8 +571,10 @@ MimePart::to_string() const noexcept
 Result<size_t>
 MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 {
-	MimeDataWrapper wrapper{g_mime_part_get_content(self())};
-	if (!wrapper)  /* this happens with invalid mails */
+	/* check before wrapping; the Object ctor throws on NULL, and we are
+	 * noexcept. This happens with invalid mails. */
+	GMimeDataWrapper *wrapper{g_mime_part_get_content(self())};
+	if (!wrapper)
 		return Err(Error::Code::File, "failed to create data wrapper");
 
 	GError *err{};
@@ -560,8 +587,7 @@ MimePart::to_file(const std::string& path, bool overwrite) const noexcept
 
 	MimeStream stream{MimeStream::make_from_stream(strm)};
 	ssize_t written{g_mime_data_wrapper_write_to_stream(
-			GMIME_DATA_WRAPPER(wrapper.object()),
-			GMIME_STREAM(stream.object()))};
+			wrapper, GMIME_STREAM(stream.object()))};
 
 	if (written < 0)
 		return Err(Error::Code::File, &err,
@@ -608,8 +634,8 @@ mime_types_equal (const std::string& mime_type, const std::string& official_type
 	const auto subtype{official_type.substr(slash_pos + 1)};
 	if (g_ascii_strncasecmp (subtype.c_str(), "x-", 2) == 0)
 		return false;
-	const auto supertype{official_type.substr(0, slash_pos - 1)};
-	const auto xtype{official_type.substr(0, slash_pos - 1) + "x-" + subtype};
+	/* supertype including the '/', then "x-" + subtype */
+	const auto xtype{official_type.substr(0, slash_pos + 1) + "x-" + subtype};
 
 	/* Check if the "x-" version of the official mime-type matches the
 	 * supplied mime-type. For example, if the official mime-type is
@@ -645,7 +671,7 @@ MimeMultipartSigned::verify(const MimeCryptoContext& ctx, VerifyFlags vflags) co
 		return Err(Error::Code::Crypto, "cannot find part");
 
 	const auto sig_mime_type{sig->mime_type()};
-	if (!sig || !mime_types_equal(sig_mime_type.value_or("<none>"), *sign_proto))
+	if (!mime_types_equal(sig_mime_type.value_or("<none>"), *sign_proto))
 		return Err(Error::Code::Crypto, "failed to find matching signature part");
 
 	MimeFormatOptions fopts{g_mime_format_options_new()};
@@ -656,9 +682,11 @@ MimeMultipartSigned::verify(const MimeCryptoContext& ctx, VerifyFlags vflags) co
 		return Err(res.error());
 	stream.reset();
 
-	MimeDataWrapper wrapper{g_mime_part_get_content(GMIME_PART(sig->object()))};
+	const auto wrapper{sig->content()};
+	if (!wrapper)
+		return Err(Error::Code::Crypto, "signature part has no content");
 	MimeStream sigstream{MimeStream::make_mem()};
-	if (auto&& res = wrapper.write_to_stream(sigstream); !res)
+	if (auto&& res = wrapper->write_to_stream(sigstream); !res)
 		return Err(res.error());
 	sigstream.reset();
 
@@ -755,8 +783,11 @@ MimeMultipartEncrypted::decrypt(const MimeCryptoContext& ctx, DecryptFlags dflag
 			   encrypted->mime_type().value_or(""));
 
 	const auto content{encrypted->content()};
+	if (!content)
+		return Err(Error::Code::Crypto, "encrypted part has no content");
 	auto ciphertext{MimeStream::make_mem()};
-	content.write_to_stream(ciphertext);
+	if (auto&& res = content->write_to_stream(ciphertext); !res)
+		return Err(res.error());
 	ciphertext.reset();
 
 	auto stream{MimeStream::make_mem()};

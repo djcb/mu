@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -58,20 +58,23 @@ validate_message_info_flags()
  * tests... also build as runtime-tests, so we can get coverage info
  */
 #ifdef BUILD_TESTS
-#define static_assert g_assert_true
+#define static_test g_assert_true
+#else
+#define static_test static_assert
 #endif /*BUILD_TESTS*/
 
 [[maybe_unused]] static void
 test_basic()
 {
-	static_assert(AllMessageFlagInfos.size() ==
-		      __builtin_ctz(static_cast<unsigned>(Flags::_final_)));
-	static_assert(validate_message_info_flags());
+	static_test(AllMessageFlagInfos.size() ==
+		      static_cast<size_t>(std::countr_zero(
+					static_cast<unsigned>(Flags::_final_))));
+	static_test(validate_message_info_flags());
 
-	static_assert(!!flag_info(Flags::Encrypted));
-	static_assert(!flag_info(Flags::None));
-	static_assert(!flag_info(static_cast<Flags>(0)));
-	static_assert(!flag_info(static_cast<Flags>(1<<AllMessageFlagInfos.size())));
+	static_test(!!flag_info(Flags::Encrypted));
+	static_test(!flag_info(Flags::None));
+	static_test(!flag_info(static_cast<Flags>(0)));
+	static_test(!flag_info(static_cast<Flags>(1<<AllMessageFlagInfos.size())));
 }
 
 /*
@@ -80,17 +83,24 @@ test_basic()
 [[maybe_unused]] static void
 test_flag_info()
 {
-	static_assert(flag_info('D')->flag == Flags::Draft);
-	static_assert(flag_info('l')->flag == Flags::MailingList);
-	static_assert(!flag_info('y'));
+	static_test(flag_info('D')->flag == Flags::Draft);
+	static_test(flag_info('l')->flag == Flags::MailingList);
+	static_test(!flag_info('y'));
 
-	static_assert(flag_info("trashed")->flag == Flags::Trashed);
-	static_assert(flag_info("attach")->flag == Flags::HasAttachment);
-	static_assert(!flag_info("fnorb"));
+	static_test(flag_info("trashed")->flag == Flags::Trashed);
+	static_test(flag_info("attach")->flag == Flags::HasAttachment);
+	static_test(!flag_info("fnorb"));
+
+	/* single-char names are treated as shortcuts... */
+	static_test(flag_info("z")->flag == Flags::Signed);
+	/* ... but longer names must match a full flag name; i.e., "zombie"
+	 * should not resolve to the 'z' shortcut */
+	static_test(!flag_info("zombie"));
+	static_test(!flag_info("Du"));
 
 
-	static_assert(flag_info('D')->shortcut_lower() == 'd');
-	static_assert(flag_info('u')->shortcut_lower() == 'u');
+	static_test(flag_info('D')->shortcut_lower() == 'd');
+	static_test(flag_info('u')->shortcut_lower() == 'u');
 }
 
 /*
@@ -99,20 +109,20 @@ test_flag_info()
 [[maybe_unused]] static void
 test_flags_from_expr()
 {
-	static_assert(flags_from_absolute_expr("SRP").value() ==
+	static_test(flags_from_absolute_expr("SRP").value() ==
 		      (Flags::Seen | Flags::Replied | Flags::Passed));
-	static_assert(flags_from_absolute_expr("Faul").value() ==
+	static_test(flags_from_absolute_expr("Faul").value() ==
 		      (Flags::Flagged | Flags::Unread |
 		       Flags::HasAttachment | Flags::MailingList));
 
 	/* note: unread is a special flag, _implied_ from "new or not seen" */
-	static_assert(flags_from_absolute_expr("N").value() == (Flags::New|Flags::Unread));
+	static_test(flags_from_absolute_expr("N").value() == (Flags::New|Flags::Unread));
 
-	static_assert(!flags_from_absolute_expr("DRT?"));
-	static_assert(flags_from_absolute_expr("DRT?", true/*ignore invalid*/).value() ==
+	static_test(!flags_from_absolute_expr("DRT?"));
+	static_test(flags_from_absolute_expr("DRT?", true/*ignore invalid*/).value() ==
 		      (Flags::Draft | Flags::Replied |
 		       Flags::Trashed | Flags::Unread));
-	static_assert(flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
+	static_test(flags_from_absolute_expr("DFPNxulabcdef", true/*ignore invalid*/).value() ==
 		      (Flags::Draft|Flags::Flagged|Flags::Passed|
 		       Flags::New | Flags::Encrypted |
 		       Flags::Unread | Flags::MailingList | Flags::Calendar |
@@ -126,26 +136,26 @@ test_flags_from_expr()
 [[maybe_unused]] static void
 test_flags_from_delta_expr()
 {
-	static_assert(flags_from_delta_expr(
+	static_test(flags_from_delta_expr(
 			      "+S-u-N", Flags::New|Flags::Unread).value() ==
 		      Flags::Seen);
 
 	/* note: unread is a special flag, _implied_ from "new or not seen" */
-	static_assert(flags_from_delta_expr(
+	static_test(flags_from_delta_expr(
 			      "+S-N", Flags::New|Flags::Unread).value() ==
 		      Flags::Seen);
-	static_assert(flags_from_delta_expr(
+	static_test(flags_from_delta_expr(
 			      "-S", Flags::Seen).value() ==
 		      Flags::Unread);
 
-	static_assert(flags_from_delta_expr("+R+P-F", Flags::Seen).value() ==
+	static_test(flags_from_delta_expr("+R+P-F", Flags::Seen).value() ==
 		      (Flags::Seen|Flags::Passed|Flags::Replied));
 	/* '-B' is invalid */
-	static_assert(!flags_from_delta_expr("+R+P-B", Flags::Seen));
+	static_test(!flags_from_delta_expr("+R+P-B", Flags::Seen));
 	/* '-B' is invalid, but ignore invalid */
-	static_assert(flags_from_delta_expr("+R+P-B", Flags::Seen, true) ==
+	static_test(flags_from_delta_expr("+R+P-B", Flags::Seen, true) ==
 		      (Flags::Replied|Flags::Passed|Flags::Seen));
-	static_assert(flags_from_delta_expr("+F+T-S", Flags::None, true).value() ==
+	static_test(flags_from_delta_expr("+F+T-S", Flags::None, true).value() ==
 		      (Flags::Flagged|Flags::Trashed|Flags::Unread));
 }
 
@@ -155,7 +165,7 @@ test_flags_from_delta_expr()
 [[maybe_unused]] static void
 test_flags_filter()
 {
-	static_assert(flags_filter(flags_from_absolute_expr(
+	static_test(flags_filter(flags_from_absolute_expr(
 						   "DFPNxulabcdef", true/*ignore invalid*/).value(),
 					   MessageFlagCategory::Mailfile) ==
 		      (Flags::Draft|Flags::Flagged|Flags::Passed));
@@ -166,7 +176,7 @@ test_flags_filter()
 [[maybe_unused]] static void
 test_flags_keep_unmutable()
 {
-	static_assert(flags_keep_unmutable((Flags::Seen|Flags::Passed),
+	static_test(flags_keep_unmutable((Flags::Seen|Flags::Passed),
 					   (Flags::Flagged|Flags::Draft),
 					   Flags::Replied) ==
 		      (Flags::Flagged|Flags::Draft));

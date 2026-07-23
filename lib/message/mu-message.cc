@@ -27,6 +27,8 @@
 #include <string>
 #include <regex>
 #include <utils/mu-utils.hh>
+#include <utils/mu-utils-file.hh>
+#include <utils/mu-regex.hh>
 #include <utils/mu-error.hh>
 #include <utils/mu-option.hh>
 #include <utils/mu-lang-detector.hh>
@@ -49,6 +51,14 @@ struct Message::Private {
 		opts{options}, doc{doc_opts(opts)} {}
 	Private(Message::Options options, Xapian::Document&& xdoc):
 		opts{options}, doc{std::move(xdoc), doc_opts(opts)} {}
+
+	~Private() { /* clean up the cache dir, if any */
+		if (cache_path.empty())
+			return;
+		if (auto&& res{remove_directory(cache_path)}; !res)
+			mu_warning("failed to remove cache dir '{}': {}",
+				   cache_path, res.error().what());
+	}
 
 	Message::Options                opts;
 	Document			doc;
@@ -78,7 +88,7 @@ struct Message::Private {
 
 private:
 	Document::Options doc_opts(Message::Options mopts) {
-		return any_of(opts & Message::Options::NgramsEnabled) ?
+		return any_of(mopts & Message::Options::NgramsEnabled) ?
 			Document::Options::NgramsEnabled :
 			Document::Options::None;
 	}
@@ -326,7 +336,8 @@ extract_tags(const MimeMessage& mime_msg)
 			for (auto&& tagval : split(*hdr, item.second)) {
 				tagval.erase(0, tagval.find_first_not_of(' '));
 				tagval.erase(tagval.find_last_not_of(' ')+1);
-				tags.emplace_back(std::move(tagval));
+				if (!tagval.empty())
+					tags.emplace_back(std::move(tagval));
 			}
 		}
 	});
@@ -493,6 +504,9 @@ handle_encrypted(const MimeMultipartEncrypted& part, Message::Private& info)
 	}
 
 	if (res->first.is_multipart()) {
+		/* handle the multipart itself too, so e.g. a decrypted
+		 * multipart/signed sets the Signed flag */
+		handle_object(part, res->first, info);
 		MimeMultipart{res->first}.for_each(
 			[&](auto&& parent, auto&& child_obj) {
 				handle_object(parent, child_obj, info);
@@ -538,8 +552,7 @@ handle_object(const MimeObject& parent,
 		handle_encrypted(MimeMultipartEncrypted{obj}, info);
 	else if (obj.is_part() ||
 		 obj.is_message_part() ||
-		 obj.is_multipart_signed() ||
-		 obj.is_multipart_encrypted())
+		 obj.is_multipart_signed())
 		info.parts.emplace_back(obj);
 
 	if (obj.is_part())
@@ -661,27 +674,17 @@ doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
 	/* some mailing lists do not set the reply-to; see pull #1278. So for
 	 * those cases, check the List-Post address and use that instead */
 
-	GMatchInfo* minfo{};
-	GRegex*     rx{};
 	const auto list_post{mime_msg.header("List-Post")};
 	if (!list_post)
 		return;
 
-	rx = g_regex_new("<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?",
-			 G_REGEX_CASELESS, (GRegexMatchFlags)0, {});
-	g_return_if_fail(rx);
+	/* compile the regex only once */
+	static const auto rx = unwrap(Regex::make(
+		"<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?", G_REGEX_CASELESS));
 
 	Contacts contacts;
-	if (g_regex_match(rx, list_post->c_str(), (GRegexMatchFlags)0, &minfo)) {
-		auto    address = (char*)g_match_info_fetch(minfo, 1);
-		contacts.push_back(Contact(address));
-		g_free(address);
-	}
-
-	if (minfo)
-		g_match_info_free(minfo);
-
-	g_regex_unref(rx);
+	if (const auto groups{rx.match_groups(*list_post)}; groups)
+		contacts.push_back(Contact(groups->at(1)));
 
 	doc.add_extra_contacts(":list-post", contacts);
 }
@@ -732,7 +735,10 @@ fill_document(Message::Private& priv)
 			doc.add(field.id, mime_msg.contacts(Contact::Type::Cc));
 			break;
 		case Field::Id::Changed:
-			doc.add(field.id, priv.ctime);
+			/* when lazily re-filling a store-backed message, we
+			 * never stat'ed the file; keep the stored value */
+			if (priv.ctime != 0)
+				doc.add(field.id, priv.ctime);
 			break;
 		case Field::Id::Date:
 			doc.add(field.id, mime_msg.date());
@@ -745,7 +751,12 @@ fill_document(Message::Private& priv)
 				doc.add(field.id, part.raw_filename());
 			break;
 		case Field::Id::Flags:
-			doc.add(priv.flags);
+			/* the stored flags may include Flags::Personal, which
+			 * is determined with the contacts-cache (mu-store.cc)
+			 * and cannot be recomputed here; don't lose it when
+			 * lazily re-filling a store-backed message */
+			doc.add(flags_keep_unmutable(doc.flags_value(), priv.flags,
+						     Flags::Personal));
 			break;
 		case Field::Id::From:
 			doc.add(field.id, mime_msg.contacts(Contact::Type::From));
@@ -806,7 +817,9 @@ fill_document(Message::Private& priv)
 Option<std::string>
 Message::header(const std::string& header_field) const
 {
-	load_mime_message();
+	if (!load_mime_message())
+		return Nothing;
+
 	return priv_->mime_msg->header(header_field);
 }
 
@@ -860,11 +873,11 @@ Message::cache_path(Option<size_t> index) const
 	}
 
 	if (index) {
-		GError *err{};
 		auto tpath = mu_format("{}/{}", priv_->cache_path, *index);
-		if (g_mkdir(tpath.c_str(), 0700) != 0)
-			return Err(Error::Code::File, &err,
-				   "failed to create cache dir '{}'; err={}", tpath, errno);
+		if (g_mkdir(tpath.c_str(), 0700) != 0 && errno != EEXIST)
+			return Err(Error::Code::File,
+				   "failed to create cache dir '{}': {}", tpath,
+				   g_strerror(errno));
 		return Ok(std::move(tpath));
 	} else
 

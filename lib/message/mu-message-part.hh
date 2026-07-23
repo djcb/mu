@@ -48,6 +48,13 @@ public:
 	MessagePart(const MessagePart& other);
 
 	/**
+	 * Move CTOR
+	 *
+	 * @param other
+	 */
+	MessagePart(MessagePart&& other) noexcept;
+
+	/**
 	 * DTOR
 	 *
 	 */
@@ -159,7 +166,7 @@ public:
 
 	struct Private;
 private:
-	const std::unique_ptr<MimeObject> mime_obj;
+	std::unique_ptr<MimeObject> mime_obj;
 };
 
 } // namespace Mu

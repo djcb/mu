@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -61,7 +61,7 @@ Mu::fields_from_name(const std::string& name) {
 
 	static const FieldsVec empty;
 	const auto& cfields{combi_fields()};
-	const auto it = seq_find_if(cfields, [&](auto cfield) {
+	const auto it = seq_find_if(cfields, [&](const auto& cfield) {
 		return cfield.name == name;
 	});
 
@@ -71,7 +71,7 @@ Mu::fields_from_name(const std::string& name) {
 bool
 Mu::field_is_combi(const std::string& name)
 {
-	return name != "" && seq_some(combi_fields(),[&](auto cfield) {
+	return !name.empty() && seq_some(combi_fields(),[&](const auto& cfield) {
 		return cfield.name == name;
 	});
 }
@@ -165,7 +165,9 @@ validate_field_flags()
  * tests... also build as runtime-tests, so we can get coverage info
  */
 #ifdef BUILD_TESTS
-#define static_assert g_assert_true
+#define static_test g_assert_true
+#else
+#define static_test static_assert
 #endif /*BUILD_TESTS*/
 
 
@@ -173,28 +175,28 @@ validate_field_flags()
 static void
 test_ids()
 {
-	static_assert(validate_field_ids());
+	static_test(validate_field_ids());
 }
 
 [[maybe_unused]]
 static void
 test_shortcuts()
 {
-	static_assert(validate_field_shortcuts());
+	static_test(validate_field_shortcuts());
 }
 
 [[maybe_unused]]
 static void
 test_prefix()
 {
-	static_assert(field_from_id(Field::Id::Subject).xapian_prefix() == 'S');
+	static_test(field_from_id(Field::Id::Subject).xapian_prefix() == 'S');
 }
 
 [[maybe_unused]]
 static void
 test_field_flags()
 {
-	static_assert(validate_field_flags());
+	static_test(validate_field_flags());
 }
 
 #ifdef BUILD_TESTS
