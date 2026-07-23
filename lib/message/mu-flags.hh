@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,6 +21,7 @@
 #define MU_FLAGS_HH__
 
 #include <algorithm>
+#include <bit>
 #include <string_view>
 #include <array>
 #include <utils/mu-utils.hh>
@@ -183,10 +184,10 @@ flag_info(Flags flag)
 	constexpr auto upper = static_cast<unsigned>(Flags::_final_);
 	const auto     val   = static_cast<unsigned>(flag);
 
-	if (__builtin_popcount(val) != 1 || val >= upper)
+	if (std::popcount(val) != 1 || val >= upper)
 		return Nothing;
 
-	return AllMessageFlagInfos[static_cast<unsigned>(__builtin_ctz(val))];
+	return AllMessageFlagInfos[static_cast<unsigned>(std::countr_zero(val))];
 }
 
 /**
@@ -223,7 +224,12 @@ flag_info(std::string_view name)
 		if (info.name == name)
 			return info;
 
-	return flag_info(name.at(0));
+	/* only a single character can be a shortcut; otherwise e.g. "zombie"
+	 * would resolve to the 'z' flag */
+	if (name.size() == 1)
+		return flag_info(name.at(0));
+
+	return Nothing;
 }
 
 /**
