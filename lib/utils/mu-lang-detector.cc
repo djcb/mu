@@ -76,7 +76,7 @@ test_lang_detector()
 
 	for (auto&& test: tests) {
 		const auto res = detect_language(std::get<0>(test));
-#if HAVE_CLD2
+#if !HAVE_CLD2
 		g_assert_false(!!res);
 #else
 		g_assert_true(!!res);
