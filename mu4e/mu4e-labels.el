@@ -30,13 +30,13 @@
 (require 'mu4e-helpers)
 
 (defconst mu4e-label-regex
-  "[^\"',+/\\`[:cntrl:][:blank:]-][^\"'$,/\\`[:cntrl:][:blank:]]+"
+  (rx (not (any ?- ?+ ?\" ?' ?$ ?, ?/ ?\\ ?` cntrl blank))
+      (* (not (any ?\" ?' ?$ ?, ?/ ?\\ ?` cntrl blank))))
   "Unanchored regular expression matching a valid label.
 
 Any character is allowed that is not a control-character, a
 blank, or a number of special characters. Additionally, the first
 character cannot be + or - either.")
-;; sadly, the 'rx' macro is not expressive enough, pre-emacs30
 
 (defun mu4e-label-validate (str)
   "Validate label STR.
@@ -53,7 +53,7 @@ See `mu4e-label-regex' for the definition of the valid format."
         (valid-rx (rx bos (regex mu4e-label-regex) eos)))
     ;; ii. must not start with + or -
     (when (or (char-equal first ?+) (char-equal first ?-))
-      (mu4e-warn "labels cannot starts with '%c'" first))
+      (mu4e-warn "labels cannot start with '%c'" first))
     ;; iii. match the regexp
     (unless (string-match-p valid-rx str)
       (mu4e-warn "not a valid label: %S" str)))
@@ -63,7 +63,7 @@ See `mu4e-label-regex' for the definition of the valid format."
   "Parse a string a DELTA-EXPRS.
 
 If empty, return nil. Otherwise, raise an error if it is invalid.
-Otherwise, return a list with the invidual elements."
+Otherwise, return a list with the individual elements."
   (seq-map (lambda (delta-expr)
              (when (string-empty-p delta-expr)
                (mu4e-warn "delta-expression cannot be empty"))
@@ -80,18 +80,14 @@ Otherwise, return a list with the invidual elements."
 
 (defun mu4e--labels-completion-at-point ()
   "Provide completion when entering a label delta expressions."
-  (cond
-   ((not (looking-back "[^ \t]*" nil))
-    (let ((bounds (bounds-of-thing-at-point 'word)))
-      (list (or (car bounds) (point))
-            (or (cdr bounds) (point)))))
-   ((looking-back
-     (rx (any "+" "-")
-         (group
-          (opt (regex mu4e-label-regex)))) nil)
+  (when (looking-back
+         (rx (any "+" "-")
+             (group
+              (opt (regex mu4e-label-regex))))
+         (line-beginning-position))
     (list (match-beginning 1)
           (match-end 1)
-          mu4e-labels-list))))
+          mu4e-labels-list)))
 
 (defvar mu4e-minibuffer-label-expr-map
   (let ((map (copy-keymap minibuffer-local-map)))
@@ -103,7 +99,7 @@ Otherwise, return a list with the invidual elements."
   "Ask for a label delta +/  expression.
 
 I.e., a sequence of 1 or more space-separated labels, each
-prefixed with \"+\" for addding the label, or \"-\" for removing
+prefixed with \"+\" for adding the label, or \"-\" for removing
 it."
   (minibuffer-with-setup-hook
       (lambda ()
@@ -124,7 +120,8 @@ Update the label cache while doing so."
   (let ((deltas (mu4e-label-parse-delta-exprs expr)))
     ;; update cache
     (seq-do (lambda (delta-label)
-              (cl-pushnew (substring delta-label 1) mu4e-labels-list))
+              (cl-pushnew (substring delta-label 1) mu4e-labels-list
+                          :test #'equal))
             deltas)
     ;; maybe pass as list?
     (mu4e--server-label docid (string-join deltas " "))))
