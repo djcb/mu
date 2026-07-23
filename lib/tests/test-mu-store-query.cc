@@ -148,7 +148,7 @@ I said: "Aujourd'hui!"
 			"to:sqlite-dev@sqlite.org",
 			"list:sqlite-dev.sqlite.org",
 			"aujourd'hui",
-#ifdef HAVE_CLD2
+#if HAVE_CLD2
 			"lang:en",
 #endif /*HAVE_CLD2*/
 		}) {

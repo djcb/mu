@@ -21,7 +21,7 @@
 
 using namespace Mu;
 
-#ifndef HAVE_CLD2
+#if HAVE_CLD2
 // Dummy implementation
 Option<Language> Mu::detect_language(const std::string& txt) { return Nothing; }
 #else
