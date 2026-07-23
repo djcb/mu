@@ -168,7 +168,7 @@ asciify_in_place (char *buf)
 	g_return_val_if_fail (buf, NULL);
 
 	for (c = buf; c && *c; ++c) {
-		if ((!isprint(*c) && !isspace (*c)) || !isascii(*c))
+		if (!is_ascii(*c) || (is_ascii_cntrl(*c) && !is_ascii_space(*c)))
 			*c = '.';
 	}
 
@@ -321,7 +321,7 @@ Mu::split(const std::string& str, char sepa)
 	while (true) {
 		if (e = str.find(sepa, b); e != std::string::npos) {
 			vec.emplace_back(str.substr(b, e - b));
-			b = e + sizeof(sepa);
+			b = e + 1;
 		} else {
 			vec.emplace_back(str.substr(b));
 			break;
@@ -340,7 +340,7 @@ Mu::join(const std::vector<std::string>& svec, const std::string& sepa)
 
 	/* calculate the overall size beforehand, to avoid re-allocations. */
 	size_t value_len =
-		std::accumulate(svec.cbegin(), svec.cend(), 0,
+		std::accumulate(svec.cbegin(), svec.cend(), std::size_t{},
 				[](size_t size, const std::string& s) {
 					return size + s.size();
 				}) + (svec.size() - 1) * sepa.length();
@@ -504,7 +504,8 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 	constexpr char UserDateMax[] = "29991231235959";
 
 	std::string date(is_first ? UserDateMin : UserDateMax);
-	std::copy_if(dstr.begin(), dstr.end(), date.begin(), [](auto c) { return isdigit(c); });
+	std::copy_if(dstr.begin(), dstr.end(), date.begin(),
+		     [](auto c) { return is_ascii_digit(c); });
 
 	if (!::strptime(date.c_str(), "%Y%m%d%H%M%S", &tbuf) &&
 	    !::strptime(date.c_str(), "%Y%m%d%H%M", &tbuf) &&
@@ -550,7 +551,12 @@ Mu::parse_size(const std::string& val, bool is_first)
 	if (!groups)
 		return Nothing;
 
-	int64_t size{::atoll(groups->at(1).c_str())}; // check overflow?
+	int64_t size{};
+	const auto& digits{groups->at(1)};
+	if (const auto res = std::from_chars(digits.data(),
+					     digits.data() + digits.size(), size);
+	    res.ec != std::errc{})
+		return Nothing; // overflow or not-a-number
 
 	const auto& unit{groups->at(2)};
 	switch (unit.empty() ? 0 : g_ascii_tolower(unit.at(0))) {

@@ -130,8 +130,8 @@ Mu::remove_directory(const std::string& path)
 	std::error_code err{};
 	const auto n{std::filesystem::remove_all(path, err)};
 	if (err)
-		return Err(Error::Code::File, "failed to remove {}; exit-code={}",
-			   path, err.value());
+		return Err(Error::Code::File, "failed to remove {}: {}",
+			   path, err.message());
 
 	mu_debug("removed directory '{}' ({})", path, n);
 
@@ -228,7 +228,7 @@ Mu::run_command(std::initializer_list<std::string> args, bool try_setsid)
 	int wait_status{};
 	gchar *std_out{}, *std_err{};
 	auto res = g_spawn_sync({},
-				static_cast<char**>(argvec.data()),
+				argvec.data(),
 				{},
 				(GSpawnFlags)(G_SPAWN_SEARCH_PATH),
 				try_setsid ? maybe_setsid : nullptr, {},
@@ -239,11 +239,21 @@ Mu::run_command(std::initializer_list<std::string> args, bool try_setsid)
 
 	if (!res)
 		return Err(Error::Code::File, &err, "failed to execute command");
-	else
-		return Ok(Mu::CommandOutput{
-				WEXITSTATUS(wait_status),
-				to_string_gchar(std::move(std_out/*consumed*/)),
-				to_string_gchar(std::move(std_err/*consumed*/))});
+
+	/* a process killed by a signal has no meaningful exit-code; flag it
+	 * as an error rather than reporting a bogus WEXITSTATUS. */
+	if (!WIFEXITED(wait_status)) {
+		auto oops{Err(Error::Code::File, "command terminated abnormally "
+			      "(wait-status={})", wait_status)};
+		g_free(std_out);
+		g_free(std_err);
+		return oops;
+	}
+
+	return Ok(Mu::CommandOutput{
+			WEXITSTATUS(wait_status),
+			to_string_gchar(std::move(std_out/*consumed*/)),
+			to_string_gchar(std::move(std_err/*consumed*/))});
 }
 
 Result<Mu::CommandOutput>
@@ -304,7 +314,7 @@ Mu::play (const std::string& path)
 }
 /* LCOV_EXCL_STOP*/
 
-Result<std::string>
+static Result<std::string>
 expand_path_real(const std::string& str)
 {
 #ifndef HAVE_WORDEXP_H

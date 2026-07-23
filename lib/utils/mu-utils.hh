@@ -79,11 +79,6 @@ void mu_log(GLogLevelFlags level, fmt::format_string<T...> frm, T&&... args) noe
 }
 
 template<typename...T>
-void mu_none(fmt::format_string<T...>, T&&...) noexcept {
-	// ignore
-}
-
-template<typename...T>
 void mu_debug(fmt::format_string<T...> frm, T&&... args) noexcept {
 	mu_log(G_LOG_LEVEL_DEBUG, frm, std::forward<T>(args)...);
 }
@@ -131,17 +126,6 @@ template<typename...T>
 void mu_printerrln(fmt::format_string<T...> frm, T&&... args) noexcept {
 	fmt::println(stderr, frm, std::forward<T>(args)...);
 }
-
-// null-stream
-class NullStream : public std::ostream {
-public:
-    NullStream() : std::ostream(&buf_) {}
-private:
-	struct NullBuffer : public std::streambuf {
-		int overflow(int c) override { return c; }
-	};
-	NullBuffer buf_;
-};
 
 /* stream print */
 template<typename...T>
@@ -519,11 +503,6 @@ to_unit(Duration d)
 }
 
 constexpr int64_t
-to_s(Duration d)
-{
-	return to_unit<std::chrono::seconds>(d);
-}
-constexpr int64_t
 to_ms(Duration d)
 {
 	return to_unit<std::chrono::milliseconds>(d);
@@ -562,16 +541,6 @@ private:
  * @return the size or Nothing if parsing failed
  */
 Option<int64_t> parse_size(const std::string& sizestr, bool first);
-
-/**
- * Convert a size into a size in bytes string
- *
- * @param size the size
- * @param first
- *
- * @return the size expressed as a string with the decimal number of bytes
- */
-std::string size_to_string(int64_t size);
 
 /**
  * get a crude 'summary' of the string, ie. the first /n/ lines of the strings,
@@ -650,21 +619,6 @@ to_string_gchar(gchar*&& str)
 	return s;
 }
 /**
- * Consume a char* and return a std::string
- *
- * @param str a gchar* (consumed/freed with ::free())
- *
- * @return a std::string, empty if gchar was {}
- */
-inline std::string
-to_string_char(char*&& str)
-{
-	std::string s(str?str:"");
-	::free(str);
-	return s;
-}
-
-/**
  * Shell-quote the given string (as per g_shell_quote())
  *
  * @param str some string
@@ -729,21 +683,6 @@ bool seq_some(const Sequence& seq, UnaryPredicate pred) {
 }
 
 /**
- * Create a sequence that has all element of seq for which pred is true
- *
- * @param seq sequence
- * @param pred false
- *
- * @return sequence
- */
-template<typename Sequence, typename UnaryPredicate>
-Sequence seq_filter(const Sequence& seq, UnaryPredicate pred) {
-	Sequence res;
-	std::copy_if(seq.begin(), seq.end(), std::back_inserter(res), pred);
-	return res;
-}
-
-/**
  * Create a sequence that has all element of seq for which pred is false
  *
  * @param seq sequence
@@ -761,20 +700,6 @@ Sequence seq_remove(const Sequence& seq, UnaryPredicate pred) {
 template<typename Sequence, typename Compare>
 void seq_sort(Sequence& seq, Compare cmp) { std::sort(seq.begin(), seq.end(), cmp); }
 
-
-/**
- * Like std::accumulate, but using a sequence instead of a range.
- *
- * @param seq some std::accumulate compatible sequence
- * @param init the initial value
- * @param op binary operation to calculate the next element
- *
- * @return the result value.
- */
-template<typename Sequence, typename ResultType,  typename BinaryOp>
-ResultType seq_fold(const Sequence& seq, ResultType init, BinaryOp op) {
-	return std::accumulate(seq.cbegin(), seq.cend(), init, op);
-}
 
 template<typename Sequence, typename UnaryOp>
 void seq_for_each(const Sequence& seq, UnaryOp op) {

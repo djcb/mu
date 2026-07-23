@@ -148,6 +148,8 @@ test_parse_size()
 
 	g_assert_false(!!parse_size("-1", true));
 	g_assert_false(!!parse_size("scoobydoobydoo", false));
+	/* overflows int64 -> Nothing rather than a wrapped value */
+	g_assert_false(!!parse_size("99999999999999999999", false));
 }
 
 static void
