@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.14.3-pre2',
+        version: '1.14.3-pre3',
         meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
         default_options : [
