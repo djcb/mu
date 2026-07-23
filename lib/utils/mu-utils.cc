@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2017-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+**  Copyright (C) 2017-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -581,17 +581,30 @@ std::string
 Mu::to_lexnum(int64_t val)
 {
 	char buf[18]; /* 1 byte prefix + hex + \0 */
-	buf[0] = 'f' + ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64, val);
+	const auto len = ::snprintf(buf + 1, sizeof(buf) - 1, "%" PRIx64,
+				    static_cast<uint64_t>(val));
+	/* an uppercase prefix marks a negative value (see mu-utils.hh);
+	 * uppercase sorts before lowercase, so negative values sort before
+	 * the positive ones. */
+	buf[0] = (val < 0 ? 'F' : 'f') + len;
 	return buf;
 }
 
 int64_t
 Mu::from_lexnum(const std::string& str)
 {
-	int64_t val{};
-	std::from_chars(str.c_str() + 1, str.c_str() + str.size(), val, 16);
+	uint64_t val{};
+	if (str.empty())
+		return 0;
 
-	return val;
+	const auto res = std::from_chars(str.c_str() + 1,
+					 str.c_str() + str.size(), val, 16);
+	if (res.ec != std::errc{})
+		return 0;
+
+	/* negative values are the two's-complement representation, so
+	 * simply cast back. */
+	return static_cast<int64_t>(val);
 }
 
 bool
