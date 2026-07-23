@@ -43,8 +43,7 @@ using MimeFormatOptions = deletable_unique_ptr<GMimeFormatOptions, g_mime_format
  * Initialize gmime (idempotent)
  *
  */
-void init_gmime(void);
-
+void init_gmime();
 
 /**
  * Get a RFC2047-compatible address for the given contact
@@ -68,9 +67,10 @@ public:
 	 *
 	 * @param obj a gobject. A ref is added.
 	 */
-	Object(GObject* &&obj): self_{G_OBJECT(g_object_ref(obj))} {
+	Object(GObject* &&obj): self_{} {
 		if (!G_IS_OBJECT(obj))
 			throw std::runtime_error("not a g-object");
+		self_ = G_OBJECT(g_object_ref(obj));
 	}
 
 	/**
@@ -274,10 +274,30 @@ struct MimeStream: public Object {
 		return mstream;
 	}
 
+	/**
+	 * Wrap a GMimeStream we receive ownership of (transfer-full);
+	 * the extra ref taken by the constructor is dropped.
+	 *
+	 * @param strm a stream; consumed.
+	 *
+	 * @return a MimeStream
+	 */
 	static MimeStream make_from_stream(GMimeStream *strm) {
 		MimeStream mstream{strm};
 		mstream.unref(); /* remove extra ref */
 		return mstream;
+	}
+
+	/**
+	 * Wrap a GMimeStream someone else owns (transfer-none); takes
+	 * its own ref, released again on destruction.
+	 *
+	 * @param strm a borrowed stream.
+	 *
+	 * @return a MimeStream
+	 */
+	static MimeStream make_from_borrowed_stream(GMimeStream *strm) {
+		return MimeStream{strm};
 	}
 
 private:
@@ -875,7 +895,7 @@ public:
 	 * Write object to a file
 	 *
 	 * @param path path to file
-	 * @param overwrite if true, overwrite existing file, if it bqexists
+	 * @param overwrite if true, overwrite existing file, if it exists
 	 *
 	 * @return size of the written file, or an error.
 	 */
@@ -927,14 +947,14 @@ public:
 	/**
 	 * Is this a MimeMessagePart?
 	 *
-	 * @return true orf alse
+	 * @return true or false
 	 */
 	bool is_message_part() const { return GMIME_IS_MESSAGE_PART(self());}
 
 	/**
 	 * Is this a MimeApplicationpkcs7Mime?
 	 *
-	 * @return true orf alse
+	 * @return true or false
 	 */
 	bool is_mime_application_pkcs7_mime() const {
 		return GMIME_IS_APPLICATION_PKCS7_MIME(self());
@@ -1136,8 +1156,16 @@ public:
 	}
 
 
-	MimeDataWrapper content() const noexcept {
-		return MimeDataWrapper{g_mime_part_get_content(self())};
+	/**
+	 * Get the content of this part, if any.
+	 *
+	 * @return a MimeDataWrapper or Nothing (as happens with invalid mails)
+	 */
+	Option<MimeDataWrapper> content() const noexcept {
+		if (auto wrapper{g_mime_part_get_content(self())}; wrapper)
+			return MimeDataWrapper{wrapper};
+		else
+			return Nothing;
 	}
 
 	/**
@@ -1168,7 +1196,7 @@ public:
 	 * Write part to a file
 	 *
 	 * @param path path to file
-	 * @param overwrite if true, overwrite existing file, if it bqexists
+	 * @param overwrite if true, overwrite existing file, if it exists
 	 *
 	 * @return size of the written file, or an error.
 	 */
