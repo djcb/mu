@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -87,20 +87,37 @@ make_term_generator(Xapian::Document& doc, Document::Options opts)
 	return termgen;
 }
 
-static void
-add_search_term(Xapian::Document& doc, const Field& field, const std::string& val,
-		Document::Options opts)
+/* build a term from an already-flattened value; equivalent to
+ * Field::xapian_term(), minus the second flatten-pass. */
+static std::string
+prefixed_term(const Field& field, const std::string& flat)
+{
+	std::string term(1U, field.xapian_prefix());
+	term += flat;
+	if (G_UNLIKELY(term.size() > MaxTermLength))
+		term.erase(MaxTermLength);
+
+	return term;
+}
+
+void
+Document::add_search_term(const Field& field, const std::string& val)
 {
 	if (field.is_normal_term() || field.is_phrasable_term()) {
 		const auto flat{utf8_flatten(val)};
 		if (field.is_normal_term())
-			doc.add_term(field.xapian_term(flat));
+			xdoc_.add_term(prefixed_term(field, flat));
 		if (field.is_phrasable_term()) {
-			auto termgen{make_term_generator(doc, opts)};
+			auto termgen{make_term_generator(xdoc_, options_)};
+			/* continue after the previous text, with a gap, so
+			 * phrases cannot match across unrelated texts */
+			termgen.set_termpos(termpos_);
 			termgen.index_text(flat, 1, field.xapian_term());
+			termgen.increase_termpos();
+			termpos_ = termgen.get_termpos();
 		}
 	} else if (field.is_boolean_term()) {
-		doc.add_boolean_term(field.xapian_term(val));
+		xdoc_.add_boolean_term(field.xapian_term(val));
 	} else
 		throw std::logic_error("not a search term");
 }
@@ -114,7 +131,7 @@ Document::add(Field::Id id, const std::string& val)
 		xdoc_.add_value(field.value_no(), val);
 
 	if (field.is_searchable())
-		add_search_term(xdoc_, field, val, options_);
+		add_search_term(field, val);
 
 	sexp_put_prop(field, val);
 
@@ -130,7 +147,7 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 	if (field.is_searchable())
 		std::for_each(vals.begin(), vals.end(),
 			      [&](const auto& val) {
-				      add_search_term(xdoc_, field, val, options_); });
+				      add_search_term(field, val); });
 
 	if (field.include_in_sexp()) {
 		Sexp elms{};
@@ -170,9 +187,11 @@ Document::add(Field::Id id, const Contacts& contacts)
 
 	const auto field{field_from_id(id)};
 	std::vector<std::string> cvec;
+	Sexp contacts_sexp;
 
 	const std::string sepa2(1, SepaChar2);
 	auto&& termgen{make_term_generator(xdoc_, options_)};
+	termgen.set_termpos(termpos_);
 
 	for (auto&& contact: contacts) {
 
@@ -180,7 +199,7 @@ Document::add(Field::Id id, const Contacts& contacts)
 		if (!cfield_id || *cfield_id != id)
 			continue;
 
-		const auto e{contact.email};
+		const auto& e{contact.email};
 		xdoc_.add_term(field.xapian_term(e));
 
 		/* allow searching for address components, too */
@@ -190,16 +209,28 @@ Document::add(Field::Id id, const Contacts& contacts)
 			xdoc_.add_term(field.xapian_term(e.substr(atpos + 1)));
 		}
 
-		if (!contact.name.empty())
+		if (!contact.name.empty()) {
 			termgen.index_text(utf8_flatten(contact.name), 1,
 					   field.xapian_term());
-		cvec.emplace_back(contact.email + sepa2 + contact.name);
+			/* keep a gap between the contacts, so phrases cannot
+			 * match across them */
+			termgen.increase_termpos();
+		}
+		cvec.emplace_back(e + sepa2 + contact.name);
+
+		Sexp contact_sexp(":email"_sym, e);
+		if (!contact.name.empty())
+			contact_sexp.add(":name"_sym, contact.name);
+		contacts_sexp.add(std::move(contact_sexp));
 	}
+	termpos_ = termgen.get_termpos();
 
-	if (!cvec.empty())
+	if (!cvec.empty()) {
 		xdoc_.add_value(field.value_no(), join(cvec, SepaChar1));
-
-	sexp_put_prop(field, make_contacts_sexp(contacts));
+		/* only the contacts matching the field-id, consistent with
+		 * the terms & values above */
+		sexp_put_prop(field, std::move(contacts_sexp));
+	}
 }
 
 Contacts
@@ -470,6 +501,60 @@ test_to()
 }
 
 
+static std::vector<Xapian::termpos>
+term_positions(const Xapian::Document& xdoc, const std::string& term)
+{
+	std::vector<Xapian::termpos> positions;
+
+	auto it{xdoc.termlist_begin()};
+	it.skip_to(term);
+	if (it == xdoc.termlist_end() || *it != term)
+		return positions;
+
+	for (auto pit = it.positionlist_begin(); pit != it.positionlist_end(); ++pit)
+		positions.emplace_back(*pit);
+
+	return positions;
+}
+
+static void
+test_termpos_contacts()
+{
+	Document doc;
+	doc.add(Field::Id::To, {{
+			Contact{"lars@example.com", "Lars Foo", Contact::Type::To},
+			Contact{"kirk@example.com", "Kirk Bar", Contact::Type::To}
+		}});
+
+	/* "foo" is the last word of the first contact, "kirk" the first word
+	 * of the second; without a gap between contacts, the phrase
+	 * to:"foo kirk" would match. */
+	const auto foo_pos{term_positions(doc.xapian_document(), "Tfoo")};
+	const auto kirk_pos{term_positions(doc.xapian_document(), "Tkirk")};
+	g_assert_cmpuint(foo_pos.size(), ==, 1);
+	g_assert_cmpuint(kirk_pos.size(), ==, 1);
+	g_assert_cmpuint(kirk_pos.front(), >, foo_pos.front() + 1);
+}
+
+static void
+test_termpos_texts()
+{
+	Document doc;
+	doc.add(Field::Id::BodyText, std::string{"hello world"});
+	doc.add(Field::Id::BodyText, std::string{"foo bar"});
+
+	/* separately-added texts must not overlap position-wise; otherwise
+	 * e.g. the phrase "hello bar" could match. */
+	const auto hello_pos{term_positions(doc.xapian_document(), "Bhello")};
+	const auto world_pos{term_positions(doc.xapian_document(), "Bworld")};
+	const auto foo_pos{term_positions(doc.xapian_document(), "Bfoo")};
+	g_assert_cmpuint(hello_pos.size(), ==, 1);
+	g_assert_cmpuint(world_pos.size(), ==, 1);
+	g_assert_cmpuint(foo_pos.size(), ==, 1);
+	g_assert_cmpuint(world_pos.front(), ==, hello_pos.front() + 1);
+	g_assert_cmpuint(foo_pos.front(), >, world_pos.front() + 1);
+}
+
 static void
 test_size()
 {
@@ -496,6 +581,8 @@ main(int argc, char* argv[])
 	g_test_add_func("/message/document/from", test_from);
 	g_test_add_func("/message/document/to", test_to);
 
+	g_test_add_func("/message/document/termpos-contacts", test_termpos_contacts);
+	g_test_add_func("/message/document/termpos-texts", test_termpos_texts);
 	g_test_add_func("/message/document/size", test_size);
 
 	return g_test_run();
