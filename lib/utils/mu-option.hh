@@ -23,20 +23,41 @@
 #include <tl/optional.hpp>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <type_traits>
 
 namespace Mu {
 
 /// Either a value of type T, or None
+///
+/// Note: unlike std::optional, tl::optional also supports _references_
+/// (Option<T&>), which we use in various places; std:: only gets those with
+/// C++26.
 template <typename T> using Option = tl::optional<T>;
 
+/**
+ * Some() wraps a value in an Option, mostly to help the reader.
+ *
+ * @param t the value; copied when passed an lvalue, moved when passed an
+ * rvalue.
+ *
+ * @return an Option<T> containing the value
+ */
 template <typename T>
-Option<T>
+[[nodiscard]] Option<std::decay_t<T>>
 Some(T&& t)
 {
-	return std::move(t);
+	return std::forward<T>(t);
 }
 constexpr auto Nothing = tl::nullopt; // 'None' is already taken.
 
+/**
+ * Get the value from an Option, or throw
+ *
+ * @param res an Option
+ *
+ * @return the value (moved out of @p res)
+ */
 template<typename T> T
 unwrap(Option<T>&& res)
 {
@@ -54,8 +75,9 @@ unwrap(Option<T>&& res)
  *
  * @return option with either the string or nothing if str was NULL.
  */
-Option<std::string>
-inline to_string_opt(const char* str) {
+inline Option<std::string>
+to_string_opt(const char* str)
+{
 	if (str)
 		return std::string{str};
 	else

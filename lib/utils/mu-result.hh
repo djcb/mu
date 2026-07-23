@@ -20,12 +20,19 @@
 #ifndef MU_RESULT_HH__
 #define MU_RESULT_HH__
 
+#include <utility>
+#include <type_traits>
+
 #include <tl/expected.hpp>
 #include "utils/mu-error.hh"
 
 namespace Mu {
 /**
  * A little Rust-envy...a Result is _either_ some value of type T, _or_ a Mu::Error
+ *
+ * Note: nothing outside this header uses tl:: directly, and Result only uses
+ * the std::expected subset of the API; so once mu requires C++23, this can
+ * simply become std::expected (with tl::unexpected -> std::unexpected below).
  */
 template <typename T> using Result = tl::expected<T, Error>;
 
@@ -33,14 +40,15 @@ template <typename T> using Result = tl::expected<T, Error>;
  * Ok() is not typically strictly needed (unlike Err), but imitates Rust's Ok
  * and it helps the reader.
  *
- * @param t the value to return
+ * @param t the value to return; copied when passed an lvalue, moved when
+ * passed an rvalue.
  *
  * @return a success Result<T>
  */
-template <typename T> Result<T>
+template <typename T> [[nodiscard]] Result<std::decay_t<T>>
 Ok(T&& t)
 {
-	return std::move(t);
+	return std::forward<T>(t);
 }
 
 /**
@@ -48,7 +56,7 @@ Ok(T&& t)
  *
  * @return a success Result<void>
  */
-inline Result<void>
+[[nodiscard]] inline Result<void>
 Ok()
 {
 	return {};
@@ -61,68 +69,71 @@ Ok()
  *
  * @return error
  */
-template<typename T> Result<T>
-Err(Error&& err)
-{
-	return tl::unexpected(std::move(err));
-}
-template<typename T> Result<T>
-Err(const Error& err)
-{
-	return tl::unexpected(err);
-}
-
-inline tl::unexpected<Error>
+[[nodiscard]] inline tl::unexpected<Error>
 Err(Error&& err)
 {
 	return tl::unexpected(std::move(err));
 }
 
-inline tl::unexpected<Error>
+[[nodiscard]] inline tl::unexpected<Error>
 Err(const Error& err)
 {
 	return tl::unexpected(err);
 }
 
+/**
+ * Get the error from some error Result
+ *
+ * @param res a Result; must hold an error (checking that is up to the
+ * caller)
+ *
+ * @return the error
+ */
 template<typename T>
-inline tl::unexpected<Error>
+[[nodiscard]] inline tl::unexpected<Error>
 Err(const Result<T>& res)
 {
-	return res.error();
+	return tl::unexpected(res.error());
 }
 
 template<typename T>
-inline tl::unexpected<Error>
+[[nodiscard]] inline tl::unexpected<Error>
 Err(Result<T>&& res)
 {
-	return std::move(res.error());
+	return tl::unexpected(std::move(res.error()));
 }
 
 /*
  * convenience
  */
 template <typename ...T>
-tl::unexpected<Error>
+[[nodiscard]] tl::unexpected<Error>
 Err(Error::Code code, fmt::format_string<T...> frm, T&&... args)
 {
 	return Err(Error{code, frm, std::forward<T>(args)...});
 }
 
 template <typename ...T>
-tl::unexpected<Error>
+[[nodiscard]] tl::unexpected<Error>
 Err(Error::Code code, GError **err, fmt::format_string<T...> frm, T&&... args)
 {
 	return Err(Error{code, err, frm, std::forward<T>(args)...});
 }
 
-
+/**
+ * Get the value from a Result, or throw its error
+ *
+ * @param res a Result
+ *
+ * @return the value (moved out of @p res)
+ */
 template<typename T> T
 unwrap(Result<T>&& res)
 {
 	if (!!res)
 		return std::move(res.value());
 	else
-		throw res.error();
+		throw std::move(res.error());
 }
 
 /**
