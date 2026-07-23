@@ -34,6 +34,8 @@ MessagePart::MessagePart(const MessagePart& other):
 	MessagePart(*other.mime_obj)
 {}
 
+MessagePart::MessagePart(MessagePart&& other) noexcept = default;
+
 MessagePart::~MessagePart() = default;
 
 const MimeObject&
@@ -212,8 +214,7 @@ MessagePart::looks_like_attachment() const noexcept
 			return true;
 	}
 
-	// otherwise, rely on the disposition
-	return is_attachment();
+	return false;
 }
 
 

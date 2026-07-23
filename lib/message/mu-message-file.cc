@@ -25,8 +25,7 @@ using namespace Mu;
 Result<std::string>
 Mu::maildir_from_path(const std::string& path, const std::string& root)
 {
-	const auto pos = path.find(root);
-	if (pos != 0 || path[root.length()] != '/')
+	if (!path.starts_with(root) || path[root.length()] != '/')
 		return Err(Error{Error::Code::InvalidArgument,
 				"root '{}' is not a root for path '{}'", root, path});
 
@@ -38,7 +37,8 @@ Mu::maildir_from_path(const std::string& path, const std::string& root)
 				"invalid path: {}", path});
 	mdir.erase(slash);
 	auto subdir = mdir.data() + slash - 4;
-	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 && strncmp(subdir, "/new", 4)))
+	if (G_UNLIKELY(strncmp(subdir, "/cur", 4) != 0 &&
+		       strncmp(subdir, "/new", 4) != 0))
 		return Err(Error::Code::InvalidArgument,
 			   "cannot find '/new' or '/cur' - invalid path: {}", path);
 
@@ -72,10 +72,12 @@ Mu::message_file_parts(const std::string& file)
 Mu::Result<DirFile>
 Mu::base_message_dir_file(const std::string& path)
 {
-	constexpr auto newdir{"/new"};
-
 	const auto dname{dirname(path)};
-	bool is_new{dname.ends_with(newdir)};
+	const bool is_new{dname.ends_with("/new")};
+
+	if (!is_new && !dname.ends_with("/cur"))
+		return Err(Error{Error::Code::InvalidArgument,
+				"not in a '/new' or '/cur' maildir: {}", path});
 
 	std::string mdir{dname.substr(0, dname.size() - 4)};
 	return Ok(DirFile{std::move(mdir), basename(path), is_new});
@@ -83,20 +85,13 @@ Mu::base_message_dir_file(const std::string& path)
 
 Mu::Result<Mu::Flags>
 Mu::flags_from_path(const std::string& path)
-{	/*
-	 * this gets us the source maildir filesystem path, the directory
-	 * in which new/ & cur/ lives, and the source file
-	 */
-	auto dirfile{base_message_dir_file(path)};
-	if (!dirfile)
-		return Err(std::move(dirfile.error()));
-
+{
 	/* a message under new/ is just.. New. Filename is not considered */
-	if (dirfile->is_new)
+	if (dirname(path).ends_with("/new"))
 		return Ok(Flags::New);
 
-	/* it's cur/ message, so parse the file name */
-	const auto parts{message_file_parts(dirfile->file)};
+	/* otherwise, parse the file name */
+	const auto parts{message_file_parts(basename(path))};
 	auto flags{flags_from_absolute_expr(parts.flags_suffix,
 					    true/*ignore invalid*/)};
 	if (!flags) {
@@ -142,7 +137,9 @@ test_base_message_dir_file()
 	};
 	auto test_cases = std::to_array<TestCase>({
 			{ "/home/djcb/Maildir/foo/cur/msg:2,S",
-			  { "/home/djcb/Maildir/foo", "msg:2,S", false } }
+			  { "/home/djcb/Maildir/foo", "msg:2,S", false } },
+			{ "/home/djcb/Maildir/foo/new/msg",
+			  { "/home/djcb/Maildir/foo", "msg", true } }
 		});
 	for(auto&& tcase: test_cases)  {
 		const auto res{base_message_dir_file(tcase.path)};
@@ -151,6 +148,11 @@ test_base_message_dir_file()
 		assert_equal(res->file, tcase.expected.file);
 		g_assert_cmpuint(res->is_new, ==, tcase.expected.is_new);
 	}
+
+	/* not in a cur/new maildir */
+	g_assert_false(!!base_message_dir_file("/home/djcb/Maildir/foo/msg:2,S"));
+	g_assert_false(!!base_message_dir_file("msg"));
+	g_assert_false(!!base_message_dir_file(""));
 }
 
 static void
