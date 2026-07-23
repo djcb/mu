@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,7 +21,7 @@
 
 using namespace Mu;
 
-#if HAVE_CLD2
+#if !HAVE_CLD2
 // Dummy implementation
 Option<Language> Mu::detect_language(const std::string& txt) { return Nothing; }
 #else
