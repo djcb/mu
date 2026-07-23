@@ -253,7 +253,7 @@ public:
 			Type::Boolean,
 			Flags::System,
 			"scm-enabled",
-			[]()->std::string { return mu_format("{}", BUILD_GUILE); },
+			[]()->std::string { return mu_format("{}", BUILD_SCM); },
 			"Is SCM/Guile supported?"
 		},
 		{

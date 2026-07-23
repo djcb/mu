@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2020-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2020-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -29,7 +29,7 @@
 #include "mu-cmd.hh"
 #include "mu-server.hh"
 
-#ifdef BUILD_SCM
+#if BUILD_SCM
 #include "scm/mu-scm.hh"
 #endif/*BUILD_SCM*/
 
@@ -120,7 +120,7 @@ maybe_setup_readline(const Mu::Options& opts)
 static std::string
 maybe_listen_path(const Mu::Store& store, const Mu::Options& opts)
 {
-#ifdef BUILD_SCM
+#if BUILD_SCM
 	if (!opts.scm.socket_path)
 		return {};
 	const auto socket_path{*opts.scm.socket_path};
