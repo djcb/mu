@@ -119,7 +119,7 @@ ContactsCache::Private::deserialize(const std::string& serialized) const
 	std::string       line;
 
 	while (std::getline(ss, line)) {
-		const auto parts = Mu::split(line, SepaChar2);
+		auto parts = Mu::split(line, SepaChar2);
 		if (G_UNLIKELY(parts.size() != 5)) {
 			mu_warning("error: '{}'", line);
 			continue;
