@@ -28,6 +28,7 @@
 #include <regex>
 #include <utils/mu-utils.hh>
 #include <utils/mu-utils-file.hh>
+#include <utils/mu-regex.hh>
 #include <utils/mu-error.hh>
 #include <utils/mu-option.hh>
 #include <utils/mu-lang-detector.hh>
@@ -673,26 +674,17 @@ doc_add_list_post(Document& doc, const MimeMessage& mime_msg)
 	/* some mailing lists do not set the reply-to; see pull #1278. So for
 	 * those cases, check the List-Post address and use that instead */
 
-	GMatchInfo* minfo{};
 	const auto list_post{mime_msg.header("List-Post")};
 	if (!list_post)
 		return;
 
 	/* compile the regex only once */
-	static GRegex *rx = g_regex_new(
-		"<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?",
-		G_REGEX_CASELESS, (GRegexMatchFlags)0, {});
-	g_return_if_fail(rx);
+	static const auto rx = unwrap(Regex::make(
+		"<?mailto:([a-z0-9!@#$%&'*+-/=?^_`{|}~]+)>?", G_REGEX_CASELESS));
 
 	Contacts contacts;
-	if (g_regex_match(rx, list_post->c_str(), (GRegexMatchFlags)0, &minfo)) {
-		auto    address = (char*)g_match_info_fetch(minfo, 1);
-		contacts.push_back(Contact(address));
-		g_free(address);
-	}
-
-	if (minfo)
-		g_match_info_free(minfo);
+	if (const auto groups{rx.match_groups(*list_post)}; groups)
+		contacts.push_back(Contact(groups->at(1)));
 
 	doc.add_extra_contacts(":list-post", contacts);
 }

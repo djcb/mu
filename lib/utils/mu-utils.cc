@@ -44,6 +44,7 @@
 #include <glib/gprintf.h>
 
 #include "mu-utils.hh"
+#include "mu-regex.hh"
 #include "mu-unbroken.hh"
 
 #include "mu-error.hh"
@@ -538,43 +539,31 @@ Mu::parse_date_time(const std::string& dstr, bool is_first, bool utc)
 Option<int64_t>
 Mu::parse_size(const std::string& val, bool is_first)
 {
-	int64_t		size{-1};
-	std::string	str;
-	GRegex*		rx;
-	GMatchInfo*	minfo;
-
 	/* one-sided ranges */
 	if (val.empty())
 		return is_first ? 0 : std::numeric_limits<int64_t>::max();
 
-	rx = g_regex_new("^(\\d+)(b|k|kb|m|mb|g|gb)?$",
-			 G_REGEX_CASELESS, (GRegexMatchFlags)0, NULL);
-	minfo = NULL;
-	if (g_regex_match(rx, val.c_str(), (GRegexMatchFlags)0, &minfo)) {
+	static const auto rx =
+		unwrap(Regex::make("^(\\d+)(b|k|kb|m|mb|g|gb)?$", G_REGEX_CASELESS));
 
-		char*  s = g_match_info_fetch(minfo, 1);
-		size = atoll(s); // check overflow?
-		g_free(s);
+	const auto groups{rx.match_groups(val)};
+	if (!groups)
+		return Nothing;
 
-		s = g_match_info_fetch(minfo, 2);
-		switch (s ? g_ascii_tolower(s[0]) : 0) {
-		case 'k': size *= 1024; break;
-		case 'm': size *= (1024 * 1024); break;
-		case 'g': size *= (1024 * 1024 * 1024); break;
-		default: break;
-		}
+	int64_t size{::atoll(groups->at(1).c_str())}; // check overflow?
 
-		g_free(s);
+	const auto& unit{groups->at(2)};
+	switch (unit.empty() ? 0 : g_ascii_tolower(unit.at(0))) {
+	case 'k': size *= 1024; break;
+	case 'm': size *= (1024 * 1024); break;
+	case 'g': size *= (1024 * 1024 * 1024); break;
+	default: break;
 	}
-
-	g_regex_unref(rx);
-	g_match_info_unref(minfo);
 
 	if (size < 0)
 		return Nothing;
 	else
 		return size;
-
 }
 
 std::string
