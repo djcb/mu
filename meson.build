@@ -264,7 +264,7 @@ endif
 
 #
 # guile
-
+#
 guile_required=get_option('guile').enabled() or get_option('scm').enabled()
 guile_dep = dependency('guile-3.0', required: guile_required)
 
@@ -352,7 +352,8 @@ if guile_dep.found()
                            guile_dep.get_variable(pkgconfig: 'guile'))
     subdir('guile')
   endif
-
+else
+      config_h_data.set('BUILD_SCM', 0)
 endif
 
 subdir('mu')
