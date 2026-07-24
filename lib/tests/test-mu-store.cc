@@ -101,8 +101,8 @@ test_store_reinit()
 
 		const auto addrs{store->config().get<Config::Id::PersonalAddresses>()};
 		g_assert_cmpuint(addrs.size(),==,2);
-		g_assert_true(seq_some(addrs, [](auto&& a){return a=="foo@example.com";}));
-		g_assert_true(seq_some(addrs, [](auto&& a){return a=="bar@example.com";}));
+		g_assert_true(std::ranges::any_of(addrs, [](auto&& a){return a=="foo@example.com";}));
+		g_assert_true(std::ranges::any_of(addrs, [](auto&& a){return a=="bar@example.com";}));
 
 		const auto msgpath{MuTestMaildir + "/cur/1283599333.1840_11.cthulhu!2,"};
 		const auto id = store->add_message(msgpath);
@@ -597,9 +597,9 @@ test_store_maildirs()
 	const auto mdirs = store->maildirs();
 
 	g_assert_cmpuint(mdirs.size(), ==, 3);
-	g_assert(seq_some(mdirs, [](auto&& m){return m == "/Foo";}));
-	g_assert(seq_some(mdirs, [](auto&& m){return m == "/bar";}));
-	g_assert(seq_some(mdirs, [](auto&& m){return m == "/wom_bat";}));
+	g_assert(std::ranges::any_of(mdirs, [](auto&& m){return m == "/Foo";}));
+	g_assert(std::ranges::any_of(mdirs, [](auto&& m){return m == "/bar";}));
+	g_assert(std::ranges::any_of(mdirs, [](auto&& m){return m == "/wom_bat";}));
 }
 
 

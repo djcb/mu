@@ -314,7 +314,7 @@ get_priority(const MimeMessage& mime_msg)
 	if (!opt_str)
 		return  Priority::Normal;
 
-	const auto it = seq_find_if(prio_alist, [&](auto&& item) {
+	const auto it = std::ranges::find_if(prio_alist, [&](auto&& item) {
 		return g_ascii_strncasecmp(item.first.data(), opt_str->c_str(),
 					   item.first.size()) == 0; });
 
@@ -331,7 +331,7 @@ extract_tags(const MimeMessage& mime_msg)
 	});
 
 	std::vector<std::string> tags;
-	seq_for_each(tag_headers, [&](auto&& item) {
+	std::ranges::for_each(tag_headers, [&](auto&& item) {
 		if (auto&& hdr = mime_msg.header(item.first); hdr) {
 			for (auto&& tagval : split(*hdr, item.second)) {
 				tagval.erase(0, tagval.find_first_not_of(' '));

@@ -571,8 +571,8 @@ std::string quoted_join(const T& items, F&& func)
 {
 	std::vector<std::string> vec;
 
-	std::transform(items.begin(), items.end(), std::back_inserter(vec),
-		       [&](const auto& item) { return quote(func(item)); });
+	std::ranges::transform(items, std::back_inserter(vec),
+			       [&](const auto& item) { return quote(func(item)); });
 
 	return join(vec,  " ");
 }
@@ -827,7 +827,7 @@ Server::Private::help_handler(const Command& cmd)
 	for (auto&& name_cmd: info_map)
 		names.emplace_back(name_cmd.first);
 
-	std::sort(names.begin(), names.end());
+	std::ranges::sort(names);
 
 	for (auto&& name : names) {
 		const auto& info{info_map.find(name)->second};

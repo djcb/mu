@@ -144,10 +144,10 @@ topic_combi_fields(const Options& opts)
 	Table fields;
 	fields.add_row({"combi-field", "fields"});
 
-	seq_for_each(combi_fields(), [&](const auto& cfield) {
+	std::ranges::for_each(combi_fields(), [&](const auto& cfield) {
 
 		std::string fnames;
-		seq_for_each(cfield.fields, [&](auto&& field) {
+		std::ranges::for_each(cfield.fields, [&](auto&& field) {
 			if (!fnames.empty())
 				fnames += ", ";
 			fnames +=  mu_format("{}", field.name);

@@ -196,11 +196,10 @@ run_scm(const Mu::Store& store, const Mu::Options& opts)
 		       [](auto _data, auto _argc, auto _argv) {
 			       mu_mod = scm_c_define_module ("mu", init_module_mu, &mu_data);
 		std::vector<char*> args;
-		std::transform(scm_args.begin(),
-			       scm_args.end(), std::back_inserter(args),
-			       [&](const std::string& strarg){
-				       /* ahem...*/
-				       return const_cast<char*>(strarg.c_str());
+		std::ranges::transform(scm_args, std::back_inserter(args),
+				       [](const std::string& strarg){
+					       /* ahem...*/
+					       return const_cast<char*>(strarg.c_str());
 		});
 		scm_shell(args.size(), args.data());
 

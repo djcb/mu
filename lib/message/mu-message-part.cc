@@ -51,7 +51,7 @@ cook(const std::string& fname, const std::vector<char>& forbidden)
 	clean.reserve(fname.length());
 
 	for (auto& c: basename(fname))
-		if (seq_some(forbidden,[&](char fc){
+		if (std::ranges::any_of(forbidden,[&](char fc){
 			return is_ascii_cntrl(c) || c == fc;}))
 			clean += '-';
 		else
@@ -190,8 +190,8 @@ MessagePart::looks_like_attachment() const noexcept
 {
 	auto matches=[](const MimeContentType& ctype,
 			const std::initializer_list<std::pair<const char*, const char*>>& ctypes) {
-		return std::find_if(ctypes.begin(), ctypes.end(), [&](auto&& item){
-			return ctype.is_type(item.first, item.second); }) != ctypes.end();
+		return std::ranges::any_of(ctypes, [&](auto&& item){
+			return ctype.is_type(item.first, item.second); });
 	};
 
 	const auto ctype{mime_object().content_type()};

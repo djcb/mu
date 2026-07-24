@@ -313,7 +313,7 @@ private:
 
 template<typename S, typename T>
 constexpr Option<std::string_view> to_string_view_opt(const S& seq, T t) {
-	auto&& it = seq_find_if(seq, [&](auto&& item){return item.first == t;});
+	auto&& it = std::ranges::find_if(seq, [&](auto&& item){return item.first == t;});
 	if (it == seq.cend())
 		return Nothing;
 	else

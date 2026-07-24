@@ -61,7 +61,7 @@ Mu::fields_from_name(const std::string& name) {
 
 	static const FieldsVec empty;
 	const auto& cfields{combi_fields()};
-	const auto it = seq_find_if(cfields, [&](const auto& cfield) {
+	const auto it = std::ranges::find_if(cfields, [&](const auto& cfield) {
 		return cfield.name == name;
 	});
 
@@ -71,7 +71,7 @@ Mu::fields_from_name(const std::string& name) {
 bool
 Mu::field_is_combi(const std::string& name)
 {
-	return !name.empty() && seq_some(combi_fields(),[&](const auto& cfield) {
+	return !name.empty() && std::ranges::any_of(combi_fields(),[&](const auto& cfield) {
 		return cfield.name == name;
 	});
 }

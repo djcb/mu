@@ -260,6 +260,10 @@ test_join()
 	assert_equal(join({"a", "b", "c"}, ""), "abc");
 	assert_equal(join({},"foo"), "");
 	assert_equal(join({"d", "e", "f"}, "foo"), "dfooefoof");
+	// empty elements are joined, too
+	assert_equal(join({"", "a"}, ","), ",a");
+	assert_equal(join({"", ""}, ","), ",");
+	assert_equal(join({"a"}, ","), "a");
 }
 
 

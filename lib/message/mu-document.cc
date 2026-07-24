@@ -145,9 +145,8 @@ Document::add(Field::Id id, const std::vector<std::string>& vals)
 		xdoc_.add_value(field.value_no(), Mu::join(vals, SepaChar1));
 
 	if (field.is_searchable())
-		std::for_each(vals.begin(), vals.end(),
-			      [&](const auto& val) {
-				      add_search_term(field, val); });
+		std::ranges::for_each(vals, [&](const auto& val) {
+			add_search_term(field, val); });
 
 	if (field.include_in_sexp()) {
 		Sexp elms{};
@@ -169,7 +168,7 @@ make_contacts_sexp(const Contacts& contacts)
 {
 	Sexp contacts_sexp;
 
-	seq_for_each(contacts, [&](auto&& c) {
+	std::ranges::for_each(contacts, [&](auto&& c) {
 		Sexp contact(":email"_sym, c.email);
 		if (!c.name.empty())
 			contact.add(":name"_sym, c.name);

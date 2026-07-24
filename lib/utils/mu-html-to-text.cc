@@ -354,7 +354,7 @@ needs_separator(std::string_view tagname)
 	constexpr auto nosep_tags = std::to_array<const char*>({
 		"b", "em", "i", "s", "strike", "tt", "u"
 	});
-	return !seq_some(nosep_tags, [&](auto&& t){return matches(tagname, t);});
+	return !std::ranges::any_of(nosep_tags, [&](auto&& t){return matches(tagname, t);});
 }
 
 static bool // do we need to skip the element completely?
@@ -363,7 +363,7 @@ is_skip_element(std::string_view tagname)
 	constexpr auto skip_tags = std::to_array<const char*>({
 		"head", "title"
 	});
-	return seq_some(skip_tags, [&](auto&& t){return matches(tagname, t);});
+	return std::ranges::any_of(skip_tags, [&](auto&& t){return matches(tagname, t);});
 }
 
 // skip the end-tag
@@ -518,7 +518,7 @@ html_escape_char(Context& ctx)
 			if (matches(esc, n.name))
 				return std::string{n.repl};
 
-		if (seq_some(accents, [&](auto&& a){
+		if (std::ranges::any_of(accents, [&](auto&& a){
 			return starts_with(esc.substr(1), a);}))
 			return std::string(1, to_ascii_lower(esc.front()));
 

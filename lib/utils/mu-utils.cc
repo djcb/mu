@@ -34,7 +34,6 @@
 #include <string.h>
 #include <iostream>
 #include <algorithm>
-#include <numeric>
 #include <functional>
 #include <cinttypes>
 #include <charconv>
@@ -339,25 +338,18 @@ Mu::join(const std::vector<std::string>& svec, const std::string& sepa)
 
 
 	/* calculate the overall size beforehand, to avoid re-allocations. */
-	size_t value_len =
-		std::accumulate(svec.cbegin(), svec.cend(), std::size_t{},
-				[](size_t size, const std::string& s) {
-					return size + s.size();
-				}) + (svec.size() - 1) * sepa.length();
+	size_t value_len{(svec.size() - 1) * sepa.length()};
+	for (const auto& s : svec)
+		value_len += s.size();
 
 	std::string value;
 	value.reserve(value_len);
 
-	std::accumulate(svec.cbegin(), svec.cend(), std::ref(value),
-			[&](std::string& s1, const std::string& s2)->std::string& {
-				if (s1.empty())
-					s1 = s2;
-				else {
-					s1.append(sepa);
-					s1.append(s2);
-				}
-				return s1;
-			});
+	value.append(svec.front());
+	for (auto it = std::next(svec.cbegin()); it != svec.cend(); ++it) {
+		value.append(sepa);
+		value.append(*it);
+	}
 
 	return value;
 }

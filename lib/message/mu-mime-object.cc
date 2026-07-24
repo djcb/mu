@@ -447,7 +447,7 @@ MimeMessage::references() const noexcept
 {
 	// is ref already in the list? O(n) but with small n.
 	auto is_dup = [](auto&& seq, const std::string& ref) {
-		return seq_some(seq, [&](auto&& str) { return ref == str; });
+		return std::ranges::any_of(seq, [&](auto&& str) { return ref == str; });
 	};
 
 	auto on_blacklist = [](auto&& msgid) {

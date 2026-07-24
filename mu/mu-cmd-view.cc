@@ -46,7 +46,7 @@ static std::string /* return comma-sep'd list of attachments */
 get_attach_str(const Message& message, const Options& opts)
 {
 	std::string str;
-	seq_for_each(message.parts(), [&](auto&& part) {
+	std::ranges::for_each(message.parts(), [&](auto&& part) {
 		if (auto fname = part.raw_filename(); fname) {
 			if (str.empty())
 				str = fname.value();

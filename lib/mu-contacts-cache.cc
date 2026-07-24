@@ -74,7 +74,9 @@ private:
 	}
 
 	template<Config::Id Id> StringVec make_matchers() const {
-		return seq_remove(config_db_.get<Id>(), is_rx);
+		auto matchers{config_db_.get<Id>()};
+		std::erase_if(matchers, is_rx);
+		return matchers;
 	}
 	template<Config::Id Id> std::vector<Regex> make_rx_matchers() const {
 		std::vector<Regex> rxvec;
@@ -234,7 +236,7 @@ ContactsCache::add(Contact&& contact)
 void
 ContactsCache::add(Contacts&& contacts, bool& personal)
 {
-	personal = seq_find_if(contacts,[&](auto&& c){
+	personal = std::ranges::find_if(contacts,[&](auto&& c){
 		return is_personal(c.email); }) != contacts.cend();
 
 	for (auto&& contact: contacts) {

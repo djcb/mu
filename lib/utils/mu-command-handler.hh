@@ -224,7 +224,7 @@ struct CommandHandler {
 			std::vector<std::string> names;
 			for (auto&& arg : args)
 				names.emplace_back(arg.first);
-			std::sort(names.begin(), names.end(), [&](const auto& name1, const auto& name2) {
+			std::ranges::sort(names, [&](const auto& name1, const auto& name2) {
 				const auto& arg1{args.find(name1)->second};
 				const auto& arg2{args.find(name2)->second};
 				if (arg1.required != arg2.required)

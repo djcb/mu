@@ -246,8 +246,8 @@ test_updated_labels()
 
 	const auto delta_labels = [](std::initializer_list<std::string> strs)->DeltaLabelVec {
 		DeltaLabelVec deltas;
-		std::transform(strs.begin(), strs.end(), std::back_inserter(deltas),
-			       [](auto str) {
+		std::ranges::transform(strs, std::back_inserter(deltas),
+				       [](auto str) {
 				       const auto res = parse_delta_label(str);
 				       assert_valid_result(res);
 				       return *res;

@@ -30,7 +30,7 @@ Mu::mu_cmd_script(const Options& opts)
 {
 	ScriptPaths paths = { MU_SCRIPTS_DIR };
 	const auto&& scriptinfos{script_infos(paths)};
-	auto script_it = Mu::seq_find_if(scriptinfos, [&](auto&& item) {
+	auto script_it = std::ranges::find_if(scriptinfos, [&](auto&& item) {
 		return item.name == opts.script.name;
 	});
 

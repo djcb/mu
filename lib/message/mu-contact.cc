@@ -51,7 +51,7 @@ Mu::to_string(const Mu::Contacts& contacts)
 {
 	std::string res;
 
-	seq_for_each(contacts, [&](auto&& contact) {
+	std::ranges::for_each(contacts, [&](auto&& contact) {
 		if (res.empty())
 			res = contact.display_name();
 		else

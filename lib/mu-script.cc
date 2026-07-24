@@ -125,9 +125,7 @@ Mu::script_infos(const Mu::ScriptPaths& paths)
 		script_infos_in_dir(dir, infos);
 	}
 
-	std::sort(infos.begin(), infos.end(), [](auto&& i1, auto&& i2) {
-		return i1.name < i2.name;
-	});
+	std::ranges::sort(infos, {}, &ScriptInfo::name);
 
 	return infos;
 }

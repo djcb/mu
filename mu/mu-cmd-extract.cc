@@ -63,7 +63,7 @@ save_parts(const Message& message, const std::string& filename_rx,
 			else if (opts.extract.save_attachments &&
 			    part.looks_like_attachment())
 				return true;
-			else if (seq_some(opts.extract.parts,
+			else if (std::ranges::any_of(opts.extract.parts,
 				     [&](auto&& num){return num==partnum;}))
 				return true;
 			else if (!filename_rx.empty() && part.raw_filename()) {

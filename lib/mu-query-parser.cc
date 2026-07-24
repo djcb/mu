@@ -55,7 +55,7 @@ looks_like_matcher(const Sexp& sexp)
 		return false;
 
 	const auto symbol{sexp.front().symbol()};
-	if (seq_some(value_syms, [&](auto &&sym) { return symbol == sym; }))
+	if (std::ranges::any_of(value_syms, [&](auto &&sym) { return symbol == sym; }))
 		return true;
 	else if (!!field_from_name(symbol.name) || field_is_combi(symbol.name))
 		 return true;

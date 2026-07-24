@@ -250,8 +250,8 @@ Scanner::Private::process_dir(const std::string& path, bool is_maildir)
 #if HAVE_DIRENT_D_INO
 	// sort by i-node; much faster on rotational (HDDs) devices and on SSDs
 	// sort is quick enough to not matter much
-	std::sort(dir_entries.begin(), dir_entries.end(),
-		  [](auto&& d1, auto&& d2){ return d1.d_ino < d2.d_ino; });
+	std::ranges::sort(dir_entries,
+			  [](auto&& d1, auto&& d2){ return d1.d_ino < d2.d_ino; });
 #endif /*HAVEN_DIRENT_D_INO*/
 
 	// now process...
@@ -379,9 +379,9 @@ test_count_maildirs()
 	while (scanner.is_running()) { g_usleep(1000); }
 
 	g_assert_cmpuint(dirs.size(),==,3);
-	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "bar";}) != dirs.end());
-	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "Foo";}) != dirs.end());
-	g_assert_true(seq_find_if(dirs, [](auto& p){return p == "wom_bat";}) != dirs.end());
+	g_assert_true(std::ranges::find(dirs, "bar") != dirs.end());
+	g_assert_true(std::ranges::find(dirs, "Foo") != dirs.end());
+	g_assert_true(std::ranges::find(dirs, "wom_bat") != dirs.end());
 }
 
 static void

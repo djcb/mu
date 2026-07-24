@@ -49,7 +49,7 @@ Mu::mu_cmd_move(Mu::Store& store, const Options& opts)
 			   "Must have at least one of destination and flags");
 	else if (!dest.empty()) {
 		const auto mdirs{store.maildirs()};
-		if (!seq_some(mdirs, [&](auto &&d){ return d == dest;}))
+		if (!std::ranges::any_of(mdirs, [&](auto &&d){ return d == dest;}))
 			return Err(Error{Error::Code::InvalidArgument,
 					"No maildir '{}' in store", dest}
 				.add_hint("Try 'mu mkdir'"));

@@ -656,56 +656,6 @@ inline std::string shell_quote(const std::string& str) {
 std::string to_lexnum(int64_t val);
 int64_t from_lexnum(const std::string& str);
 
-/**
- * Like std::find_if, but using sequence instead of a range.
- *
- * @param seq some std::find_if compatible sequence
- * @param pred a predicate
- *
- * @return an iterator
- */
-template<typename Sequence, typename UnaryPredicate>
-typename Sequence::const_iterator seq_find_if(const Sequence& seq, UnaryPredicate pred) {
-	return std::find_if(seq.cbegin(), seq.cend(), pred);
-}
-
-/**
- * Is pred(element) true for at least one element of sequence?
- *
- * @param seq sequence
- * @param pred a predicate
- *
- * @return true or false
- */
-template<typename Sequence, typename UnaryPredicate>
-bool seq_some(const Sequence& seq, UnaryPredicate pred) {
-	return seq_find_if(seq, pred) != seq.cend();
-}
-
-/**
- * Create a sequence that has all element of seq for which pred is false
- *
- * @param seq sequence
- * @param pred false
- *
- * @return sequence
- */
-template<typename Sequence, typename UnaryPredicate>
-Sequence seq_remove(const Sequence& seq, UnaryPredicate pred) {
-	Sequence res;
-	std::remove_copy_if(seq.begin(), seq.end(), std::back_inserter(res), pred);
-	return res;
-}
-
-template<typename Sequence, typename Compare>
-void seq_sort(Sequence& seq, Compare cmp) { std::sort(seq.begin(), seq.end(), cmp); }
-
-
-template<typename Sequence, typename UnaryOp>
-void seq_for_each(const Sequence& seq, UnaryOp op) {
-	std::for_each(seq.cbegin(), seq.cend(), op);
-}
-
 struct MaybeAnsi {
 	explicit MaybeAnsi(bool use_color) : color_{use_color} {}
 

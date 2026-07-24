@@ -489,10 +489,7 @@ sort_container(Container& container)
 
 	// now sort this level; use a stable sort so messages with equal
 	// dates keep their original (mset) order.
-	std::stable_sort(container.children.begin(), container.children.end(),
-			 [](auto&& c1, auto&& c2) {
-		return c1->thread_date_key < c2->thread_date_key;
-	});
+	std::ranges::stable_sort(container.children, {}, &Container::thread_date_key);
 
 	// and 'bubble up' the date of the *newest* message with a date. We
 	// reasonably assume that it's later than its parent.
@@ -527,7 +524,7 @@ sort_siblings(IdTable& id_table, bool descending)
 	//
 	// Note that unless we're testing, _xapian_ will handle
 	// the ascending/descending of the top level.
-	std::stable_sort(root_vec.begin(), root_vec.end(), [&](auto&& c1, auto&& c2) {
+	std::ranges::stable_sort(root_vec, [&](auto&& c1, auto&& c2) {
 #ifdef BUILD_TESTS
 		if (descending)
 			return c2->thread_date_key < c1->thread_date_key;
@@ -558,7 +555,7 @@ operator<<(std::ostream& os, const IdTable& id_table)
 	}
 
 	for (auto&& id : ids) {
-		auto it = std::find_if(id_table.begin(), id_table.end(), [&](auto&& item) {
+		auto it = std::ranges::find_if(id_table, [&](auto&& item) {
 			return item.second.query_match &&
 			       item.second.query_match->thread_path == id;
 		});
@@ -664,7 +661,7 @@ static void
 assert_thread_paths(const MockQueryResults& qrs, const Expected& expected)
 {
 	for (auto&& exp : expected) {
-		auto it = std::find_if(qrs.begin(), qrs.end(), [&](auto&& qr) {
+		auto it = std::ranges::find_if(qrs, [&](auto&& qr) {
 			return qr.message_id().value_or("") == exp.first ||
 			       qr.path().value_or("") == exp.first;
 		});

@@ -143,10 +143,9 @@ import_labels_for_message(Mu::Store& store, bool dry_run, Level level,
 	using namespace Labels;
 
 	Labels::DeltaLabelVec delta_labels{};
-	std::transform(labels.begin(), labels.end(),
-		       std::back_inserter(delta_labels),
-		       [](const auto& label) {
-			       return DeltaLabel{Delta::Add, label}; });
+	std::ranges::transform(labels, std::back_inserter(delta_labels),
+			       [](const auto& label) {
+				       return DeltaLabel{Delta::Add, label}; });
 
 	const auto qres = [&]()->Result<QueryResults>{
 		// plan A: match by path

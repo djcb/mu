@@ -119,7 +119,7 @@ goto * instructions[pOp->opcode];
 
 	auto all_contacts{message->all_contacts()};
 	g_assert_cmpuint(all_contacts.size(), ==, 4);
-	seq_sort(all_contacts, [](auto&& c1, auto&& c2){return c1.email < c2.email; });
+	std::ranges::sort(all_contacts, [](auto&& c1, auto&& c2){return c1.email < c2.email; });
 	assert_equal(all_contacts[0].email, "anon@example.com");
 	assert_equal(all_contacts[1].email, "sqlite-dev-bounces@sqlite.org");
 	assert_equal(all_contacts[2].email, "sqlite-dev@sqlite.org");

@@ -650,8 +650,8 @@ Store::move_message(Store::Id id,
 	}
 
 	// sort the dup paths by name;
-	std::sort(id_paths.begin() + 1, id_paths.end(),
-		  [](const auto& idp1, const auto& idp2) { return idp1.second < idp2.second; });
+	std::ranges::sort(id_paths.begin() + 1, id_paths.end(),
+			  [](const auto& idp1, const auto& idp2) { return idp1.second < idp2.second; });
 
 	return Ok(std::move(id_paths));
 }
@@ -811,7 +811,7 @@ Store::maildirs() const
 
 	Scanner scanner{root_maildir(), handler, Scanner::Mode::MaildirsOnly};
 	scanner.start();
-	std::sort(mdirs.begin(), mdirs.end());
+	std::ranges::sort(mdirs);
 
 	return mdirs;
 }
