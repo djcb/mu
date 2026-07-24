@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -21,12 +21,10 @@
 #define MU_QUERY_RESULTS_HH__
 
 #include <algorithm>
-#include <limits>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <limits>
 #include <ostream>
 #include <cmath>
 #include <memory>
@@ -192,6 +190,7 @@ public:
 	QueryResultsIterator operator++(int) {
 		auto old{mset_it_};
 		++mset_it_;
+		mdoc_ = Nothing;
 		return QueryResultsIterator{old, query_matches_};
 	}
 
@@ -214,6 +213,7 @@ public:
 	QueryResultsIterator operator--(int) {
 		auto old{mset_it_};
 		--mset_it_;
+		mdoc_ = Nothing;
 		return QueryResultsIterator{old, query_matches_};
 	}
 
@@ -225,7 +225,6 @@ public:
 	 * @return true or false
 	 */
 	bool operator==(const QueryResultsIterator& rhs) const { return mset_it_ == rhs.mset_it_; }
-	bool operator!=(const QueryResultsIterator& rhs) const { return mset_it_ != rhs.mset_it_; }
 
 	QueryResultsIterator&       operator*() { return *this; }
 	const QueryResultsIterator& operator*() const { return *this; }
@@ -371,7 +370,7 @@ private:
 	const Mu::Document& mu_document() const {
 		if (!mdoc_) {
 			if (auto xdoc = document(); !xdoc)
-				std::runtime_error("iter without document");
+				throw std::runtime_error("iter without document");
 			else
 				mdoc_ = Mu::Document{xdoc.value()};
 		}
@@ -389,8 +388,6 @@ format_as(const QueryResultsIterator& it)
 {
 	return it.path().value_or("<no path>");
 }
-
-constexpr auto MaxQueryResultsSize = std::numeric_limits<size_t>::max();
 
 class QueryResults {
 public:

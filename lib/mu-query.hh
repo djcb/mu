@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 **
 */
 
-#ifndef __MU_QUERY_HH__
-#define __MU_QUERY_HH__
+#ifndef MU_QUERY_HH__
+#define MU_QUERY_HH__
 
 #include <string>
 #include <memory>
@@ -91,4 +91,4 @@ private:
 };
 } // namespace Mu
 
-#endif /*__MU_QUERY_HH__*/
+#endif /*MU_QUERY_HH__*/

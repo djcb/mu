@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -62,14 +62,14 @@ std::unique_ptr<Xapian::MatchDecider> make_related_decider(QueryFlags qflags, De
 
 /**
  * Make a "thread" decider, that is, a MatchDecider that removes all but the
- * document excepts for the ones found during initial/related searches.
+ * documents found during the initial/related searches (i.e., those that
+ * received a thread-path during threading).
  *
- * @param qflags     query flags
- * @param match_info receives information about the matches.
+ * @param matches the matches found during the initial/related searches
  *
  * @return a unique_ptr to a match decider.
  */
-std::unique_ptr<Xapian::MatchDecider> make_thread_decider(QueryFlags qflags, DeciderInfo& info);
+std::unique_ptr<Xapian::MatchDecider> make_thread_decider(const QueryMatches& matches);
 
 } // namespace Mu
 

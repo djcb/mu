@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,18 +37,18 @@ struct Query::Private {
 					     Field::Id sortfield_id,
 					     QueryFlags qflags) const;
 
-	Option<QueryResults> run_threaded(QueryResults&& qres, Xapian::Enquire& enq,
-					  QueryFlags qflags, size_t max_size) const;
-	Option<QueryResults> run_singular(const std::string&       expr,
-					  Field::Id sortfield_id,
-					  QueryFlags qflags, size_t maxnum) const;
-	Option<QueryResults> run_related(const std::string&       expr,
-					 Field::Id sortfield_id,
-					 QueryFlags qflags, size_t maxnum) const;
+	QueryResults run_threaded(QueryResults&& qres, Xapian::Enquire& enq,
+				  QueryFlags qflags, size_t max_size) const;
+	QueryResults run_singular(const std::string& expr,
+				  Field::Id sortfield_id,
+				  QueryFlags qflags, size_t maxnum) const;
+	QueryResults run_related(const std::string& expr,
+				 Field::Id sortfield_id,
+				 QueryFlags qflags, size_t maxnum) const;
 
-	Option<QueryResults> run(const std::string& expr,
-				 Field::Id sortfield_id, QueryFlags qflags,
-				 size_t maxnum) const;
+	QueryResults run(const std::string& expr,
+			 Field::Id sortfield_id, QueryFlags qflags,
+			 size_t maxnum) const;
 	const Store& store_;
 	const ParserFlags parser_flags_;
 };
@@ -121,7 +121,7 @@ struct ThreadKeyMaker : public Xapian::KeyMaker {
 	const QueryMatches& match_info_;
 };
 
-Option<QueryResults>
+QueryResults
 Query::Private::run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFlags qflags,
 			     size_t maxnum) const
 {
@@ -132,15 +132,14 @@ Query::Private::run_threaded(QueryResults&& qres, Xapian::Enquire& enq, QueryFla
 	ThreadKeyMaker key_maker{qres.query_matches()};
 	enq.set_sort_by_key(&key_maker, descending);
 
-	DeciderInfo minfo;
-	minfo.matches = qres.query_matches();
-	auto mset{enq.get_mset(0, maxnum, {}, make_thread_decider(qflags, minfo).get())};
+	auto mset{enq.get_mset(0, maxnum, {},
+			       make_thread_decider(qres.query_matches()).get())};
 	mset.fetch();
 
 	return QueryResults{mset, std::move(qres.query_matches())};
 }
 
-Option<QueryResults>
+QueryResults
 Query::Private::run_singular(const std::string& expr,
 			     Field::Id sortfield_id,
 			     QueryFlags qflags, size_t maxnum) const
@@ -155,11 +154,7 @@ Query::Private::run_singular(const std::string& expr,
 	const auto threading{any_of(qflags & QueryFlags::Threading)};
 
 	DeciderInfo minfo{};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wextra"
 	auto enq{make_enquire(expr, threading ? Field::Id::Date : sortfield_id, qflags)};
-#pragma GCC diagnostic ignored "-Wswitch-default"
-#pragma GCC diagnostic pop
 	auto mset{enq.get_mset(0, maxnum, {},
 			       make_leader_decider(singular_qflags, minfo).get())};
 	mset.fetch();
@@ -181,7 +176,7 @@ opt_string(const Xapian::Document& doc, Field::Id id) noexcept
 		return Some(std::move(val));
 }
 
-Option<QueryResults>
+QueryResults
 Query::Private::run_related(const std::string& expr,
 			    Field::Id sortfield_id,
 			    QueryFlags qflags, size_t maxnum) const
@@ -228,7 +223,7 @@ Query::Private::run_related(const std::string& expr,
 	return threading ? run_threaded(std::move(qres), r_enq, qflags, maxnum) : qres;
 }
 
-Option<QueryResults>
+QueryResults
 Query::Private::run(const std::string&  expr, Field::Id sortfield_id, QueryFlags qflags,
 		    size_t maxnum) const
 {
@@ -257,11 +252,7 @@ Query::run(const std::string& expr, Field::Id sortfield_id,
 			  maxnum == 0 ? std::string{"∞"} : std::to_string(maxnum))};
 
 	return xapian_try_result([&]{
-		if (auto&& res = priv_->run(expr, sortfield_id, qflags, maxnum); res)
-			return Result<QueryResults>(Ok(std::move(res.value())));
-		else
-			return Result<QueryResults>(Err(Error::Code::Query,
-							"failed to run query"));
+		return Ok(priv_->run(expr, sortfield_id, qflags, maxnum));
 	});
 }
 
@@ -271,9 +262,10 @@ Query::count(const std::string& expr) const
 	return xapian_try(
 	    [&] {
 		    const auto enq{priv_->make_enquire(expr, {}, {})};
-		    auto       mset{enq.get_mset(0, priv_->store_.size())};
-		    mset.fetch();
-		    return mset.size();
+		    // with checkatleast == the db size, the "estimate"
+		    // is exact; this avoids materializing the match items.
+		    return enq.get_mset(0, 0, priv_->store_.size())
+			    .get_matches_estimated();
 	    },
 	    0);
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -40,38 +40,29 @@ struct Container {
 	Container(const Container&) = delete;
 	Container(Container&&)      = default;
 
-	void add_child(Container& new_child)
-	{
+	void add_child(Container& new_child) {
 		new_child.parent = this;
 		children.emplace_back(&new_child);
 	}
-	void remove_child(Container& child)
-	{
-		children.erase(find_child(child));
+	void remove_child(Container& child) {
+		std::erase(children, &child);
 		assert(!has_child(child));
 	}
 
-	Containers::iterator find_child(Container& child)
-	{
-		return std::find_if(children.begin(), children.end(), [&](auto&& c) {
-			return c == &child;
-		});
+	Containers::iterator find_child(Container& child) {
+		return std::ranges::find(children, &child);
 	}
-	Containers::const_iterator find_child(Container& child) const
-	{
-		return std::find_if(children.begin(), children.end(), [&](auto&& c) {
-			return c == &child;
-		});
+	Containers::const_iterator find_child(Container& child) const {
+		return std::ranges::find(children, &child);
 	}
 	bool has_child(Container& child) const { return find_child(child) != children.cend(); }
 
-	bool is_reachable(Container* other) const
-	{
+	bool is_reachable(Container* other) const {
 		auto up{ur_parent()};
 		return up && up == other->ur_parent();
 	}
-	template <typename Func> void for_each_child(Func&& func)
-	{
+
+	template <typename Func> void for_each_child(Func&& func) {
 		auto it{children.rbegin()};
 		while (it != children.rend()) {
 			auto next = std::next(it);
@@ -137,15 +128,19 @@ handle_duplicates(IdTable& id_table, DupTable& dup_table)
 	size_t n{};
 
 	for (auto&& dup : dup_table) {
-		const auto msgid{dup.first};
-		auto       it = id_table.find(msgid);
+		auto it = id_table.find(dup.first);
 		if (it == id_table.end())
 			continue;
 
-		// add duplicates as fake children
-		char buf[32];
-		::snprintf(buf, sizeof(buf), "dup-%zu", ++n);
-		it->second.add_child(id_table.emplace(buf, std::move(dup.second)).first->second);
+		// add duplicates as fake children; hold a _reference_ to the
+		// parent, since the emplace below may invalidate the iterator
+		// (references remain valid).
+		auto& parent{it->second};
+		auto& dup_child{id_table.emplace(mu_format("dup-{}", ++n),
+						 std::move(dup.second)).first->second};
+		if (dup_child.query_match)
+			dup_child.thread_date_key = dup_child.query_match->date_key;
+		parent.add_child(dup_child);
 	}
 }
 
@@ -156,11 +151,21 @@ determine_id_table(QueryResultsType& qres)
 	// 1. For each query_match
 	IdTable  id_table;
 	DupTable dups;
+	id_table.reserve(qres.size() * 2); // heuristic: msgids + references
+
 	for (auto&& mi : qres) {
-		const auto msgid{mi.message_id().value_or(*mi.path())};
+		// fall back to the (unique) path for message-id-less messages
+		auto msgid_opt{mi.message_id()};
+		if (!msgid_opt)
+			msgid_opt = mi.path();
+		const auto msgid{std::move(msgid_opt).value_or(std::string{})};
+
 		// Step 0 (non-JWZ): filter out dups, handle those at the end
 		if (mi.query_match().has_flag(QueryMatch::Flags::Duplicate)) {
-			dups.emplace(msgid, mi.query_match());
+			auto& qmatch{mi.query_match()};
+			qmatch.date_key = mi.date_str().value_or("");
+			qmatch.subject	= mi.subject().value_or("");
+			dups.emplace(msgid, qmatch);
 			continue;
 		}
 		// 1.A If id_table contains an empty Container for this ID:
@@ -357,7 +362,7 @@ inline std::string
 to_string(const ThreadPath& tpath, size_t digits)
 {
 	std::string str;
-	str.reserve(tpath.size() * digits);
+	str.reserve(tpath.size() * (digits + 1)); // incl. ':' separators
 
 	bool first{true};
 	for (auto&& segm : tpath) {
@@ -369,19 +374,17 @@ to_string(const ThreadPath& tpath, size_t digits)
 }
 
 static bool // compare subjects, ignore anything before the last ':<space>*'
-subject_matches(const std::string& sub1, const std::string& sub2)
+subject_matches(std::string_view sub1, std::string_view sub2)
 {
-	auto search_str = [](const std::string& s) -> const char* {
+	auto tail = [](std::string_view s) -> std::string_view {
 		const auto pos = s.find_last_of(':');
-		if (pos == std::string::npos)
-			return s.c_str();
-		else {
-			const auto pos2 = s.find_first_not_of(' ', pos + 1);
-			return s.c_str() + (pos2 == std::string::npos ? pos : pos2);
-		}
+		if (pos == std::string_view::npos)
+			return s;
+		const auto pos2 = s.find_first_not_of(' ', pos + 1);
+		return s.substr(pos2 == std::string_view::npos ? pos : pos2);
 	};
 
-	return g_strcmp0(search_str(sub1), search_str(sub2)) == 0;
+	return tail(sub1) == tail(sub2);
 }
 
 static bool
@@ -484,8 +487,10 @@ sort_container(Container& container)
 	for (auto& child : container.children)
 		sort_container(*child);
 
-	// now sort this level.
-	std::sort(container.children.begin(), container.children.end(), [&](auto&& c1, auto&& c2) {
+	// now sort this level; use a stable sort so messages with equal
+	// dates keep their original (mset) order.
+	std::stable_sort(container.children.begin(), container.children.end(),
+			 [](auto&& c1, auto&& c2) {
 		return c1->thread_date_key < c2->thread_date_key;
 	});
 
@@ -522,7 +527,7 @@ sort_siblings(IdTable& id_table, bool descending)
 	//
 	// Note that unless we're testing, _xapian_ will handle
 	// the ascending/descending of the top level.
-	std::sort(root_vec.begin(), root_vec.end(), [&](auto&& c1, auto&& c2) {
+	std::stable_sort(root_vec.begin(), root_vec.end(), [&](auto&& c1, auto&& c2) {
 #ifdef BUILD_TESTS
 		if (descending)
 			return c2->thread_date_key < c1->thread_date_key;
@@ -946,6 +951,7 @@ try {
 	g_test_add_func("/threader/thread-info/descending", test_thread_info_descending);
 
 	return g_test_run();
+
 } catch (const std::runtime_error& re) {
 	std::cerr << re.what() << "\n";
 	return 1;
