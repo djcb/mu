@@ -193,7 +193,7 @@ DATA is either the bookmarks or maildirs (user-defined).
 
 LAST-RESULTS-DATA contains unread/counts we received from the
 server, while BASELINE-DATA contains the same but taken at some
-earier time.
+earlier time.
 
 The TYPE denotes the category for the query item, a symbol
 bookmark or maildir."

@@ -69,7 +69,7 @@ Needed by `mu4e-action-add-org-contact'.")
     (defvar org-capture-templates nil)))
 
 (defun mu4e-action-add-org-contact (msg)
-  "Add an org-contact based on the sender ddress of the current MSG.
+  "Add an org-contact based on the sender address of the current MSG.
 You need to set `mu4e-org-contacts-file' to the full path to the
 file where you store your org-contacts."
   (unless (require 'org-capture nil 'noerror)

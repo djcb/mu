@@ -732,7 +732,7 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		},
 		{ SubCommand::Extract,
 		  {Category::None,
-		  "extract", "Extract attachements and other MIME-parts", sub_extract}
+		  "extract", "Extract attachments and other MIME-parts", sub_extract}
 		},
 		{ SubCommand::Fields,
 		  {Category::None,
