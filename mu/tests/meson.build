@@ -121,6 +121,15 @@ test('test-cmd-query',
                 build_by_default: false,
                 dependencies: [glib_dep, config_h_dep, lib_mu_dep]))
 
+test('test-options',
+     executable('test-options',
+                '../mu-options.cc',
+                install: false,
+                build_by_default: false,
+                cpp_args: ['-DBUILD_TESTS',
+                           '-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
+                dependencies: [glib_dep, config_h_dep, cli11_dep, lib_mu_dep]))
+
 gmime_test = executable(
   'gmime-test', [
   'gmime-test.c'

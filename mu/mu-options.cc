@@ -20,20 +20,18 @@
 /**
  * @brief Command-line handling
  *
- * Here we implement mu's command-line parsing based on the CLI11 library. At
- * the time of writing, that library seems to be the best based on the criteria
+ * Here we implement mu's command-line parsing based on the CLI11 library.
+ *
+ * At the time of writing, that library seems to be the best based on the criteria
  * that it supports the features we need and is available as a header-only
  * include.
  *
  * CLI11 can do quite a bit, and we're only scratching the surface here,
  * plan is to slowly improve things.
- *
- * - we do quite a bit of sanity-checking, but the errors are a rather terse
- * - the docs could be improved, e.g., `mu find --help` and --format/--sortfield
- *
  */
 
 #include <config.h>
+#include <algorithm>
 #include <stdexcept>
 #include <array>
 #include <unordered_map>
@@ -59,13 +57,13 @@ using namespace Mu;
 /*
  * helpers
  */
-
+namespace {
 /**
- * array of associated pair elements -- like an alist
- * but based on std::array and thus can be constexpr
+ * Element of an array of associated pair elements -- like an alist
+ * entry; make the array with std::to_array so its size is deduced.
  */
-template<typename T1, typename T2, std::size_t N>
-      using AssocPairs = std::array<std::pair<T1, T2>, N>;
+template<typename T1, typename T2>
+      using AssocPair = std::pair<T1, T2>;
 
 /**
   * Get the first value of the pair where the second element is @param s.
@@ -104,73 +102,16 @@ to_second(const P& p, typename P::value_type::first_type f)
 }
 
 /**
- * Options-specific array-bases type that maps some enum to a <name, description> pair
+ * Options-specific pair type that maps some enum to a <name, description> pair
  */
-template<typename T, std::size_t N>
-using InfoEnum = AssocPairs<T, std::pair<std::string_view, std::string_view>, N>;
-
-/**
- * Get the name (shortname) for some InfoEnum, based on the enum
- *
- * @param ie an InfoEnum
- * @param e an enum value
- *
- * @return the name if found, or Nothing
- */
-template<typename IE>
-static constexpr Option<std::string_view>
-to_name(const IE& ie, typename IE::value_type::first_type e) {
-	if (auto&& s{to_second(ie, e)}; s)
-		return s->first;
-	else
-		return Nothing;
-}
-
-/**
- * Get the enum value for some InfoEnum, based on the name
- *
- * @param ie an InfoEnum
- * @param name some name (shortname)
- *
- * @return the name if found, or Nothing
- */
-template<typename IE>
-static constexpr Option<typename IE::value_type::first_type>
-to_enum(const IE& ie, std::string_view name) {
-	for(auto&& item: ie)
-		if (item.second.first == name)
-			return item.first;
-	return Nothing;
-}
-
-/**
- * List help options for as a string, with the default marked with '(*)'
- *
- * @param ie infoenum
- * @param default_opt default option
- *
- * @return a help string
- */
-template<typename IE>
-static std::string
-options_help(const IE& ie, typename IE::value_type::first_type default_opt)
-{
-	std::string s;
-	for(auto&& item: ie) {
-		if (!s.empty())
-			s += ", ";
-		s += std::string{item.second.first};
-		if (item.first == default_opt)
-			s += "(*)"; /* default option */
-	}
-	return s;
-}
+template<typename T>
+using InfoPair = AssocPair<T, std::pair<std::string_view, std::string_view>>;
 
 /**
  * Get map from string->type
  */
 template<typename IE>
-static std::unordered_map<std::string, typename IE::value_type::first_type>
+std::unordered_map<std::string, typename IE::value_type::first_type>
 options_map(const IE& ie)
 {
 	std::unordered_map<std::string, typename IE::value_type::first_type> map;
@@ -180,20 +121,165 @@ options_map(const IE& ie)
 	return map;
 }
 
+/**
+ * Get the list of option names (shortnames), in declaration order
+ */
+template<typename IE>
+std::vector<std::string>
+options_names(const IE& ie)
+{
+	std::vector<std::string> names;
+	names.reserve(ie.size());
+	for (auto&& item : ie)
+		names.emplace_back(item.second.first);
+
+	return names;
+}
+
+/**
+ * Friendly error messages for some options (see add_choice_option,
+ * add_number_option), used for rewriting CLI11's rather terse errors.
+ */
+struct FriendlyError {
+	const CLI::App		*sub;	 /**< subcommand owning the option */
+	const CLI::Option	*opt;	 /**< the option */
+	std::string		 errmsg; /**< friendly error message */
+};
+std::vector<FriendlyError> friendly_errors;
+
+/**
+ * Get a friendly error message for some error.
+ *
+ * @param err a parse error
+ *
+ * @return the error message
+ */
+std::string
+friendly_error(const CLI::ParseError& err)
+{
+	const std::string what{err.what()};
+	for (const auto& info: friendly_errors) {
+		if (!info.sub->parsed())
+			continue;
+		const auto name{info.opt->get_name()};
+		// the CLI11 messages we know how to improve upon
+		for (const auto pat: { ": 1 required",	    // no value given
+				       ": requires one of", // bad choice value
+				       ": Value " })	    // bad numeric value
+			if (what.starts_with(name + pat))
+				return info.errmsg;
+	}
+	return what;
+}
+
+/**
+ * Add an option to sub that takes its value from a fixed set of choices.
+ *
+ * Like CLI11's CheckedTransformer, but with friendlier help and error
+ * messages, e.g.
+ *   error: --format requires one of { plain, links }; default is plain
+ *
+ * @param sub command to add the option to
+ * @param name option name(s), e.g. "--format,-o"
+ * @param value target for the parsed value
+ * @param help help text; the choices and default are appended
+ * @param type_name name for the value in the help, e.g. "<format>"
+ * @param choices map from choice-name to value
+ * @param choice_names the choice names; displayed in alphabetical order
+ * @param default_name name of the default choice; must occur in @p choices
+ *
+ * @return the newly added option
+ */
+template<typename T>
+CLI::Option*
+add_choice_option(CLI::App& sub, const std::string& name, T& value,
+		  const std::string& help, const std::string& type_name,
+		  std::unordered_map<std::string, T> choices,
+		  std::vector<std::string> choice_names,
+		  const std::string& default_name)
+{
+	std::ranges::sort(choice_names);
+	const auto choices_str{"{ " + join(choice_names, ", ") + " }"};
+
+	auto opt = sub.add_option(name, value,
+				  mu_format("{}; one of {}; default is {}",
+					    help, choices_str, default_name))
+		->type_name(type_name)
+		->default_val(choices.at(default_name))
+		->default_str(default_name);
+
+	// add the transform only after default_val(), so the default does not
+	// go through the transform (CLI11 applies it at default_val() time).
+	opt->transform([choices = std::move(choices),
+			errmsg = mu_format("requires one of {}; default is {}",
+					   choices_str, default_name)]
+		       (const std::string& val) -> std::string {
+		if (const auto it = choices.find(val); it != choices.end())
+			return std::to_string(
+				static_cast<std::underlying_type_t<T>>(it->second));
+		// normally rewritten by friendly_choice_error()
+		throw CLI::ValidationError{errmsg};
+	});
+
+	friendly_errors.push_back(
+		{&sub, opt, mu_format("{} requires one of {}; default is {}",
+				      opt->get_name(), choices_str, default_name)});
+	return opt;
+}
+
+/** The kind of number a numeric option accepts */
+enum struct Numeric { Positive, NonNegative };
+
+/**
+ * Add an option to @p sub that takes a numeric value.
+ *
+ * Like CLI11's PositiveNumber/NonNegativeNumber checks, but with
+ * friendlier error messages, e.g.
+ *   error: --maxnum requires a positive number
+ *
+ * @param sub command to add the option to
+ * @param name option name(s), e.g. "--maxnum,-n"
+ * @param value target for the parsed value
+ * @param help help text
+ * @param type_name name for the value in the help, e.g. "<number>"
+ * @param kind the kind of number the option accepts
+ *
+ * @return the newly added option
+ */
+template<typename T>
+CLI::Option*
+add_number_option(CLI::App& sub, const std::string& name, T& value,
+		  const std::string& help, const std::string& type_name,
+		  Numeric kind)
+{
+	const auto positive{kind == Numeric::Positive};
+
+	auto opt = sub.add_option(name, value, help)
+		->type_name(type_name)
+		->check(positive ? CLI::PositiveNumber : CLI::NonNegativeNumber);
+
+	friendly_errors.push_back(
+		{&sub, opt, mu_format("{} requires a {} number", opt->get_name(),
+				      positive ? "positive" : "non-negative")});
+	return opt;
+}
+
 // transformers
 
 // Expand the path using wordexp
-static const std::function ExpandPath = [](std::string filepath)->std::string {
-	if (auto&& res{expand_path(filepath)}; !res)
+const std::function ExpandPath = [](const std::string& path)->std::string {
+	if (auto&& res{expand_path(path)}; !res)
 		throw CLI::ValidationError{res.error().what()};
 	else
 		return res.value();
 };
 
 // Canonicalize path
-static const std::function CanonicalizePath = [](std::string filepath)->std::string {
-	return filepath = canonicalize_filename(filepath);
+const std::function CanonicalizePath = [](const std::string& path)->std::string {
+	return canonicalize_filename(path);
 };
+
+} // end of anonymous namespace
 
 /*
  * common
@@ -234,7 +320,7 @@ static void
 sub_cfind(CLI::App& sub, Options& opts)
 {
 	using Format = Options::Cfind::Format;
-	static constexpr InfoEnum<Format, 8> FormatInfos = {{
+	static constexpr auto FormatInfos = std::to_array<InfoPair<Format>>({
 			{ Format::Plain,           {"plain", "Plain output"} },
 			{ Format::MuttAlias,       {"mutt-alias", "Mutt alias"} },
 			{ Format::MuttAddressBook, {"mutt-ab", "Mutt address book"}},
@@ -243,30 +329,23 @@ sub_cfind(CLI::App& sub, Options& opts)
 			{ Format::Bbdb,            {"bbdb", "Emacs BBDB"}},
 			{ Format::Csv,             {"csv", "comma-separated values"}},
 			{ Format::Json,            {"json", "format as json array"}},
-		}};
+		});
 
-	const auto fhelp = options_help(FormatInfos, Format::Plain);
-	const auto fmap = options_map(FormatInfos);
-
-	sub.add_option("--format,-o", opts.cfind.format,
-		       "Output format; one of " + fhelp)
-		->type_name("<format>")
-		->default_str("plain")
-		->default_val(Format::Plain)
-		->transform(CLI::CheckedTransformer(fmap));
+	add_choice_option(sub, "--format,-o", opts.cfind.format,
+			  "Output format", "<format>",
+			  options_map(FormatInfos), options_names(FormatInfos),
+			  "plain");
 
 	sub.add_option("pattern", opts.cfind.rx_pattern,
 		       "Regular expression pattern to match");
 	sub.add_flag("--personal,-p", opts.cfind.personal,
 		       "Only show 'personal' contacts");
-	sub.add_option("--after", opts.cfind.after,
-		       "Only show results after some timestamps")
-		->type_name("<time_t>")
-		->check(CLI::PositiveNumber);
-	sub.add_option("--maxnum,-n", opts.cfind.maxnum,
-		       "Maximum number of results")
-		->type_name("<number>")
-		->check(CLI::PositiveNumber);
+	add_number_option(sub, "--after", opts.cfind.after,
+			  "Only show results after some timestamps",
+			  "<time_t>", Numeric::NonNegative);
+	add_number_option(sub, "--maxnum,-n", opts.cfind.maxnum,
+			  "Maximum number of results",
+			  "<number>", Numeric::Positive);
 }
 
 
@@ -326,7 +405,7 @@ static void
 sub_find(CLI::App& sub, Options& opts)
 {
 	using Format = Options::Find::Format;
-	static constexpr InfoEnum<Format, 7> FormatInfos = {{
+	static constexpr auto FormatInfos = std::to_array<InfoPair<Format>>({
 			{ Format::Plain,
 			  {"plain", "Plain output"}
 			},
@@ -345,7 +424,7 @@ sub_find(CLI::App& sub, Options& opts)
 			{ Format::Json2,
 			  {"json2", "more idiomatic JSON"}
 			},
-		}};
+		});
 
 	sub.add_flag("--threads,-t", opts.find.threads,
 		     "Show message threads");
@@ -356,42 +435,32 @@ sub_find(CLI::App& sub, Options& opts)
 	sub.add_flag("--analyze,-a", opts.find.analyze,
 		     "Analyze the query");
 
-	const auto fhelp = options_help(FormatInfos, Format::Plain);
-	const auto fmap = options_map(FormatInfos);
+	add_choice_option(sub, "--format,-o", opts.find.format,
+			  "Output format", "<format>",
+			  options_map(FormatInfos), options_names(FormatInfos),
+			  "plain");
 
-	sub.add_option("--format,-o", opts.find.format,
-		       "Output format; one of " + fhelp)
-		->type_name("<format>")
-		->default_str("plain")
-		->default_val(Format::Plain)
-		->transform(CLI::CheckedTransformer(fmap));
-
-	sub.add_option("--maxnum,-n", opts.find.maxnum,
-		       "Maximum number of results")
-		->type_name("<number>")
-		->check(CLI::PositiveNumber);
+	add_number_option(sub, "--maxnum,-n", opts.find.maxnum,
+			  "Maximum number of results",
+			  "<number>", Numeric::Positive);
 
 	sub.add_option("--fields,-f", opts.find.fields,
 		       "Fields to display")
 		->default_val("d f s");
 
 	std::unordered_map<std::string, Field::Id> smap;
-	std::string sopts;
+	std::vector<std::string> snames;
 	field_for_each([&](auto&& field){
 		if (field.is_sortable()) {
 			smap.emplace(std::string(field.name), field.id);
 			smap.emplace(std::string(1, field.shortcut), field.id);
-			if (!sopts.empty())
-				sopts += ", ";
-			sopts += mu_format("{}|{}", field.name, field.shortcut);
+			snames.emplace_back(mu_format("{}|{}", field.name,
+						      field.shortcut));
 		}
 	});
-	sub.add_option("--sortfield,-s", opts.find.sortfield,
-		       "Field to sort the results by; one of " + sopts)
-		->type_name("<field>")
-		->default_str("date")
-		->default_val(Field::Id::Date)
-		->transform(CLI::CheckedTransformer(smap));
+	add_choice_option(sub, "--sortfield,-s", opts.find.sortfield,
+			  "Field to sort the results by", "<field>",
+			  std::move(smap), std::move(snames), "date");
 
 	sub.add_flag("--reverse,-z", opts.find.reverse,
 		     "Sort in descending order");
@@ -403,14 +472,18 @@ sub_find(CLI::App& sub, Options& opts)
 	sub.add_flag("--clearlinks", opts.find.clearlinks,
 		     "Clear old links first");
 	sub.add_option("--linksdir", opts.find.linksdir,
-		       "Use bookmarked query")
+		       "Target directory for symlinks")
 		->type_name("<dir>")
 		->transform(ExpandPath, "expand linksdir path");
 
-	sub.add_option("--summary-len", opts.find.summary_len,
-		       "Use up to so many lines for the summary")
-		->type_name("<lines>")
-		->check(CLI::PositiveNumber);
+	add_number_option(sub, "--after", opts.find.after,
+			  "Only show messages whose message file was changed "
+			  "after some timestamp",
+			  "<time_t>", Numeric::NonNegative);
+
+	add_number_option(sub, "--summary-len", opts.find.summary_len,
+			  "Use up to so many lines for the summary",
+			  "<lines>", Numeric::Positive);
 
 	sub.add_option("--exec", opts.find.exec,
 		       "Command to execute on message file")
@@ -469,7 +542,7 @@ sub_init(CLI::App& sub, Options& opts)
 	// expand path.
 	sub.add_option("--personal-address,--my-address",
 		       opts.init.personal_addresses,
-		       "Personal e-mail address or regexp (can be used multiple titmes)")
+		       "Personal e-mail address or regexp (can be used multiple times)")
 		->type_name("<address>");
 	sub.add_option("--ignored-address", opts.init.ignored_addresses,
 		       "Ignored e-mail address or regexp")
@@ -479,8 +552,8 @@ sub_init(CLI::App& sub, Options& opts)
 		       "Maximum allowed message size in bytes");
 	sub.add_option("--batch-size", opts.init.batch_size,
 		       "Maximum size of database transaction");
-	sub.add_option("--support-ngrams", opts.init.support_ngrams,
-		       "Support CJK n-grams if for querying/indexing");
+	sub.add_flag("--support-ngrams", opts.init.support_ngrams,
+		     "Support CJK n-grams for querying/indexing");
 	sub.add_flag("--reinit", opts.init.reinit,
 		       "Re-initialize database with current settings")
 		->excludes("--maildir")
@@ -669,7 +742,7 @@ static void
 sub_view(CLI::App& sub, Options& opts)
 {
 	using Format = Options::View::Format;
-	static constexpr InfoEnum<Format, 3> FormatInfos = {{
+	static constexpr auto FormatInfos = std::to_array<InfoPair<Format>>({
 			{ Format::Plain,
 			  {"plain", "Plain output"}
 			},
@@ -679,24 +752,18 @@ sub_view(CLI::App& sub, Options& opts)
 			{ Format::Sexp,
 			  {"sexp", "S-expressions"}
 			},
-		}};
+		});
 
-	const auto fhelp = options_help(FormatInfos, Format::Plain);
-	const auto fmap = options_map(FormatInfos);
-
-	sub.add_option("--format,-o", opts.view.format,
-		       "Output format; one of " + fhelp)
-		->type_name("<format>")
-		->default_str("plain")
-		->default_val(Format::Plain)
-		->transform(CLI::CheckedTransformer(fmap));
+	add_choice_option(sub, "--format,-o", opts.view.format,
+			  "Output format", "<format>",
+			  options_map(FormatInfos), options_names(FormatInfos),
+			  "plain");
 
 	sub_crypto(sub, opts.view);
 
-	sub.add_option("--summary-len", opts.view.summary_len,
-		       "Use up to so many lines for the summary")
-		->type_name("<lines>")
-		->check(CLI::PositiveNumber);
+	add_number_option(sub, "--summary-len", opts.view.summary_len,
+			  "Use up to so many lines for the summary",
+			  "<lines>", Numeric::Positive);
 
 	sub.add_flag("--terminate", opts.view.terminate,
 		     "Insert form-feed after each message");
@@ -720,8 +787,8 @@ struct CommandInfo {
 	setup_func_t setup_func{};
 };
 
-static constexpr
-AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
+static constexpr auto SubCommandInfos =
+	std::to_array<AssocPair<SubCommand, CommandInfo>>({
 		{ SubCommand::Add,
 		  { Category::NeedsWritableStore,
 		    "add", "Add messages to the database", sub_add}
@@ -796,7 +863,9 @@ AssocPairs<SubCommand, CommandInfo, Options::SubCommandNum> SubCommandInfos= {{
 		  {Category::None,
 		  "view", "View specific messages", sub_view}
 		},
-	}};
+	});
+static_assert(SubCommandInfos.size() == Options::SubCommandNum,
+	      "SubCommandInfos must have an entry for each subcommand");
 
 static ScriptInfos
 add_scripts(CLI::App& app, Options& opts)
@@ -829,8 +898,10 @@ show_manpage(Options& opts, const std::string& name)
 	GError* err{};
 	const auto cmd{mu_format("{} {}", *manprog, shell_quote(name))};
 	// run_command0 doesn't work here.
-	auto res = g_spawn_command_line_sync(cmd.c_str(), {}, {}, {}, &err);
-	if (!res)
+	int wait_status{};
+	auto res = g_spawn_command_line_sync(cmd.c_str(), {}, {},
+					     &wait_status, &err);
+	if (!res || !g_spawn_check_wait_status(wait_status, &err))
 		return Err(Error::Code::Command, &err,
 			   "error running man command");
 
@@ -873,7 +944,6 @@ static void
 add_global_options(CLI::App& cli, Options& opts)
 {
 	opts.nocolor = Options::default_no_color();
-	errno = 0;
 
 	cli.add_flag("-q,--quiet", opts.quiet, "Hide non-essential output");
 	cli.add_flag("-v,--verbose", opts.verbose, "Show verbose output");
@@ -891,6 +961,8 @@ Options::make(int argc, char *argv[])
 {
 	Options opts{};
 	CLI::App app{"mu mail indexer/searcher " PACKAGE_VERSION, "mu"};
+
+	friendly_errors.clear(); // entries refer to the previous app, if any.
 
 	app.description(R"(mu mail indexer/searcher
 Copyright (C) 2008-2025 Dirk-Jan C. Binnema
@@ -973,7 +1045,8 @@ There is NO WARRANTY, to the extent permitted by law.)");
 	} catch (const CLI::CallForVersion&) {
 		mu_println("version {}", PACKAGE_VERSION);
 	} catch (const CLI::ParseError& pe) {
-		return Err(Error::Code::InvalidArgument, "{}", pe.what());
+		return Err(Error::Code::InvalidArgument, "{}",
+			   friendly_error(pe));
 	}  catch (...) {
 		return Err(Error::Code::Internal, "error parsing arguments");
 	}
@@ -1026,12 +1099,12 @@ test_ids()
 #ifdef BUILD_TESTS
 
 enum struct TestEnum { A, B, C };
-constexpr AssocPairs<TestEnum, std::string_view, 3>
-test_epairs = {{
+constexpr auto test_epairs =
+	std::to_array<AssocPair<TestEnum, std::string_view>>({
 	{TestEnum::A, "a"},
 	{TestEnum::B, "b"},
 	{TestEnum::C, "c"},
-}};
+});
 
 static constexpr Option<std::string_view>
 to_name(TestEnum te)
@@ -1053,6 +1126,103 @@ test_enum_pairs(void)
 	g_assert_true(to_type("c").value() ==  TestEnum::C);
 }
 
+static Result<Options>
+test_make_options(std::vector<std::string> args)
+{
+	std::vector<char*> argv;
+	argv.reserve(args.size());
+	for (auto& arg: args)
+		argv.push_back(arg.data());
+
+	return Options::make(static_cast<int>(argv.size()), argv.data());
+}
+
+static void
+test_choice_option(void)
+{
+	// an explicit value
+	const auto explicit_fmt =
+		test_make_options({"mu", "find", "--format", "sexp", "x"});
+	g_assert_true(!!explicit_fmt);
+	g_assert_true(explicit_fmt->sub_command == Options::SubCommand::Find);
+	g_assert_true(explicit_fmt->find.format == Options::Find::Format::Sexp);
+
+	// the default
+	const auto default_fmt = test_make_options({"mu", "find", "x"});
+	g_assert_true(!!default_fmt);
+	g_assert_true(default_fmt->find.format == Options::Find::Format::Plain);
+	g_assert_true(default_fmt->find.sortfield == Field::Id::Date);
+}
+
+static void
+test_choice_option_errors(void)
+{
+	constexpr auto errmsg =
+		"--format requires one of { json, json2, links, plain, sexp, xml }; "
+		"default is plain";
+
+	// bad value
+	const auto bad = test_make_options({"mu", "find", "--format=nope", "x"});
+	g_assert_false(!!bad);
+	assert_equal(bad.error().what(), errmsg);
+
+	// no value
+	const auto missing = test_make_options({"mu", "find", "x", "--format"});
+	g_assert_false(!!missing);
+	assert_equal(missing.error().what(), errmsg);
+
+	// another subcommand's --format gets its own choices
+	const auto view = test_make_options({"mu", "view", "--format=nope", "x"});
+	g_assert_false(!!view);
+	assert_equal(view.error().what(),
+		     "--format requires one of { html, plain, sexp }; "
+		     "default is plain");
+}
+
+static void
+test_sortfield_option(void)
+{
+	// by name and by shortcut
+	const auto by_name =
+		test_make_options({"mu", "find", "--sortfield=subject", "x"});
+	g_assert_true(!!by_name);
+	g_assert_true(by_name->find.sortfield == Field::Id::Subject);
+
+	const auto by_shortcut = test_make_options({"mu", "find", "-s", "s", "x"});
+	g_assert_true(!!by_shortcut);
+	g_assert_true(by_shortcut->find.sortfield == Field::Id::Subject);
+
+	const auto bad = test_make_options({"mu", "find", "-s", "nope", "x"});
+	g_assert_false(!!bad);
+	g_assert_true(std::string{bad.error().what()}
+		      .starts_with("--sortfield requires one of {"));
+}
+
+static void
+test_number_option(void)
+{
+	// valid values; --after=0 is allowed (non-negative)
+	const auto ok = test_make_options({"mu", "find", "--maxnum=10",
+			"--after=0", "x"});
+	g_assert_true(!!ok);
+	g_assert_cmpuint(ok->find.maxnum.value(), ==, 10);
+	g_assert_cmpuint(ok->find.after.value(), ==, 0);
+
+	// bad values
+	for (auto&& val: {"-5", "abc"}) {
+		const auto bad = test_make_options({"mu", "find",
+				mu_format("--maxnum={}", val), "x"});
+		g_assert_false(!!bad);
+		assert_equal(bad.error().what(),
+			     "--maxnum requires a positive number");
+	}
+
+	const auto negative = test_make_options({"mu", "find", "--after=-1", "x"});
+	g_assert_false(!!negative);
+	assert_equal(negative.error().what(),
+		     "--after requires a non-negative number");
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -1060,6 +1230,10 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/options/ids", test_ids);
 	g_test_add_func("/option/enum-pairs", test_enum_pairs);
+	g_test_add_func("/options/choice", test_choice_option);
+	g_test_add_func("/options/choice-errors", test_choice_option_errors);
+	g_test_add_func("/options/sortfield", test_sortfield_option);
+	g_test_add_func("/options/number", test_number_option);
 
 	return g_test_run();
 }

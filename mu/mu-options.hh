@@ -20,7 +20,7 @@
 #ifndef MU_OPTIONS_HH__
 #define MU_OPTIONS_HH__
 
-#include <sstream>
+#include <array>
 #include <string>
 #include <vector>
 #include <utils/mu-option.hh>
@@ -29,7 +29,6 @@
 #include <utils/mu-utils-file.hh>
 
 #include <message/mu-fields.hh>
-#include <mu-script.hh>
 #include <ctime>
 #include <sys/stat.h>
 
@@ -48,7 +47,6 @@ struct Options {
 	 */
 	bool		quiet;			/**<  don't give any output */
 	bool		debug;			/**<  log debug-level info */
-	bool		version;		/**<  request mu version */
 	bool		log_stderr;		/**<  log to stderr */
 	bool		nocolor;		/**<  don't use use ansi-colors */
 	bool		verbose;		/**<  verbose output */
@@ -68,7 +66,7 @@ struct Options {
 		__count__
 	};
 	static constexpr auto SubCommandNum = static_cast<size_t>(SubCommand::__count__);
-	static constexpr std::array<SubCommand, SubCommandNum> SubCommands = {{
+	static constexpr auto SubCommands = std::to_array<SubCommand>({
 			SubCommand::Add,
 			SubCommand::Cfind,
 			SubCommand::Extract,
@@ -87,7 +85,9 @@ struct Options {
 			SubCommand::Server,
 			SubCommand::Verify,
 			SubCommand::View
-		}};
+		});
+	static_assert(SubCommands.size() == SubCommandNum,
+		      "SubCommands must list all subcommands");
 
 	Option<SubCommand> sub_command;			/**< The chosen sub-command, if any. */
 
@@ -152,15 +152,13 @@ struct Options {
 		std::string	bookmark;		/**<  use bookmark */
 		bool		analyze;		/**<  analyze query */
 
-		enum struct Format { Plain, Links, Xml, Json, Json2, Sexp, Exec };
+		enum struct Format { Plain, Links, Xml, Json, Json2, Sexp };
 		Format		format;			/**< Output format */
 		std::string	exec;			/**<  cmd to execute on matches */
 		bool		skip_dups;		/**< show only first with msg id */
 		bool		include_related;	/**<  included related messages */
 							/**<  for find and cind */
 		OptTStamp	after;			/**<  only last seen after T */
-		bool		auto_retrieve;		/**<  assume we're online */
-		bool		decrypt;		/**<  try to decrypt the body */
 
 		StringVec	query;			/**< search query */
 	} find;
