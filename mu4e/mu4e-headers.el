@@ -111,7 +111,7 @@ In the format of `format-time-string'."
 By default, do it in a slightly inaccurate but faster way. To get
 an idea about the difference, In some tests, the rendering time
 was around 5.8 ms per messages for precise alignment, versus 3.3
-for non-precise aligment (for 445 messages)."
+for non-precise alignment (for 445 messages)."
   :type 'boolean
   :group 'mu4e-headers)
 
