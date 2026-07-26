@@ -56,7 +56,7 @@ found 7173 match(es)
 * ENVIRONMENT
 
 By default, *mu scm* expects its internal files to be found in
-~<prefix>/hare/mu/scm~. However, for development/testing you can set the
+~<prefix>/share/mu/scm~. However, for development/testing you can set the
 environment variable *MU_SCM_DIR* to some alternative directory.
 
 * SEE ALSO

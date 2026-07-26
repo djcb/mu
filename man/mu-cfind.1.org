@@ -47,7 +47,7 @@ The regular expressions are basic case-insensitive PCRE, see {{{man-link(pcre,3)
 
 * CFIND OPTIONS
 
-** --format plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv
+** --format plain|mutt-alias|mutt-ab|wl|org-contact|bbdb|csv|json
 Sets the output format to the given value. The following are available:
 
 #+ATTR_MAN: :disable-caption t
@@ -83,6 +83,10 @@ example, only consider addresses last seen after 2020-06-01, you could specify
 #+begin_example
   --after=$(date +%s --date='2020-06-01')
 #+end_example
+
+** -n, --maxnum _number_
+If _number_ > 0, display maximally that number of contacts. If not specified,
+all matching contacts are displayed.
 
 #+include: "muhome.inc" :minlevel 2
 

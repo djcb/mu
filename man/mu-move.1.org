@@ -42,6 +42,8 @@ Print the target filename(s), but don't change anything.
 Note that with the *--change-name*, the target name is not constant, so you cannot
 use a dry-run to predict the exact name when doing a `real' run.
 
+#+include: "muhome.inc" :minlevel 2
+
 #+include: "common-options.inc" :minlevel 1
 
 * FLAGS
@@ -108,6 +110,8 @@ $ mu move /home/user/Maildir/project1/cur/1695559560.a73985881f4611ac2.hostname!
 #+end_example
 
 #+include: "prefooter.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
 
 * SEE ALSO
 

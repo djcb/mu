@@ -71,6 +71,13 @@ particular file type. On MacOS, this uses the *open* program, on other platforms
 it uses *xdg-open*. You can choose a different program by setting the
 *MU_PLAY_PROGRAM* environment variable.
 
+** --decrypt
+Attempt to decrypt encrypted parts. This is only possible if *mu* was built with
+crypto-support.
+
+** -r, --auto-retrieve
+Attempt to retrieve crypto-keys automatically from the network, when needed.
+
 #+include: "common-options.inc" :minlevel 1
 
 * EXAMPLES

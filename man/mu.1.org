@@ -25,9 +25,13 @@ For information about the common options, see *COMMON OPTIONS*.
 - *index*: (re)index the messages in a Maildir
 - *info*: show information about the *mu* database
 - *init*: initialize the *mu* database
+- *labels*: manage message labels
 - *mkdir*: create a new Maildir
+- *move*: move a message or change its flags
 - *remove*: remove specific messages from the database
+- *scm*: start a Guile/Scheme shell or run a script
 - *server*: start a server process (for ~mu4e~-internal use)
+- *verify*: verify cryptographic message signatures
 - *view*: view a specific message
 
 Each of the commands have their own manpage *mu-<command>*.
@@ -57,9 +61,9 @@ man-page as well.
 Some *mu* commands support colorized output, and do so by default when writing to
 a TTY (roughly, to a screen). When not writing to a TTY, for instance when
 redirection the output to a file or using a pipe, the default is to *not* show
-output.
+colors.
 
-If you don no want colors, you can use *--nocolor*.
+If you do not want colors, you can use *--nocolor*.
 
 If you want colors even when it is not the default, use *--nocolor=false*.
 
@@ -81,15 +85,15 @@ the output is always UTF-8, regardless of the locale:
 
 * DATABASE AND FILE
 
-The *index*, *find*, and *cfind* commands work with the database, while the other
-ones work on individual mail files. Hence, running *view*, *mkdir* and *extract* does
-not require the *mu* database.
+The *index*, *find*, *cfind*, *move*, *add*, *remove* and *labels* commands work with the
+database, while the other ones work on individual mail files. Hence, running
+*view*, *mkdir* and *extract* does not require the *mu* database.
 
 * LOGGING
 
 *mu* logs to the standard logging location, which is either the systemd journal,
 *syslog* or a log file (by default, _~/.cache/mu/mu.log_), depending on your
-*system's setup; the first that appears to be working is used.
+system's setup; the first that appears to be working is used.
 
 When using a log file, it can safely be deleted when *mu* is not running. When
 running with *--debug* option, the log file can grow rather quickly. See the note
@@ -112,9 +116,13 @@ on logging below.
 {{{man-link(mu-index,1)}}},
 {{{man-link(mu-info,1)}}},
 {{{man-link(mu-init,1)}}},
+{{{man-link(mu-labels,1)}}},
 {{{man-link(mu-mkdir,1)}}},
+{{{man-link(mu-move,1)}}},
 {{{man-link(mu-remove,1)}}},
+{{{man-link(mu-scm,1)}}},
 {{{man-link(mu-server,1)}}},
+{{{man-link(mu-verify,1)}}},
 {{{man-link(mu-view,1)}}},
 {{{man-link(mu-query,7)}}},
-{{{man-link(mu-easy,1)}}}
+{{{man-link(mu-easy,7)}}}

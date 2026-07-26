@@ -63,7 +63,7 @@ file-system.
 
 ** --listen
 If set, the server starts an SCM REPL as well, which listens on a Unix domain
-socket. This corresponds to the *--listen* options for *mu scm**.
+socket. This corresponds to the *--listen* option for *mu scm*.
 
 The store object (including the Xapian database) is shared between the server and the REPL.
 

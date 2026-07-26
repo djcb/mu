@@ -22,6 +22,10 @@ mu-info  - show information
 Note that while running (e.g. ~mu4e~), some of the *store* information can be
 delayed due to database caching.
 
+* INFO OPTIONS
+
+#+include: "muhome.inc" :minlevel 2
+
 #+include: "common-options.inc" :minlevel 1
 
 #+include: "exit-code.inc" :minlevel 1

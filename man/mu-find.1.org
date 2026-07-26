@@ -49,8 +49,8 @@ Note, some of the important options are described in the {{{man-link(mu,1)}}}
 manual page and not here, as they apply to multiple *mu* commands.
 
 The *find*-command has various options that influence the way *mu* displays the
-results. If you don't specify anything, the defaults are *--fields="d f s"*,
-*--sortfield=date* and *--reverse*.
+results. If you don't specify anything, the defaults are *--fields="d f s"* and
+*--sortfield=date*.
 
 ** -f, --fields _fields_
 Specifies a string that determines which fields are shown in the output. This
@@ -103,15 +103,15 @@ Specify the field to sort the search results by and the direction (i.e.,
 
 For the complete list, try the command: *mu info fields*.
 
-Thus, for example, to sort messages by date, you could specify:
+Thus, for example, to sort messages by date, newest first, you could specify:
 
 #+begin_example
 $ mu find fahrrad --fields "d f s" --sortfield=date --reverse
 #+end_example
 
-Note, if you specify a sortfield, by default, messages are sorted in reverse
-(descending) order (e.g., from lowest to highest). This is usually a good
-choice, but for dates it may be more useful to sort in the opposite direction.
+Note, by default messages are sorted in ascending (A-Z) order; with *--reverse*
+they are sorted in descending (Z-A) order — for dates, that means the newest
+messages come first.
 
 ** -n, --maxnum _number_
 
@@ -134,11 +134,11 @@ Output results in the specified format.
 - *sexp* formats the search results as an s-expression as used in Lisp programming
   environments.
 - *json* formats the output as JSON; it is a direct translation of the *sexp* format
-- *json2* is a slightly more idiomatic JSON, for now the only difference with *json*
-  is that the latter avoids the ':' prefix in key-names (e.g., "subject" instead
+- *json2* is a slightly more idiomatic JSON; for now the only difference with *json*
+  is that *json2* avoids the ':' prefix in key-names (e.g., "subject" instead
   of ":subject"). *json2* is still experimental.
 
-** --linksdir _dir_ and -c, --clearlinks
+** --linksdir _dir_ and --clearlinks
 
 When using *--format=links*, output the results as a maildir with symbolic links
 to the found messages. This enables easy integration with mail-clients (see
@@ -160,12 +160,12 @@ index*.
 
 ** --after _timestamp_
 
-Only show messages whose message files were last modified (*mtime*) after
+Only show messages whose message files were last changed (*ctime*) after
 _timestamp_. _timestamp_ is a UNIX *time_t* value, the number of seconds since
 1970-01-01 (in UTC).
 
 From the command line, you can use the *date* command to get this value. For
-example, only consider messages modified (or created) in the last 5 minutes, you
+example, only consider messages changed (or created) in the last 5 minutes, you
 could specify
 #+begin_example
   --after=`date +%s --date='5 min ago'`

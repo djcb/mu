@@ -40,7 +40,7 @@ for details), wrapped in */* (such as =/foo-.*@example\\.com/=). Depending on yo
 shell, the argument may need to be quoted.
 
 A note of warning for *mu4e* users: any regular-expressions used with
-=--with-address= are also used by *mu4e*. Unfortunately, PCRE regular expressions
+=--personal-address= are also used by *mu4e*. Unfortunately, PCRE regular expressions
 are *not* generally compatible with Emacs regular expressions. For instance,
 *(foo|bar)* in PCRE syntax has *\(foo\|bar\)* as its Emacs equivalent.
 
@@ -65,8 +65,8 @@ Specifies the maximum size for an e-mail message. Usually, the default of
 
 ** --batch-size _size_
 The number of changes after which they are committed to the database; decreasing
-the value reduces the memory requirements, at the cost of make indexing
-substantially slower. Usually, the default of 250000 should be fine.
+the value reduces the memory requirements, at the cost of making indexing
+substantially slower. Usually, the default of 50000 should be fine.
 
 Batch-size 0 is interpreted as `use the default'.
 
@@ -100,7 +100,7 @@ variables such as *XAPIAN_CJK_NGRAM* are ignored.
 * RESTORING LABELS
 
 When you have any _labels_ defined for your database, *mu* automatically exports
-those to a file in the *mu* cache directory; you see this in the ~--init~ output.
+those to a file in the *mu* cache directory; you see this in the ~--reinit~ output.
 
 #+begin_example
 $ mu init --reinit
@@ -109,7 +109,7 @@ exported labels to: /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
 
 You can restore those labels _after_ re-indexing, e.g.,
 #+begin_example
-$ mu label import /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
+$ mu labels import /home/user/.cache/mu/mu-export-2025-08-16-13:43:27.txt
 #+end_example
 
 Please see {{{man-link(mu-labels,1)}}} for further details.

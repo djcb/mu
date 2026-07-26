@@ -43,7 +43,7 @@ useful when you want to further process them.
 Attempt to decrypt encrypted message bodies. This is only possible if *mu*
 was built with crypto-support.
 
-** --auto-retrieve
+** -r, --auto-retrieve
 Attempt to retrieve crypto-keys automatically from the network, when needed.
 
 #+include: "common-options.inc" :minlevel 1

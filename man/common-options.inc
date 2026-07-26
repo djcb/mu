@@ -11,8 +11,11 @@ standard output, but only to the log file. Error messages will still be sent to
 standard error. Note that *mu index* is much faster with *--quiet*, so it is
 recommended you use this option when using *mu* from scripts etc.
 
+** -v, --verbose
+Causes *mu* to output extra information, for some commands.
+
 ** --log-stderr
-Causes *mu* to not output log messages to standard error, in addition to sending
+Causes *mu* to output log messages to standard error, in addition to sending
 them to the standard logging location.
 
 ** --nocolor
