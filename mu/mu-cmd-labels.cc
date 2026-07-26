@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -38,12 +38,12 @@ label_update(Mu::Store& store, const Options& opts)
 	// are valid.
 	DeltaLabelVec deltas{};
 	for (auto&& delta_label : opts.labels.delta_labels) {
-	  if (const auto res = parse_delta_label(delta_label); !res)
-		  return Err(Error{Error::Code::InvalidArgument,
-				   "invalid delta-label '{}': {}", delta_label,
-				   res.error().what()});
-	  else
-		  deltas.emplace_back(std::move(*res));
+		if (const auto res = parse_delta_label(delta_label); !res)
+			return Err(Error{Error::Code::InvalidArgument,
+					 "invalid delta-label '{}': {}", delta_label,
+					 res.error().what()});
+		else
+			deltas.emplace_back(std::move(*res));
 	}
 
 	if (!opts.labels.query)
@@ -55,7 +55,7 @@ label_update(Mu::Store& store, const Options& opts)
 	auto results{store.run_query(query)};
 	if (!results)
 		return Err(Error{Error::Code::Query,
-				 "failed to run query '{}': {}", query, *results.error().what()});
+				 "failed to run query '{}': {}", query, results.error().what()});
 
 	// seems we got some results... let's apply to each
 	size_t n{};
@@ -91,7 +91,7 @@ label_clear(Mu::Store& store, const Options& opts)
 	auto results{store.run_query(query)};
 	if (!results)
 		return Err(Error{Error::Code::Query,
-				 "failed to run query '{}': {}", query, *results.error().what()});
+				 "failed to run query '{}': {}", query, results.error().what()});
 
 	size_t n{};
 	for (auto&& result : *results) {

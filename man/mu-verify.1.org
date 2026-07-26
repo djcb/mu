@@ -51,6 +51,18 @@ which does not give any output unless there is an error.
 
 #+include: "prefooter.inc" :minlevel 1
 
+* EXIT CODE
+
+This command returns 0 when all signatures could be verified successfully, or a
+non-zero exit code otherwise.
+
+    0. success; all signatures were verified
+    1. verification failed; at least one signature was bad, or could not be
+       verified. The latter includes messages without any signed parts,
+       signed parts without verifiable signatures and failures to set up the
+       crypto machinery for verification.
+
+
 * SEE ALSO
 
 {{{man-link(mu,1)}}}

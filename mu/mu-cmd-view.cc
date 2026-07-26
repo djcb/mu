@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -186,7 +186,7 @@ Mu::mu_cmd_view(const Options& opts)
 			mu_print("{}", VIEW_TERMINATOR);
 	}
 
-	// no files? read from stding
+	// no files? read from stdin
 	if (opts.view.files.empty()) {
 		const auto msgtxt = read_from_stdin();
 		if (!msgtxt)

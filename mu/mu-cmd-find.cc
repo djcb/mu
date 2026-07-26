@@ -1,5 +1,5 @@
  /*
-** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -26,8 +26,6 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <sys/wait.h>
 
 #include "message/mu-message.hh"
 #include "mu-maildir.hh"
@@ -50,7 +48,7 @@ struct OutputInfo {
 	Xapian::docid       docid{};
 	bool                header{};
 	bool                footer{};
-	bool                last{};
+	bool                first{};
 	Option<QueryMatch&> match_info;
 };
 
@@ -121,10 +119,9 @@ exec_cmd(const Option<Message>& msg, const OutputInfo& info, const Options& opts
 	if (!g_spawn_command_line_sync(cmdline.c_str(), {}, {}, &wait_status, &err))
 		return Err(Error::Code::File, &err/*consumed*/,
 			   "failed to execute shell command");
-	else if (WEXITSTATUS(wait_status) != 0)
-		return Err(Error::Code::File,
-			"shell command exited with exit-code {}",
-			   WEXITSTATUS(wait_status));
+	else if (!g_spawn_check_wait_status(wait_status, &err))
+		return Err(Error::Code::File, &err/*consumed*/,
+			   "shell command failed");
 	return Ok();
 }
 
@@ -356,10 +353,7 @@ static Result<void>
 output_sexp(const Option<Message>& msg, const OutputInfo& info, const Options& opts)
 {
 	if (msg) {
-		if (const auto sexp{msg->sexp()}; !sexp.empty())
-			fputs(sexp.to_string().c_str(), stdout);
-		else
-			fputs(msg->sexp().to_string().c_str(), stdout);
+		fputs(msg->sexp().to_string().c_str(), stdout);
 		fputs("\n", stdout);
 	}
 
@@ -375,7 +369,7 @@ output_json(const Option<Message>& msg, const OutputInfo& info, const Options& o
 	}
 
 	if (info.footer) {
-		mu_println("]");
+		mu_println("\n]");
 		return Ok();
 	}
 
@@ -385,7 +379,10 @@ output_json(const Option<Message>& msg, const OutputInfo& info, const Options& o
 	const Sexp::Format frm{opts.find.format == Format::Json2 ?  Sexp::Format::NoColon :
 		Sexp::Format::Default};
 
-	mu_println("{}{}", msg->sexp().to_json_string(frm), info.last ? "" : ",");
+	/* separate objects with a ",\n" _before_ each non-first item; we cannot
+	 * use a trailing comma, since we don't know up-front whether an item is
+	 * the last one (some may be skipped) */
+	mu_print("{}{}", info.first ? "" : ",\n", msg->sexp().to_json_string(frm));
 
 	return Ok();
 }
@@ -413,6 +410,9 @@ output_xml(const Option<Message>& msg, const OutputInfo& info, const Options& op
 		mu_println("</messages>");
 		return Ok();
 	}
+
+	if (!msg)
+		return Ok();
 
 	mu_println("\t<message>");
 	print_attr_xml("from", to_string(msg->from()));
@@ -457,17 +457,13 @@ get_output_func(const Options& opts)
 static Result<void>
 output_query_results(const QueryResults& qres, const Options& opts)
 {
-	GError* err{};
 	const auto output_func{get_output_func(opts)};
-	if (!output_func)
-		return Err(Error::Code::Query, &err, "failed to find output function");
 
 	if (auto&& res = output_func(Nothing, FirstOutput, opts); !res)
 		return Err(std::move(res.error()));
 
-	size_t n{0};
+	size_t printed{0};
 	for (auto&& item : qres) {
-		n++;
 		auto msg{item.message()};
 		if (!msg)
 			continue;
@@ -479,10 +475,11 @@ output_query_results(const QueryResults& qres, const Options& opts)
 					     {item.doc_id(),
 					      false,
 					      false,
-					      n == qres.size(), /* last? */
+					      printed == 0, /* first? */
 					      item.query_match()},
 					     opts); !res)
 			return Err(std::move(res.error()));
+		++printed;
 	}
 
 	if (auto&& res{output_func(Nothing, LastOutput, opts)}; !res)
@@ -630,6 +627,24 @@ test_mu_find_maildir_special(void)
 }
 
 
+static void
+test_mu_find_json(void)
+{
+	auto res = run_command({MU_PROGRAM, "find", "--muhome", test_mu_home,
+			"--format", "json", "mime:message/rfc822"});
+	assert_valid_result(res);
+	g_assert_cmpuint(res->exit_code, ==, 0);
+
+	/* a JSON array with two objects, separated by ",\n"; no trailing
+	 * comma before the closing bracket */
+	const auto& out{res->standard_out};
+	g_assert_true(out.starts_with("[\n"));
+	g_assert_true(out.ends_with("\n]\n"));
+	g_assert_true(out.find(",\n") != std::string::npos);
+	g_assert_true(out.find(",\n]") == std::string::npos);
+	g_assert_cmpuint(count_nl(out), ==, 4);
+}
+
 /* some more tests */
 
 static void
@@ -721,6 +736,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/cmd/find/02", test_mu_find_02);
 	g_test_add_func("/cmd/find/file", test_mu_find_file);
 	g_test_add_func("/cmd/find/mime", test_mu_find_mime);
+	g_test_add_func("/cmd/find/json", test_mu_find_json);
 	g_test_add_func("/cmd/find/links", test_mu_find_links);
 	g_test_add_func("/cmd/find/text-in-rfc822", test_mu_find_text_in_rfc822);
 	g_test_add_func("/cmd/find/wrong-muhome", test_mu_find_wrong_muhome);

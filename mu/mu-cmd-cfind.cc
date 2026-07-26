@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -51,9 +51,9 @@ guess_first_last_name(const std::string& name)
 
 
 // candidate nick and a _count_ for that given nick, to uniquify them.
-static std::unordered_map<std::string, size_t> nicks;
+using NickMap = std::unordered_map<std::string, size_t>;
 static std::string
-guess_nick(const Contact& contact)
+guess_nick(const Contact& contact, NickMap& nicks)
 {
 	auto cleanup = [](const std::string& str) {
 		std::string clean;
@@ -88,13 +88,11 @@ guess_nick(const Contact& contact)
 			return names.first + initial;
 	}));
 
-	// uniquify.
+	// uniquify; a second "foo" becomes "foo2", a third "foo3", ...
 	if (auto it = nicks.find(nick); it == nicks.cend())
-		nicks.emplace(nick, 0);
-	else {
-		++it->second;
+		nicks.emplace(nick, 1);
+	else
 		nick = mu_format("{}{}", nick, ++it->second);
-	}
 
 	return nick;
 }
@@ -117,12 +115,13 @@ output_plain(ItemType itype, OptContact contact, const Options& opts)
 }
 
 static void
-output_mutt_alias(ItemType itype, OptContact contact, const Options& opts)
+output_mutt_alias(ItemType itype, OptContact contact, const Options& opts,
+		  NickMap& nicks)
 {
 	if (!contact)
 		return;
 
-	const auto nick{guess_nick(*contact)};
+	const auto nick{guess_nick(*contact, nicks)};
 	mu_print_encoded("alias {} {} <{}>\n", nick, contact->name, contact->email);
 
 }
@@ -138,12 +137,13 @@ output_mutt_address_book(ItemType itype, OptContact contact, const Options& opts
 }
 
 static void
-output_wanderlust(ItemType itype, OptContact contact, const Options& opts)
+output_wanderlust(ItemType itype, OptContact contact, const Options& opts,
+		  NickMap& nicks)
 {
 	if (!contact || contact->name.empty())
 		return;
 
-	auto nick=guess_nick(*contact);
+	auto nick=guess_nick(*contact, nicks);
 
 	mu_print_encoded("{} \"{}\" \"{}\"\n", contact->email, nick, contact->name);
 
@@ -229,11 +229,17 @@ find_output_func(Format format)
 	case Format::Plain:
 		return output_plain;
 	case Format::MuttAlias:
-		return output_mutt_alias;
+		return [nicks = NickMap{}](ItemType itype, OptContact contact,
+					   const Options& opts) mutable {
+			output_mutt_alias(itype, contact, opts, nicks);
+		};
 	case Format::MuttAddressBook:
 		return output_mutt_address_book;
 	case Format::Wanderlust:
-		return output_wanderlust;
+		return [nicks = NickMap{}](ItemType itype, OptContact contact,
+					   const Options& opts) mutable {
+			output_wanderlust(itype, contact, opts, nicks);
+		};
 	case Format::OrgContact:
 		return output_org_contact;
 	case Format::Bbdb:
@@ -258,7 +264,6 @@ Mu::mu_cmd_cfind(const Mu::Store& store, const Mu::Options& opts)
 	if (!output)
 		return Err(Error::Code::Internal,
 			   "missing output function");
-	nicks.clear();
 
 	const auto res = store.contacts_cache().for_each([&](const Contact& contact)->bool {
 		const auto itype{num == 0 ? ItemType::Header : ItemType::Normal};
@@ -447,6 +452,24 @@ test_mu_cfind_csv(void)
 
 
 static void
+test_guess_nick()
+{
+	NickMap nicks;
+
+	g_assert_cmpstr(guess_nick(Contact{"foo@example.com", "Foo Bar"}, nicks).c_str(),
+			==, "FooB");
+	g_assert_cmpstr(guess_nick(Contact{"foo2@example.com", "Foo Bar"}, nicks).c_str(),
+			==, "FooB2");
+	g_assert_cmpstr(guess_nick(Contact{"foo3@example.com", "Foo Bar"}, nicks).c_str(),
+			==, "FooB3");
+
+	g_assert_cmpstr(guess_nick(Contact{"cuux@example.com", "Cuux"}, nicks).c_str(),
+			==, "Cuux");
+	g_assert_cmpstr(guess_nick(Contact{"bar@example.com", ""}, nicks).c_str(),
+			==, "bar");
+}
+
+static void
 test_mu_cfind_json()
 {
 	auto res{run_command({MU_PROGRAM, "--nocolor", "cfind", "--muhome", test_mu_home,
@@ -496,6 +519,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/cmd/find/mutt-ab", test_mu_cfind_mutt_ab);
 	g_test_add_func("/cmd/find/org-contact", test_mu_cfind_org_contact);
 	g_test_add_func("/cmd/find/csv", test_mu_cfind_csv);
+	g_test_add_func("/cmd/find/guess-nick", test_guess_nick);
 	g_test_add_func("/cmd/find/json", test_mu_cfind_json);
 
 	return g_test_run();

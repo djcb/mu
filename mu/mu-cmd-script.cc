@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2012-2022 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2012-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -45,5 +45,5 @@ Mu::mu_cmd_script(const Options& opts)
 	}
 
 	// won't return unless there's an error.
-	return run_script(script_it->path, opts.script.params);
+	return run_script(script_it->path, params);
 }

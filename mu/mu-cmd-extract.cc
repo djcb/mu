@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2010-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2010-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -18,6 +18,7 @@
 */
 
 #include "config.h"
+
 #include "mu-cmd.hh"
 #include "utils/mu-utils.hh"
 #include "utils/mu-utils-file.hh"
@@ -52,6 +53,14 @@ static Result<void>
 save_parts(const Message& message, const std::string& filename_rx,
 	   const Options& opts)
 {
+	Regex rx{};
+	if (!filename_rx.empty()) {
+		if (auto&& res{Regex::make(filename_rx)}; !res)
+			return Err(res.error());
+		else
+			rx = std::move(*res);
+	}
+
 	size_t partnum{}, saved_num{};
 	for (auto&& part: message.parts()) {
 		++partnum;
@@ -66,12 +75,9 @@ save_parts(const Message& message, const std::string& filename_rx,
 			else if (std::ranges::any_of(opts.extract.parts,
 				     [&](auto&& num){return num==partnum;}))
 				return true;
-			else if (!filename_rx.empty() && part.raw_filename()) {
-				if (auto rx = Regex::make(filename_rx); !rx)
-					throw rx.error();
-				else if (rx->matches(*part.raw_filename()))
-					return true;
-			}
+			else if (rx && part.raw_filename() &&
+				 rx.matches(*part.raw_filename()))
+				return true;
 			return false;
 		});
 
@@ -115,7 +121,7 @@ show_part(const MessagePart& part, size_t index, bool color)
 	const auto ctype{part.mime_type()};
 	fputs_encoded(ctype.value_or("<none>"), stdout);
 
-	/* /\* disposition *\/ */
+	/* disposition */
 	color_maybe(MU_COLOR_MAGENTA);
 	mu_print_encoded(" [{}]", part.is_attachment() ? "attachment" : "inline");
 	/* size */
@@ -193,8 +199,6 @@ get_file_size(const std::string& path)
 {
 	int         rv;
 	struct stat statbuf;
-
-	mu_info("ppatj {}", path);
 
 	rv = stat(path.c_str(), &statbuf);
 	if (rv != 0) {

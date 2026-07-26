@@ -24,7 +24,7 @@
 #include "mu-maildir.hh"
 #include "message/mu-message-file.hh"
 
- #include <unistd.h>
+#include <unistd.h>
 
 using namespace Mu;
 
@@ -228,7 +228,7 @@ test_move_real()
 	const auto src{join_paths(testpath, "cur", "1220863042.12663_1.mindcrime!2,S")};
 	{
 		auto store = Store::make_new(dbpath, testpath, {});
-		assert_valid_result(res);
+		assert_valid_result(store);
 		g_assert_true(store->indexer().start({}, true/*block*/));
 	}
 

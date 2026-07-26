@@ -57,16 +57,6 @@ cmd_fields(const Options& opts)
 
 
 static Result<void>
-cmd_find(const Options& opts)
-{
-	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb))};
-	if (!store)
-		return Err(store.error());
-	else
-		return mu_cmd_find(*store, opts);
-}
-
-static Result<void>
 cmd_scm(const Store& store, const Options& opts)
 {
 #if !BUILD_SCM
@@ -77,7 +67,7 @@ cmd_scm(const Store& store, const Options& opts)
 		return Mu::Scm::run_script(store, opts, *opts.scm.script_path);
 	else if (opts.scm.eval)
 		return Mu::Scm::run_eval(store, opts, *opts.scm.eval);
-		else
+	else
 		return Mu::Scm::run_repl(store, opts, opts.scm.socket_path.value_or(""));
 #endif /*BUILD_SCM*/
 }
@@ -87,42 +77,23 @@ static void
 show_usage(void)
 {
 	mu_println("usage: mu command [options] [parameters]");
-	mu_println("where command is one of index, find, cfind, view, mkdir, "
-		"extract, add, remove, script, verify or server");
+	mu_println("where command is one of add, cfind, extract, find, index, "
+		   "info, init, labels, mkdir, move, remove, scm, script, "
+		   "server, verify or view");
 	mu_println("see the mu, mu-<command> or mu-easy manpages for "
 		   "more information");
 }
 
 
-using ReadOnlyStoreFunc = std::function<Result<void>(const Store&, const Options&)>;
-using WritableStoreFunc = std::function<Result<void>(Store&, const Options&)>;
-
+/* open the store with the given store-options and pass it to func; works for
+ * both funcs taking a const Store& and a Store& (the latter requires
+ * store_opts with Store::Options::Writable) */
+template<typename StoreFunc>
 static Result<void>
-with_readonly_store(const ReadOnlyStoreFunc& func, const Options& opts)
+with_store(const StoreFunc& func, const Options& opts,
+	   Store::Options store_opts = Store::Options::None)
 {
-	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb))};
-	if (!store)
-		return Err(store.error());
-
-	return func(store.value(), opts);
-}
-
-static Result<void> // overloading does not work.
-with_readonly_store2(const WritableStoreFunc& func, const Options& opts)
-{
-	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb))};
-	if (!store)
-		return Err(store.error());
-
-	return func(store.value(), opts);
-}
-
-
-static Result<void>
-with_writable_store(const WritableStoreFunc func, const Options& opts)
-{
-	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb),
-			       Store::Options::Writable)};
+	auto store{Store::make(opts.runtime_path(RuntimePath::XapianDb), store_opts)};
 	if (!store)
 		return Err(store.error());
 
@@ -158,32 +129,30 @@ Mu::mu_cmd_execute(const Options& opts) try {
 	 */
 
 	case Options::SubCommand::Cfind:
-		return with_readonly_store(mu_cmd_cfind, opts);
+		return with_store(mu_cmd_cfind, opts);
 	case Options::SubCommand::Find:
-		return cmd_find(opts);
+		return with_store(mu_cmd_find, opts);
 	case Options::SubCommand::Info:
-		return with_readonly_store(mu_cmd_info, opts);
+		return with_store(mu_cmd_info, opts);
 	case Options::SubCommand::Scm:
-		return with_readonly_store(cmd_scm, opts);
-
+		return with_store(cmd_scm, opts);
 
 	/* writable store */
 
 	case Options::SubCommand::Add:
-		return with_writable_store(mu_cmd_add, opts);
+		return with_store(mu_cmd_add, opts, Store::Options::Writable);
 	case Options::SubCommand::Remove:
-		return with_writable_store(mu_cmd_remove, opts);
+		return with_store(mu_cmd_remove, opts, Store::Options::Writable);
 	case Options::SubCommand::Move:
-		return with_writable_store(mu_cmd_move, opts);
+		return with_store(mu_cmd_move, opts, Store::Options::Writable);
 
 	/*
 	 *  read-only _or_ writable store
 	 */
 	case Options::SubCommand::Labels:
-		if (opts.labels.read_only)
-			return with_readonly_store2(mu_cmd_labels, opts);
-		else
-			return with_writable_store(mu_cmd_labels, opts);
+		return with_store(mu_cmd_labels, opts,
+				  opts.labels.read_only ?
+				  Store::Options::None : Store::Options::Writable);
 	/*
 	 * commands instantiate store themselves
 	 */

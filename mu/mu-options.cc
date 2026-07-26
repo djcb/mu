@@ -1044,6 +1044,16 @@ There is NO WARRANTY, to the extent permitted by law.)");
 		mu_println("{}", app.help("", CLI::AppFormatMode::All));
 	} catch (const CLI::CallForVersion&) {
 		mu_println("version {}", PACKAGE_VERSION);
+	} catch (const CLI::ExtrasError& xe) {
+		/* a first unexpected non-option argument without any subcommand
+		 * is (likely) a mistyped or unknown command */
+		if (const auto extras{app.remaining()};
+		    app.get_subcommands().empty() && !extras.empty() &&
+		    !extras.front().starts_with('-'))
+			return Err(Error::Code::InvalidArgument,
+				   "'{}' is not a mu command. See 'mu --help'",
+				   extras.front());
+		return Err(Error::Code::InvalidArgument, "{}", xe.what());
 	} catch (const CLI::ParseError& pe) {
 		return Err(Error::Code::InvalidArgument, "{}",
 			   friendly_error(pe));
@@ -1223,6 +1233,35 @@ test_number_option(void)
 		     "--after requires a non-negative number");
 }
 
+static void
+test_unknown_command(void)
+{
+	constexpr auto errmsg = "'flimflam' is not a mu command. See 'mu --help'";
+
+	const auto unknown = test_make_options({"mu", "flimflam"});
+	g_assert_false(!!unknown);
+	assert_equal(unknown.error().what(), errmsg);
+
+	// also with a global option in front
+	const auto with_opt = test_make_options({"mu", "--quiet", "flimflam"});
+	g_assert_false(!!with_opt);
+	assert_equal(with_opt.error().what(), errmsg);
+
+	// an unknown _option_ keeps CLI11's message
+	const auto unknown_opt = test_make_options({"mu", "--flimflam"});
+	g_assert_false(!!unknown_opt);
+	g_assert_true(std::string{unknown_opt.error().what()}
+		      .find("--flimflam") != std::string::npos);
+	g_assert_true(std::string{unknown_opt.error().what()}
+		      .find("is not a mu command") == std::string::npos);
+
+	// extra arguments to a real subcommand are not rewritten
+	const auto sub_extra = test_make_options({"mu", "index", "extra"});
+	g_assert_false(!!sub_extra);
+	g_assert_true(std::string{sub_extra.error().what()}
+		      .find("is not a mu command") == std::string::npos);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -1234,6 +1273,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/options/choice-errors", test_choice_option_errors);
 	g_test_add_func("/options/sortfield", test_sortfield_option);
 	g_test_add_func("/options/number", test_number_option);
+	g_test_add_func("/options/unknown-command", test_unknown_command);
 
 	return g_test_run();
 }

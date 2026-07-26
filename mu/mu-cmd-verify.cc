@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -79,18 +79,25 @@ verify(const MimeMultipartSigned& sigpart, const Options& opts)
 		VFlags::EnableKeyserverLookups: VFlags::None};
 
 	auto ctx{MimeCryptoContext::make_gpg()};
-	if (!ctx)
+	if (!ctx) {
+		if (!opts.quiet)
+			mu_println("cannot verify: {}", ctx.error().what());
 		return false;
+	}
 
 	const auto sigs{sigpart.verify(*ctx, vflags)};
 	Mu::MaybeAnsi col{!opts.nocolor};
 
 	if (!sigs || sigs->empty()) {
 
-		if (!opts.quiet)
-			mu_println("cannot find signatures in part");
+		if (!opts.quiet) {
+			if (!sigs)
+				mu_println("verification failed: {}", sigs.error().what());
+			else
+				mu_println("cannot find signatures in part");
+		}
 
-		return true;
+		return false;
 	}
 
 	bool valid{true};
@@ -104,7 +111,7 @@ verify(const MimeMultipartSigned& sigpart, const Options& opts)
 		if (opts.verbose)
 			print_signature(sig, opts);
 
-		if (none_of(sig.status() & MimeSignature::Status::Green))
+		if (none_of(status & MimeSignature::Status::Green))
 			valid = false;
 	}
 
@@ -159,7 +166,7 @@ Mu::mu_cmd_verify(const Options& opts)
 			all_ok = false;
 	}
 
-	// when no messages provided, read from stdin
+	// when no messages are provided, read from stdin
 	if (opts.verify.files.empty()) {
 		const auto msgtxt = read_from_stdin();
 		if (!msgtxt)

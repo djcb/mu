@@ -184,7 +184,8 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 		if (line.find_first_not_of(" \t") == std::string::npos)
 			continue; // skip whitespace-only lines
 
-		do_quit = server.invoke(line) ? false : true;
+		if (!server.invoke(line))
+			do_quit = true;
 		save_line(line);
 	}
 

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -41,7 +41,7 @@ colorify(Table& table, const Options& opts)
 	if (opts.nocolor || table.size() == 0)
 		return;
 
-	for (auto&& c = 0U; c != table.row(0).size(); ++c) {
+	for (auto c = 0U; c != table.row(0).size(); ++c) {
 		switch (c) {
 		case 0:
 			table.column(c).format()
@@ -85,7 +85,7 @@ colorify(Table& table, const Options& opts)
 		}
 	}
 
-	for (auto&& c = 0U; c != table.row(0).size(); ++c)
+	for (auto c = 0U; c != table.row(0).size(); ++c)
 		table[0][c].format()
 			.font_color(Color::white)
 			.font_style({FontStyle::bold});
@@ -232,8 +232,7 @@ topic_store(const Mu::Store& store, const Options& opts)
 				      std::string{prop.description}});
 		}
 	}
-	if (!opts.nocolor)
-		colorify(info, opts);
+	colorify(info, opts);
 
 	std::cout << info << '\n';
 
@@ -264,8 +263,7 @@ topic_mu(const Mu::Store& store, const Options& opts)
 		}
 	}
 
-	if (!opts.nocolor)
-		colorify(info, opts);
+	colorify(info, opts);
 
 	std::cout << info << '\n';
 
@@ -285,28 +283,31 @@ Mu::mu_cmd_info(const Mu::Store& store, const Options& opts)
 	else if (topic == "maildirs")
 		return topic_maildirs(store, opts);
 	else if (topic == "fields") {
-		topic_fields(opts);
+		if (auto&& res{topic_fields(opts)}; !res)
+			return res;
 		std::cout << std::endl;
-		topic_combi_fields(opts);
+		if (auto&& res{topic_combi_fields(opts)}; !res)
+			return res;
 		std::cout << std::endl;
-		topic_flags(opts);
+		return topic_flags(opts);
 	} else if (topic == "mu") {
 		return topic_mu(store, opts);
 	} else {
-		topic_mu(store, opts);
+		if (auto&& res{topic_mu(store, opts)}; !res)
+			return res;
 
 		MaybeAnsi col{!opts.nocolor};
 		using Color = MaybeAnsi::Color;
 
-		auto topic = [&](auto&& t, auto&& d)->std::string {
+		auto describe = [&](auto&& t, auto&& d)->std::string {
 			return mu_format("{}{:<10}{} - {:>12}",
 					 col.fg(Color::Green), t, col.reset(), d);
 		};
 
 		mu_println("\nother info topics ('mu info <topic>'):\n{}\n{}\n{}",
-			   topic("store", "information about the message store (database)"),
-			   topic("maildirs", "list the maildirs under the store's root-maildir"),
-			   topic("fields",  "information about message fields"));
+			   describe("store", "information about the message store (database)"),
+			   describe("maildirs", "list the maildirs under the store's root-maildir"),
+			   describe("fields",  "information about message fields"));
 	}
 
 	return Ok();

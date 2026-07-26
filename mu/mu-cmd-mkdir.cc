@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -72,7 +72,7 @@ test_mkdir_multi()
 
 	g_assert_true(check_dir(join_paths(testdir2, "cur"), true, true));
 	g_assert_true(check_dir(join_paths(testdir2, "new"), true, true));
-	g_assert_true(check_dir(join_paths(testdir3, "tmp"), true, true));
+	g_assert_true(check_dir(join_paths(testdir2, "tmp"), true, true));
 
 	g_assert_true(check_dir(join_paths(testdir3, "cur"), true, true));
 	g_assert_true(check_dir(join_paths(testdir3, "new"), true, true));

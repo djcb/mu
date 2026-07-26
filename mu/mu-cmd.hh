@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -201,4 +201,4 @@ Result<void> mu_cmd_execute(const Options& opts);
 
 } // namespace Mu
 
-#endif /*__MU_CMD_H__*/
+#endif /*MU_CMD_HH__*/
