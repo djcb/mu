@@ -73,6 +73,10 @@
    #+end_example
    (1.14.0)
 
+   - add procedures ~configuration~ (an alist with the system configuration) and
+     ~fields~/~field~ (alists with metadata about database fields). See the SCM
+     reference documentation for further details (1.14.3).
+
 * 1.12 (released on February 24, 2024)
 
   The 1.12 series has been "stable" for a fairly long time, and gained many

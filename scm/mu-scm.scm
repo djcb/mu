@@ -20,6 +20,7 @@
   :use-module (oop goops)
   :use-module (system foreign)
   :use-module (rnrs bytevectors)
+  :use-module (srfi srfi-1) ;; lists
   :use-module (ice-9 optargs)
   :use-module (ice-9 format)
   :use-module (ice-9 binary-ports)
@@ -102,6 +103,8 @@
 	    ;; misc
             options
             configuration
+            fields
+            field
 
             %options  ;; deprecated, use (options)
 
@@ -635,8 +638,20 @@ init'. Uses the default-store."
 (set-documentation! '%configuration
 		    "Alist with the mu system configuration parameters.")
 (define (configuration)
-  "Alist with the mu system configuration parameters.."
+  "Alist with the mu system configuration parameters."
   %configuration)
+
+%fields ;; defined in c++
+(set-documentation! '%fields
+		    "Alist with information about mu database fields.")
+(define (fields)
+  "Alist with information about mu database fields."
+  %fields)
+
+(define (field field-id)
+  "Get the information alist for FIELD-ID.
+If FIELD does not exist, return #f."
+  (find (lambda(item) (eq? (assoc-ref item 'field) field-id)) (fields)))
 
 (define %preferences
   '( (short-date  . "%F %T")

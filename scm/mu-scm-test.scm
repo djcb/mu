@@ -110,7 +110,7 @@
 
     ;; language
     (test-equal (language msg)
-      (if (assoc-ref (configuration) 'language-enabled?) 'en nil))
+      (if (assoc-ref (configuration) 'language-enabled?) 'en #f))
 
     ;; cc, bc, labels
     (test-equal '() (cc msg))
@@ -196,6 +196,13 @@
   (test-equal "2025-06-16 12:43:12" (time->string 1750077792 #:utc? #t))
   (test-equal "2025-06-16 15:43:12" (time->string 1750077792 #:utc? #f))
   (test-equal "12:43:12" (time->string 1750077792 #:utc? #t #:format "%T"))
+
+  (let* ((subject (field 'subject)))
+    (test-assert subject)
+    (test-equal (assoc-ref subject 'name) "subject")
+    (test-equal (assoc-ref subject 'shortcut) #\s)
+    (test-equal (assoc-ref subject 'search-type) 'phrase)
+    (test-assert (assoc-ref subject 'value?)))
 
   ;; (define old-prefs %preferences)
   ;; (define %preferences '((utc? . #t) (short-date  . "%T %F")))

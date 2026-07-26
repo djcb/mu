@@ -271,6 +271,8 @@ namespace Mu::Scm {
 		}
 		else if constexpr (std::is_same_v<Type, bool>)
 			return scm_from_bool(val);
+		else if constexpr (std::is_same_v<Type, char>)
+			return SCM_MAKE_CHAR(static_cast<unsigned char>(val));
 		else if constexpr (std::is_same_v<Type, size_t>)
 			return scm_from_size_t(val);
 		else if constexpr (std::is_same_v<Type, int>)

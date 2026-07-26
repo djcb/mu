@@ -968,12 +968,56 @@ Other options may be added.
 @deffn {Scheme Procedure} configuration
 @end deffn
 
-An association-list (alist) of the @t{mu} system configuration. This might look
-something like:
+An association-list (alist) of the @t{mu} system configuration, similar to what
+you get with the @code{mu info} command. This might look something like:
 @lisp
 (configuration)
-((mu-version . "1.14.3") (xapian-version . "1.4.30") (glib-version . "2.88.2")
+=> ((mu-version . "1.14.3") (xapian-version . "1.4.30") (glib-version . "2.88.2")
  (gmime-version . "3.2.15") (scm-enabled? . #t) (language-enabled? . #t))
+@end lisp
+
+
+@deffn {Scheme Procedure} fields
+@end deffn
+
+An association-list (alist) with information about @t{mu}'s database fields,
+similar to what you get with the @command{mu info fields} command. This looks something like:
+
+@lisp
+(fields)
+=> (((field . bcc) (name . "bcc") (shortcut . #\h) (value? . #t) (search-type . phrase))
+((field . body) (name . "body") (shortcut . #\b) (value? . #f) (search-type . phrase))
+((field . cc) (name . "cc") (shortcut . #\c) (value? . #t) (search-type . phrase))
+((field . changed) (name . "changed") (shortcut . #\k) (value? . #t) (search-type . range))
+((field . date) (name . "date") (shortcut . #\d) (value? . #t) (search-type . range))
+((field . embed) (name . "embed") (shortcut . #\e) (value? . #f) (search-type . phrase))
+((field . file) (name . "file") (shortcut . #\j) (value? . #f) (search-type . boolean))
+((field . flags) (name . "flags") (shortcut . #\g) (value? . #t) (search-type . boolean))
+((field . from) (name . "from") (shortcut . #\f) (value? . #t) (search-type . phrase))
+((field . language) (name . "language") (shortcut . #\a) (value? . #t) (search-type . boolean))
+((field . maildir) (name . "maildir") (shortcut . #\m) (value? . #t) (search-type . boolean))
+((field . list) (name . "list") (shortcut . #\v) (value? . #t) (search-type . boolean))
+((field . message-id) (name . "message-id") (shortcut . #\i) (value? . #t) (search-type . boolean))
+((field . mime) (name . "mime") (shortcut . #\y) (value? . #f) (search-type . boolean))
+((field . path) (name . "path") (shortcut . #\l) (value? . #t) (search-type . boolean))
+((field . priority) (name . "priority") (shortcut . #\p) (value? . #t) (search-type . boolean))
+((field . references) (name . "references") (shortcut . #\r) (value? . #t) (search-type . boolean))
+((field . size) (name . "size") (shortcut . #\z) (value? . #t) (search-type . range))
+((field . subject) (name . "subject") (shortcut . #\s) (value? . #t) (search-type . phrase))
+((field . tags) (name . "tags") (shortcut . #\x) (value? . #t) (search-type . boolean))
+((field . thread) (name . "thread") (shortcut . #\w) (value? . #t) (search-type . boolean))
+((field . to) (name . "to") (shortcut . #\t) (value? . #t) (search-type . phrase))
+((field . labels) (name . "labels") (shortcut . #\q) (value? . #t) (search-type . boolean)))
+@end lisp
+
+@deffn {Scheme Procedure} field
+@end deffn
+
+Gets information about one specific fields (from @code{fields}). E.g.
+
+@lisp
+(field 'subject)
+=> ((field . subject) (name . "subject") (shortcut . #\s) (value? . #t) (search-type . phrase))
 @end lisp
 
 @c @defvar %preferences

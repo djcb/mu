@@ -102,6 +102,39 @@ init_configuration()
 }
 
 static void
+init_fields_info()
+{
+	SCM fields_scm{SCM_EOL};
+
+	const auto search_type = [&](const Field& field)->SCM {
+		if (field.is_boolean_term())
+			return make_symbol("boolean");
+		else if (field.is_phrasable_term())
+			return make_symbol("phrase");
+		else if (field.is_contact())
+			return make_symbol("contact");
+		else if (field.is_range())
+			return make_symbol("range");
+		else
+			return SCM_BOOL_F;
+	};
+
+	field_for_each([&](const auto& field) {
+		SCM field_scm = alist_add(SCM_EOL,
+					  make_symbol("field"), make_symbol(field.name),
+					  make_symbol("name"),   field.name,
+					  make_symbol("shortcut"),
+					  field.shortcut ? to_scm(field.shortcut) : SCM_BOOL_F,
+					  make_symbol("value?"), field.is_value(),
+					  make_symbol("search-type"), search_type(field));
+		fields_scm = scm_cons(scm_reverse_x(field_scm, SCM_EOL), fields_scm);
+	});
+
+	scm_c_define("%fields", scm_reverse_x(fields_scm, SCM_EOL));
+}
+
+
+static void
 init_misc()
 {
 	scm_define(make_symbol("level-critical"), to_scm(G_LOG_LEVEL_CRITICAL));
@@ -217,6 +250,8 @@ init_module_mu(void* data)
 
 	init_options(conf.opts);
 	init_configuration();
+	init_fields_info();
+
 	init_misc();
 	init_subrs();
 
