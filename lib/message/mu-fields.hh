@@ -68,7 +68,7 @@ struct Field {
 
 		// XXX: re-order when we update the db-schema.
 		Labels,         /**< Labels */
-
+		UtcOffset,      /**< Offset from UTC for the sent Date */
 		//
 		_count_         /**< Number of Ids */
 	};
@@ -465,6 +465,8 @@ inline constexpr std::array<Field, Field::id_size()>
 		Field::Flag::NormalTerm |
 		Field::Flag::PhrasableTerm,
 	    },
+	    // at the end for now; reordering when we're bumping
+	    // the db schema version.
 	    {
 		Field::Id::Labels,
 		Field::Type::StringList,
@@ -475,7 +477,16 @@ inline constexpr std::array<Field, Field::id_size()>
 		Field::Flag::BooleanTerm |
 		Field::Flag::Value |
 		Field::Flag::IncludeInSexp
-,
+	    },
+	    {
+		Field::Id::UtcOffset,
+		Field::Type::Integer,
+		"utc-offset", {},
+		"UTC offset for Date in seconds:",
+		{},
+		'u',
+		Field::Flag::Value |
+		Field::Flag::IncludeInSexp
 	    },
 
 	}};

@@ -1047,12 +1047,19 @@ public:
 		return Mu::to_string_opt(g_mime_message_get_subject(self()));
 	}
 
+	using Date = std::pair<int64_t/*unix-time*/, int64_t/*utc-offset in secs*/>;
+	/**< Date type */
+
 	/**
-	 * Gets the date if it exists, or nullopt otherwise.
+	 * Gets a date, utf-offset pair if it exists, or nullopt otherwise.
+	 *
+	 * The date is the number of seconds since epoch (i.e., unix time),
+	 * while utf-offset is the number of seconds offset from UTC
+	 * (i.e., negative numbers west of GMT, positive numbers for east)
 	 *
 	 * @return a time_t value (expressed as a 64-bit number) or nullopt
 	 */
-	Option<int64_t> date() const noexcept;
+	Option<Date> date() const noexcept;
 
 
 	/**

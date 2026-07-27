@@ -307,7 +307,7 @@ test_view_sexp()
 	g_assert_true(::stat(msgpath.c_str(), &statbuf) == 0);
 
 	const auto expected = mu_format(
-		R"((:path "{}" :size 638 :changed ({} {} 0) :date (19930 8345 0) :flags (unread) :from ((:email "test@example.com" :name "Test")) :message-id "10374608.109906.11909.20115aabbccdd.MSGID@mailinglijst.nl" :priority normal :subject "vla" :to ((:email "abc@example.com")))
+					R"((:path "{}" :size 638 :changed ({} {} 0) :date (19930 8345 0) :utc-offset 7200 :flags (unread) :from ((:email "test@example.com" :name "Test")) :message-id "10374608.109906.11909.20115aabbccdd.MSGID@mailinglijst.nl" :priority normal :subject "vla" :to ((:email "abc@example.com")))
 )",
 		msgpath,
 		statbuf.st_ctime >> 16,

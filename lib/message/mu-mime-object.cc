@@ -334,13 +334,17 @@ MimeMessage::make_from_text(const std::string& text)
 		return make_from_stream(std::move(stream));
 }
 
-Option<int64_t>
+Option<MimeMessage::Date>
 MimeMessage::date() const noexcept
 {
 	if (/*const*/GDateTime *dt{g_mime_message_get_date(self())}; !dt)
 		return Nothing;
-	else
-		return g_date_time_to_unix(dt);
+	else {
+		constexpr auto usecs_per_sec = 1'000'000;
+		return Date{ g_date_time_to_unix(dt),
+			     g_date_time_get_utc_offset(dt) / usecs_per_sec };
+
+	}
 }
 
 constexpr Option<GMimeAddressType>
@@ -431,7 +435,8 @@ MimeMessage::contacts(Contact::Type ctype) const noexcept
 		return {};
 
 	Contacts contacts;
-	add_contacts(addrs, ctype, date().value_or(0), contacts);
+	const auto mdate{date()};
+	add_contacts(addrs, ctype, mdate ? mdate->first : 0, contacts);
 
 	return contacts;
 }
