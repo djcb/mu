@@ -270,12 +270,20 @@ It is the mu4e-version of \"mu find <query> --analyze\"."
 
 ;;; Handling raw server data
 
-(defvar mu4e--server-buf nil
-  "Buffer (string) for data received from the backend.")
 (defconst mu4e--server-name " *mu4e-server*"
   "Name of the server process, buffer.")
 (defvar mu4e--server-process nil
   "The mu-server process.")
+
+(defun mu4e--server-buffer ()
+  "Get the buffer for accumulating data received from the backend.
+Create it if needed. The buffer is unibyte, since the lengths in
+the length cookies are in bytes."
+  (let ((buf (get-buffer-create mu4e--server-name)))
+    (with-current-buffer buf
+      (when enable-multibyte-characters
+        (set-buffer-multibyte nil)))
+    buf))
 
 ;; dealing with the length cookie that precedes expressions
 (defconst mu4e--server-cookie-pre "\376"
@@ -301,33 +309,33 @@ Checks whether the server process is live."
 
 (declare-function mu4e--massage-addresses "mu4e-contacts")
 
-(defsubst mu4e--server-eat-sexp-from-buf ()
-  "Eat the next s-expression from `mu4e--server-buf'.
-Note: this is a string, not an emacs-buffer. `mu4e--server-buf gets
-its contents from the mu-servers in the following form:
+(defun mu4e--server-eat-sexp-from-buf ()
+  "Eat the next s-expression from the server buffer.
+The server buffer (see `mu4e--server-buffer') gets its contents
+from the mu-server in the following form:
    <`mu4e--server-cookie-pre'><length-in-hex><`mu4e--server-cookie-post'>
 Function returns this sexp, or nil if there was none.
-`mu4e--server-buf' is updated as well, with all processed sexp data
+The server buffer is updated as well, with all processed sexp data
 removed."
   (ignore-errors ;; the server may die in the middle...
-    (let ((b (string-match mu4e--server-cookie-matcher-rx mu4e--server-buf))
-          (sexp-len) (objcons))
-      (when b
-        (setq sexp-len (string-to-number (match-string 1 mu4e--server-buf) 16))
-        ;; does mu4e--server-buf contain the full sexp?
-        (when (>= (length mu4e--server-buf) (+ sexp-len (match-end 0)))
-          ;; clear-up start
-          (setq mu4e--server-buf (substring mu4e--server-buf (match-end 0)))
-          ;; note: we read the input in binary mode -- here, we take the part
-          ;; that is the sexp, and convert that to utf-8, before we interpret
-          ;; it.
-          (setq objcons (read-from-string
-                         (decode-coding-string
-                          (substring mu4e--server-buf 0 sexp-len)
-                          'utf-8 t)))
-          (when objcons
-            (setq mu4e--server-buf (substring mu4e--server-buf sexp-len))
-            (car objcons)))))))
+    (with-current-buffer (mu4e--server-buffer)
+      (goto-char (point-min))
+      (when (re-search-forward mu4e--server-cookie-matcher-rx nil t)
+        (let ((sexp-len (string-to-number (match-string 1) 16)))
+          ;; does the buffer contain the full sexp?
+          (when (>= (- (point-max) (point)) sexp-len)
+            ;; clear-up start
+            (delete-region (point-min) (point))
+            ;; note: we read the input in binary mode -- here, we take the part
+            ;; that is the sexp, and convert that to utf-8, before we interpret
+            ;; it.
+            (prog1
+                (car (read-from-string
+                      (decode-coding-string
+                       (buffer-substring-no-properties
+                        (point-min) (+ (point-min) sexp-len))
+                       'utf-8 t)))
+              (delete-region (point-min) (+ (point-min) sexp-len)))))))))
 
 (defun mu4e--server-plist-get (plist key)
   "Like `plist-get' but load data from file if it is a string.
@@ -415,7 +423,9 @@ The server output is as follows:
   (:compose <reply|forward|edit|new> [:original<msg-sexp>] [:include <attach>])
   `mu4e-compose-func'. :original looks like :view."
   (mu4e-log 'misc "* Received %d byte(s)" (length str))
-  (setq mu4e--server-buf (concat mu4e--server-buf str)) ;; update our buffer
+  (with-current-buffer (mu4e--server-buffer) ;; update our buffer
+    (goto-char (point-max))
+    (insert str))
   (let ((sexp (mu4e--server-eat-sexp-from-buf)))
     (with-local-quit
       (while sexp
@@ -571,7 +581,8 @@ Not to be confused with the SCM/Guile REPL, as per
   (mu4e--kill-stale)
   (let* ((process-connection-type nil) ;; use a pipe
          (args (mu4e--server-args)))
-    (setq mu4e--server-buf "")
+    (with-current-buffer (mu4e--server-buffer)
+      (erase-buffer))
     (mu4e-log 'misc "* invoking '%s' with parameters %s" mu4e-mu-binary
               (mapconcat (lambda (arg) (format "'%s'" arg)) args " "))
     (setq mu4e--server-process (apply 'start-process
@@ -599,9 +610,7 @@ Not to be confused with the SCM/Guile REPL, as per
       ;; try sending SIGINT (C-c) to process, so it can exit gracefully
       (ignore-errors
         (signal-process proc 'SIGINT))))
-  (setq
-   mu4e--server-process nil
-   mu4e--server-buf nil))
+  (setq mu4e--server-process nil))
 
 ;; error codes are defined in src/mu-util
 ;;(defconst mu4e-xapian-empty 19 "Error code: xapian is empty/non-existent")
@@ -609,9 +618,12 @@ Not to be confused with the SCM/Guile REPL, as per
 (defun mu4e--server-sentinel (proc _msg)
   "Function called when the server process PROC terminates with MSG."
   (let ((status (process-status proc)) (code (process-exit-status proc)))
-    (mu4e-log 'misc "* famous last words from server: '%s'" mu4e--server-buf)
+    (mu4e-log 'misc "* famous last words from server: '%s'"
+              (with-current-buffer (mu4e--server-buffer)
+                (buffer-string)))
     (setq mu4e--server-process nil)
-    (setq mu4e--server-buf "") ;; clear any half-received sexps
+    (with-current-buffer (mu4e--server-buffer)
+      (erase-buffer)) ;; clear any half-received sexps
     (cond
      ((eq status 'signal)
       (cond
