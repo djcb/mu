@@ -117,7 +117,8 @@ Mu::read_line(bool& do_quit)
 #endif /*HAVE_READLINE*/
 
 	std::string line;
-	mu_print(";; mu> ");
+	if (is_a_tty) /* avoid uncookied noise for e.g. mu4e */
+		mu_print(";; mu> ");
 	if (!std::getline(std::cin, line))
 		do_quit = true;
 

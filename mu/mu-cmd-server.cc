@@ -25,6 +25,7 @@
 #include <cstdio>
 
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "mu-cmd.hh"
 #include "mu-server.hh"
@@ -161,6 +162,15 @@ Mu::mu_cmd_server(const Mu::Options& opts) try {
 	// determine this before any server output, so it holds for
 	// --eval/--commands as well.
 	tty = ::isatty(::fileno(stdout));
+
+#ifdef F_SETPIPE_SZ
+	/* when talking to mu4e over a pipe, enlarge it (best-effort; Linux
+	 * only). with the default 64k, we stall on writing big result batches
+	 * while the client is busy rendering earlier results; with a bigger
+	 * pipe, producing results and rendering them can overlap. */
+	if (!tty)
+		::fcntl(::fileno(stdout), F_SETPIPE_SZ, 1024 * 1024);
+#endif /*F_SETPIPE_SZ*/
 
 	Server::Options sopts{opts.server.allow_temp_file, socket_path};
 	Server server{*store, sopts, output_stdout};
