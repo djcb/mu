@@ -1,6 +1,7 @@
 ;; unit tests
 
 (use-modules (mu) (srfi srfi-64)
+             (srfi srfi-19)
 	     (ice-9 textual-ports))
 
 (define (test-store)
@@ -60,10 +61,19 @@
 
 (define (test-mfind)
   (test-begin "test-mfind")
-  (let ((msg (car (mfind "to:a@example.com" #:sort-field 'date #:reverse? #t))))
-    (test-equal "test with multi to and cc" (subject msg) )
+  (let* ((msg (car (mfind "to:a@example.com" #:sort-field 'date #:reverse? #t)))
+         (dateobj (date-object msg)))
+    (test-equal "test with multi to and cc" (subject msg))
     (test-equal "2016-05-15 16:57:25"
-      (time->string (date msg) #:format "%F %T" #:utc? #t)))
+      (time->string (date msg) #:format "%F %T" #:utc? #t))
+    (test-equal -7200 (utc-offset msg))
+    (test-equal 2016 (date-year dateobj))
+    (test-equal 5 (date-month dateobj))
+    (test-equal 15 (date-day dateobj))
+    (test-equal 14 (date-hour dateobj))
+    (test-equal 57 (date-minute dateobj))
+    (test-equal 25 (date-second dateobj))
+    (test-equal 0 (date-nanosecond dateobj)))
   (test-end "test-mfind"))
 
 (define (test-message-full)
@@ -73,13 +83,11 @@
     (test-equal "Motörhead" (header msg "Subject"))
     (test-equal "Mü <testmu@testmu.xx>" (header msg "From"))
     (test-equal #f (header msg "Bla"))
-
     (test-equal (string-append "\nTest for issue #38, where apparently searching for "
 			       "accented words in subject,\nto etc. fails.\n\n"
 			       "What about here? Queensrÿche. Mötley Crüe.\n\n\n")
       (body msg))
     (test-equal #f (body msg #:html? #t))
-
     (test-end "test-message-full")))
 
 (define (test-message-more)
@@ -107,7 +115,6 @@
     (test-equal 'normal (assoc-ref alist 'priority))
     (test-equal '((email . "anon@example.com") (name . "Mickey Mouse"))
       (car  (assoc-ref alist 'from)))
-
     ;; language
     (test-equal (language msg)
       (if (assoc-ref (configuration) 'language-enabled?) 'en #f))

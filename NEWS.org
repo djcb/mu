@@ -10,6 +10,8 @@
 
    - significant speed-ups in the cleanup process after ~mu index~ (1.14.0)
 
+   - record the timezone-offset for message sent dates (1.14.3)
+
 *** mu4e
 
    - ~mu4e-main-hide-personal-addresses~ can now also be a number, which
@@ -76,6 +78,10 @@
    - add procedures ~configuration~ (an alist with the system configuration) and
      ~fields~/~field~ (alists with metadata about database fields). See the SCM
      reference documentation for further details (1.14.3).
+
+   - add procedures ~date-object~ to get a message's sent-date as an SRFI-19
+     object; and ~utc-offset~ to get the UTC (timezone) offset for a date.
+     (1.14.3)
 
 * 1.12 (released on February 24, 2024)
 

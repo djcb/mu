@@ -21,6 +21,7 @@
   :use-module (system foreign)
   :use-module (rnrs bytevectors)
   :use-module (srfi srfi-1) ;; lists
+  :use-module (srfi srfi-19) ;; date/time
   :use-module (ice-9 optargs)
   :use-module (ice-9 format)
   :use-module (ice-9 binary-ports)
@@ -40,6 +41,9 @@
 	    message->alist
 
 	    date
+            date-object
+            utc-offset
+
 	    changed
 
 	    message-id
@@ -214,7 +218,6 @@ CONTENT-ONLY? is implied to be #t."
 Either the 'filename' field in the mime-part and if that does not exist, use
 'mime-part-<index>' with <index> being the number of the mime-part.")
 
-
 (define* (make-output-file mime-part #:key (path #f) (overwrite? #f))
   "Create a port for the file to write MIME-PART to.
 
@@ -330,6 +333,21 @@ path of the message."
   "Get the timestamp for MESSAGE was sent.
 This is the number of seconds since epoch; #f if not found."
   (assoc-ref (message->alist message) 'date))
+
+(define-method (utc-offset (message <message>))
+  "Get the UTC offset in seconds for this MESSAGE.
+I.e., the offset from the UTC for the time the message was sent.
+#f if not available."
+    (assoc-ref (message->alist message) 'utc-offset))
+
+(define-method (date-object (message <message>))
+  "Get an SRFI-19 date object for MESSAGE's sent date.
+This includes the date and the timezone (if known). #f if not found."
+  (let ((unix-time (date message)) (offset (utc-offset message)))
+    (if unix-time
+        (time-utc->date (make-time 'time-utc 0 unix-time)
+                        (or offset 0))
+        #f)))
 
 (define-method (changed (message <message>))
   "Get the timestamp for the last change to MESSAGE.
@@ -661,7 +679,7 @@ If FIELD does not exist, return #f."
   "Alist with user-preferences.
 - short-date: a strftime-compatibie string for the display
 	      format of short dates.
-- utc?       : whether to assume use UTC for dates/times")
+- utc?       : whether to assume UTC for dates/times")
 
 (define (value-or-preference val key)
   "If VAL is the symbol 'preference, return the value for KEY from %preferences.

@@ -613,6 +613,24 @@ For example:
 => 2025-06-16T09:00:31
 @end lisp
 
+@deffn {Scheme Procedure} date-object message
+@end deffn
+Get the message's @t{Date} field (the sent-date) in the form of an SRFI-19
+date-object, or @t{#f} if there is none.
+
+@deffn {Scheme Procedure} utc-offset message
+@end deffn
+Get the message's time-zone offset in seconds; negative for west of GMT,
+positive for east of GMT, or @t{#f} if there is none.
+
+For example:
+@lisp
+(date-object msg)
+=> #<date nanosecond: 0 second: 25 minute: 57 hour: 14 day: 15 month: 5 year: 2016 zone-offset: -7200>
+(utc-offset msg)
+=> -7200
+@end lisp
+
 @deffn {Scheme Procedure} body message  [#:html? #f]
 @end deffn
 Get the message body as a string, or return @code{#f} if not found.
