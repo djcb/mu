@@ -45,6 +45,7 @@
             utc-offset
 
 	    changed
+            changed-object
 
 	    message-id
 	    path
@@ -377,16 +378,20 @@ I.e., the offset from the UTC for the time the message was sent.
 (define-method (date-object (message <message>))
   "Get an SRFI-19 date object for MESSAGE's sent date.
 This includes the date and the timezone (if known). #f if not found."
-  (let ((unix-time (date message)) (offset (utc-offset message)))
-    (if unix-time
-        (time-utc->date (make-time 'time-utc 0 unix-time)
-                        (or offset 0))
-        #f)))
+  (when-let ((unix-time (date message)))
+    (time-utc->date (make-time 'time-utc 0 unix-time)
+                    (or (utc-offset message) 0))))
 
 (define-method (changed (message <message>))
   "Get the timestamp for the last change to MESSAGE.
 This is the number of seconds since epoch; #f if not found."
   (assoc-ref (message->alist message) 'changed))
+
+(define-method (changed-object (message <message>))
+  "Get an SRFI-19 date object for MESSAGE's last-change.
+No time-zone offset is defined. #f if not found."
+  (when-let ((unix-time (changed message)))
+    (time-utc->date (make-time 'time-utc 0 unix-time))))
 
 (define-method (path (message <message>))
   "Get the file-system path for MESSAGE or #f if not found."
@@ -400,11 +405,8 @@ A symbol, either 'high, 'low or 'normal, or #f if not found."
 (define-method (language (message <message>))
   "Get the ISO-639-1 language code for the MESSAGE as a symbol, if detected.
 Return #f otherwise."
-  (let ((lang (assoc-ref (message->alist message) 'language)))
-    (if lang
-	(string->symbol lang)
-	#f)))
-;; if-let would be nice!
+  (when-let ((lang (assoc-ref (message->alist message) 'language)))
+    (string->symbol lang)))
 
 (define-method (size (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
@@ -426,10 +428,9 @@ the empty list."
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
 If neither are available, return #f.
 This is method is useful to determine the thread a message is in."
-  (let ((refs (references message)))
-    (if (and refs (not (null? refs)))
-	(car refs)
-	(message-id message))))
+  (if-let* ((refs (references message)) (_ (not (null? refs))))
+    (car refs)
+    (message-id message)))
 
 (define-method (mailing-list (message <message>))
   "Get the mailing-list id for MESSAGE or #f if not available."

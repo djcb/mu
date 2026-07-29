@@ -840,15 +840,20 @@ Does this message include a calendar invitation? Returns @t{#t} or @code{#f}.
 
 @deffn {Scheme Procedure} changed message
 @end deffn
+@deffn {Scheme Procedure} changed-object message
+@end deffn
 Get the time of the message's last change (through @t{mu}), or @code{#f} if there
 is none. The time is expressed the data as the number of seconds since epoch,
 @t{time_t}.
 
 For example:
 @lisp
-(last-change msg)
+(changed msg)
 => 1703336567
 @end lisp
+
+@code{changed-object} returns a value as a SRFI-19 date object, similar to
+@code{date-object}, but without any time-zone offset.
 
 @deffn {Scheme Procedure} priority message
 @end deffn

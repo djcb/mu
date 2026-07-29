@@ -79,8 +79,9 @@
      ~fields~/~field~ (alists with metadata about database fields). See the SCM
      reference documentation for further details (1.14.3).
 
-   - add procedures ~date-object~ to get a message's sent-date as an SRFI-19
-     object; and ~utc-offset~ to get the UTC (timezone) offset for a date.
+   - add procedures ~date-object~ which is like ~date~, but returns message's
+     sent-date as an SRFI-19 object; and ~utc-offset~ to get the UTC (timezone)
+     offset for a date. Similarly, add ~changed-object~ to complement ~changed~
      (1.14.3)
 
 * 1.12 (released on February 24, 2024)
