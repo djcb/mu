@@ -1,6 +1,6 @@
 ;;; mu4e-dbus.el --- DBus support -*- lexical-binding: t-*-
 
-;; Copyright (C) 2025 Dirk-Jan C. Binnema
+;; Copyright (C) 2025-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -21,7 +21,7 @@
 ;; along with mu4e.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; Generic support for showing new-mail notifications.
+;;; Export Mu4e information over D-Bus.
 
 ;;; Code:
 
@@ -93,11 +93,12 @@ Apart from the properties boilerplate, the
 
     Each item describes a bookmark/maildir item with
     entries:
-    - name     (string) ->  name of the item
-    - query    (string) ->  query for this item
-    - count    (number) ->  number of matching messages
-    - unread   (number) ->  the number of unread messages
-    - favorite (bool)   ->  this is the favorite entry
+    - name          (string) ->  name of the item
+    - query         (string) ->  query for this item
+    - count         (number) ->  number of matching messages
+    - unread        (number) ->  the number of unread messages
+    - delta-unread  (number) ->  number of unread, since baseline
+    - favorite (bool)        ->  this is the favorite entry
               (optional, at most one entry has this).")
 
 ;; Introspection... although not strictly required, it is very useful for
@@ -160,8 +161,7 @@ setting a property means (re)registering it."
 ;; Convert to D-Bus format - list of dict entries
 (defun mu4e--dbus-query-info ()
   "Return an array of dbus vardicts with query-items information.
-
-This filters / maps the information from `mu4e-query-items'."
+this filters / maps the information from `mu4e-query-items'."
   ;; D-Bus signature: aa{sv} (array of dict with string keys and variant values)
   ;;  Return an array of dbus vardicts with query-items information.
   ;; This filters / maps the information from `mu4e-query-items'."
@@ -172,8 +172,8 @@ This filters / maps the information from `mu4e-query-items'."
            (let ((dict))
              (while plist
                (let* ((key (car plist)) (val (cadr plist)))
-                 (when (memq key '(:name :query :count :unread :favorite))
-                   (push (list :dict-entry (substring (symbol-name key) 1) ; eat ':'
+                 (when (memq key '(:name :query :count :unread :delta-unread :favorite))
+                   (push (list :dict-entry (substring (symbol-name key) 1) ; decolonize
                                (list :variant val)) dict))
                  (setq plist (cddr plist))))
              (cons ':array dict)))
