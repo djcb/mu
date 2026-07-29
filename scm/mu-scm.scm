@@ -126,6 +126,40 @@
 ;;
 ;; Helpers
 
+(define-syntax if-let*
+  (syntax-rules ()
+    "Bind variables according to VAR and evaluate THEN or ELSE.
+Evaluate each binding in turn, as in ‘let*’, stopping if a binding value is nil.
+If all are non-nil return the value of THEN, otherwise the value of the last
+form in ELSE, or #f if there are none."
+    ((_ () then) then)
+    ((_ () then else) then)
+    ((_ ((var expr) rest ...) then)
+     (if-let* ((var expr) rest ...) then #f))
+    ((_ ((var expr) rest ...) then else)
+     (let ((var expr))
+       (if var
+           (if-let* (rest ...) then else)
+           else)))))
+
+(define-syntax when-let*
+  (syntax-rules ()
+    "Bind variables according to VAR and evaluate THEN.
+Evaluate each binding in turn, as in ‘let*’, stopping if a binding value is nil.
+If all are non-nil return the value of THEN, or #f if there are none."
+    ((_ (bindings ...) body body* ...)
+     (if-let* (bindings ...) (begin body body* ...)))))
+
+(define-syntax if-let
+  (syntax-rules ()
+    "Alias for if-let*."
+    ((_ args ...) (if-let* args ...))))
+
+(define-syntax when-let
+  (syntax-rules ()
+    "Alias for when-let*."
+    ((_ args ...) (when-let* args ...))))
+
 (define (set-documentation! symbol docstring)
   "Set the docstring for symbol in current module to docstring.
 This is useful for symbols that do not support docstrings directly, such
