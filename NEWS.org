@@ -10,7 +10,12 @@
 
    - significant speed-ups in the cleanup process after ~mu index~ (1.14.0)
 
-   - record the timezone-offset for message sent dates (1.14.3)
+   - Record the timezone-offset for message sent dates as part of the index
+     (1.14.3)
+
+   - for (rare) messages without a =Date:= header, fall-back to the date of the
+     most recent =Received:= header. Not perfect, but better than nothing.
+     Requires re-indexing to apply to older messages (1.14.3)
 
 *** mu4e
 

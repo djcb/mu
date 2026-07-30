@@ -1051,16 +1051,23 @@ public:
 	/**< Date type */
 
 	/**
-	 * Gets a date, utf-offset pair if it exists, or nullopt otherwise.
+	 * Gets a { date, utf-offset } pair if it exists, or nullopt otherwise.
 	 *
 	 * The date is the number of seconds since epoch (i.e., unix time),
 	 * while utf-offset is the number of seconds offset from UTC
 	 * (i.e., negative numbers west of GMT, positive numbers for east)
 	 *
-	 * @return a time_t value (expressed as a 64-bit number) or nullopt
+	 * @return a Date pair or nullopt
 	 */
 	Option<Date> date() const noexcept;
 
+	/**
+	 * Gets a { date, utc-offset } pair from the first (more recent)
+	 * Received: header, or nullopt if there is none.
+	 *
+	 * @return a Date pair or nullopt
+	 */
+	Option<Date> received() const noexcept;
 
 	/**
 	 * Get the references for this message (including in-reply-to), in the

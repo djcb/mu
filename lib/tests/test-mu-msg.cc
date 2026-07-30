@@ -368,6 +368,31 @@ k+ZGGoQ0v8b7RwmyskMAAAAAAAAAAAAA
 }
 
 
+static void
+test_mu_msg_received_date()
+{
+	/* without a Date: header, fall back to the date in the topmost (most
+	 * recent) Received: header */
+	const auto txt =
+R"(Return-Path: me@example.com
+Received: from imap.example.com [61.223.64.18]
+	by evergrey with IMAP (fetchmail-6.6.6)
+	for <me@localhost> (single-drop); Thu, 30 Jul 2026 13:47:56 +0300 (EEST)
+Received: from mail.example.com ([10.11.12.13]);
+	Wed, 29 Jul 2026 01:02:03 +0000
+From: Me <me@example.com>
+To: You <you@example.com>
+Subject: no date
+Message-ID: <abcdef@example.com>
+
+Test.
+)";
+	const auto msg{Message::make_from_text(txt, "boo/cur/msg3:2,S")};
+	assert_valid_result(msg);
+
+	g_assert_cmpuint(msg->date(), ==, 1785408476); /* 2026-07-30 10:47:56 UTC */
+}
+
 [[maybe_unused]] static gboolean
 ignore_error(const char* log_domain, GLogLevelFlags log_level, const gchar* msg, gpointer user_data)
 {
@@ -402,6 +427,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/msg/mu-msg-comp-unix-programmer", test_mu_msg_comp_unix_programmer);
 
 	g_test_add_func("/msg/mu-smime", test_mu_smime);
+	g_test_add_func("/msg/mu-msg-received-date", test_mu_msg_received_date);
 
 	g_test_add_func("/str/mu-str-prio-01", test_mu_str_prio_01);
 

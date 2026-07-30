@@ -741,7 +741,10 @@ fill_document(Message::Private& priv)
 				doc.add(field.id, priv.ctime);
 			break;
 		case Field::Id::Date:
-			if (const auto& date{mime_msg.date()}; date) {
+			/* for the rare message without a Date: header, fall back
+			 * to the most recent Received: header */
+			if (const auto date{mime_msg.date().or_else([&]{
+					return mime_msg.received(); })}; date) {
 				doc.add(field.id, date->first);
 				doc.add(Field::Id::UtcOffset, date->second);
 			}
