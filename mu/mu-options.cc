@@ -973,7 +973,7 @@ There is NO WARRANTY, to the extent permitted by law.)");
 
 	app.set_version_flag("-V,--version", PACKAGE_VERSION);
 	app.set_help_flag("-h,--help", "Show help information");
-	app.set_help_all_flag("--help-all");
+	app.set_help_all_flag("--help-all", "Show help for all commands");
 	app.require_subcommand(0, 1);
 
 	add_global_options(app, opts);
