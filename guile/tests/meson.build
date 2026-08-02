@@ -1,4 +1,4 @@
-## Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@
 # guile test; they don't work with ASAN.
 #
 if get_option('b_sanitize') == 'none'
-  guile_load_path       = join_paths(meson.project_source_root(), 'guile')
+  guile_load_path       = meson.project_source_root() / 'guile'
   guile_extensions_path = ':'.join([
-    join_paths(meson.project_build_root(), 'guile'),
+    meson.project_build_root() / 'guile',
     meson.current_build_dir()])
 
   test('test-mu-guile',

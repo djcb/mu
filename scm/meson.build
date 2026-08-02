@@ -1,4 +1,4 @@
-## Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -13,8 +13,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-mu_scm_dir=join_paths(datadir, 'mu', 'scm')
-mu_scm_dir_arg='-DMU_SCM_DIR="' + mu_scm_dir + '"'
+mu_scm_dir=datadir / 'mu' / 'scm'
+mu_scm_dir_arg=f'-DMU_SCM_DIR="@mu_scm_dir@"'
 
 lib_mu_scm=static_library(
   'mu-scm',  [
@@ -49,20 +49,20 @@ if makeinfo.found()
                 output: 'mu-scm.info',
                 install: true,
                 install_dir: infodir,
+                depends: fdl_texi,
                 command: [makeinfo,
-                          '-o', join_paths(meson.current_build_dir(), 'mu-scm.info'),
-                          join_paths(meson.current_source_dir(), 'mu-scm.texi'),
-                          '-I', join_paths(meson.current_build_dir(), '..')])
+                          '-o', meson.current_build_dir() / 'mu-scm.info',
+                          meson.current_source_dir() / 'mu-scm.texi',
+                          '-I', meson.current_build_dir() / '..'])
   if install_info.found()
-    infodir = join_paths(get_option('prefix') / get_option('infodir'))
     meson.add_install_script(install_info_script, infodir, 'mu-scm.info')
   endif
 endif
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
 
   srcdir=meson.current_source_dir()
-  def_srcdir='-DMU_SCM_SRCDIR="' + srcdir + '"'
+  def_srcdir=f'-DMU_SCM_SRCDIR="@srcdir@"'
 
   test('test-scm',
        executable('test-scm',

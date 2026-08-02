@@ -26,7 +26,7 @@ mu4e_meta = configure_file(
   configuration: {
       'VERSION'           : meson.project_version(),
       'MU_VERSION_EXTRA'  : version_extra,
-      'MU_DOC_DIR'        : join_paths(datadir, 'doc', 'mu'),
+      'MU_DOC_DIR'        : datadir / 'doc' / 'mu',
     })
 
 mu4e_pkg_desc = configure_file(
@@ -97,7 +97,7 @@ endif
 # byte compile the sources that can be byte-compiled. This may exclude mu4e-dbus.el
 foreach src : mu4e_bc_srcs
   target_name= '@BASENAME@.elc'
-  target_path = join_paths(meson.current_build_dir(), target_name)
+  target_path = meson.current_build_dir() / target_name
   target_func = '(setq byte-compile-dest-file-function(lambda(_) "' + target_path + '"))'
 
   custom_target(src.underscorify() + '_el',
@@ -122,15 +122,16 @@ endforeach
 
 # hack-around for native compile issue: copy sources to builddir.
 # see: https://debbugs.gnu.org/db/47/47987.html
+mu4e_el_copies=[]
 foreach src : mu4e_srcs
-  configure_file(input: src, output:'@BASENAME@.el', copy:true,
-                 install_mode: 'r--r--r--')
-  # seems meson ignores 'install_mode' for copy (1.5.1, 1.6.1)
+  mu4e_el_copies += fs.copyfile(src)
 endforeach
 
 # this depends on the above hack: all mu4e elisp files needs to be in builddir
-mu4e_autoloads = configure_file(
+mu4e_autoloads = custom_target('mu4e-autoloads',
   output: 'mu4e-autoloads.el',
+  build_by_default: true,
+  depends: mu4e_el_copies,
   install: true,
   install_dir: mu4e_lispdir,
   command: [emacs,
@@ -144,7 +145,7 @@ mu4e_autoloads = configure_file(
 install_data(mu4e_srcs, install_dir: mu4e_lispdir)
 
 # install mu4e-about.org
-install_data('mu4e-about.org', install_dir : join_paths(datadir, 'doc', 'mu'))
+install_data('mu4e-about.org', install_dir : datadir / 'doc' / 'mu')
 
 if makeinfo.found()
   custom_target('mu4e_info',
@@ -152,12 +153,12 @@ if makeinfo.found()
                 output: 'mu4e.info',
                 install_dir: infodir,
                 install: true,
+                depends: fdl_texi,
                 command: [makeinfo,
-                          '-o', join_paths(meson.current_build_dir(), 'mu4e.info'),
-                          join_paths(meson.current_source_dir(), 'mu4e.texi'),
-                          '-I', join_paths(meson.current_build_dir(), '..')])
+                          '-o', meson.current_build_dir() / 'mu4e.info',
+                          meson.current_source_dir() / 'mu4e.texi',
+                          '-I', meson.current_build_dir() / '..'])
   if install_info.found()
-    infodir = join_paths(get_option('prefix') / get_option('infodir'))
     meson.add_install_script(install_info_script, infodir, 'mu4e.info')
   endif
 endif

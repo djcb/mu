@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -37,9 +37,9 @@ mu = executable(
 ],
   dependencies: [ glib_dep, gmime_dep, cli11_dep,
                   lib_mu_dep, mu_scm_dep, thread_dep, config_h_dep ],
-  cpp_args: ['-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
+  cpp_args: ['-DMU_SCRIPTS_DIR="' + datadir / 'mu' / 'scripts' + '"'],
   install: true)
 #
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   subdir('tests')
 endif

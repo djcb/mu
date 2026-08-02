@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2024 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ compile_scm=configure_file(
   install: false
 )
 run_command('chmod', '+x', compile_scm, check: true)
-scm_compiler=join_paths(meson.current_build_dir(), 'compile-scm')
+scm_compiler=meson.current_build_dir() / 'compile-scm'
 
 #
 # NOTE: snarfing works but you get:
@@ -53,12 +53,9 @@ if do_snarf
   snarf_args=['-o', '@OUTPUT@', '@INPUT@', '-I' + meson.current_source_dir() + '/..',
               '-I' + meson.current_source_dir() + '/../lib',
               '-I' + meson.current_build_dir() + '/..']
-  snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('includedir'),
-                                  'glib-2.0')
-  snarf_args += '-I' + join_paths(glib_dep.get_pkgconfig_variable('libdir'),
-                                  'glib-2.0', 'include')
-  snarf_args += '-I' + join_paths(guile_dep.get_pkgconfig_variable('includedir'),
-                                  'guile', '3.0')
+  snarf_args += '-I' + glib_dep.get_variable(pkgconfig: 'includedir') / 'glib-2.0'
+  snarf_args += '-I' + glib_dep.get_variable(pkgconfig: 'libdir') / 'glib-2.0' / 'include'
+  snarf_args += '-I' + guile_dep.get_variable(pkgconfig: 'includedir') / 'guile' / '3.0'
   snarf_gen=generator(snarf,
                       output: '@BASENAME@.x',
                       arguments: snarf_args)
@@ -83,32 +80,32 @@ if makeinfo.found()
                 output: 'mu-guile.info',
                 install: true,
                 install_dir: infodir,
+                depends: fdl_texi,
                 command: [makeinfo,
-                          '-o', join_paths(meson.current_build_dir(), 'mu-guile.info'),
-                          join_paths(meson.current_source_dir(), 'mu-guile.texi'),
-                          '-I', join_paths(meson.current_build_dir(), '..')])
+                          '-o', meson.current_build_dir() / 'mu-guile.info',
+                          meson.current_source_dir() / 'mu-guile.texi',
+                          '-I', meson.current_build_dir() / '..'])
   if install_info.found()
-    infodir = join_paths(get_option('prefix') / get_option('infodir'))
     meson.add_install_script(install_info_script, infodir, 'mu-guile.info')
   endif
 endif
 
-guile_scm_dir=join_paths(datadir, 'guile', 'site', '3.0')
+guile_scm_dir=datadir / 'guile' / 'site' / '3.0'
 install_data(['mu.scm'], install_dir: guile_scm_dir)
-guile_scm_mu_dir=join_paths(guile_scm_dir, 'mu')
+guile_scm_mu_dir=guile_scm_dir / 'mu'
 foreach mod : ['script.scm', 'message.scm', 'stats.scm', 'plot.scm']
-    install_data(join_paths('mu', mod), install_dir: guile_scm_mu_dir)
+    install_data('mu' / mod, install_dir: guile_scm_mu_dir)
 endforeach
 
 mu_guile_scripts=[
-  join_paths('scripts', 'find-dups.scm'),
-  join_paths('scripts', 'msgs-count.scm'),
-  join_paths('scripts', 'histogram.scm')]
-mu_guile_script_dir=join_paths(datadir, 'mu', 'scripts')
+  'scripts' / 'find-dups.scm',
+  'scripts' / 'msgs-count.scm',
+  'scripts' / 'histogram.scm']
+mu_guile_script_dir=datadir / 'mu' / 'scripts'
 install_data(mu_guile_scripts, install_dir: mu_guile_script_dir)
 
 guile_builddir=meson.current_build_dir()
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   subdir('tests')
 endif

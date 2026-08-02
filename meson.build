@@ -20,11 +20,13 @@ project('mu', ['c', 'cpp'],
         version: '1.14.3-pre5',
         meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
-        default_options : [
-          'buildtype=debugoptimized',
-          'warning_level=3',
-          'c_std=c11',
-          'cpp_std=c++20'])
+        default_options : {
+          'buildtype': 'debugoptimized',
+          'warning_level': '3',
+          'c_std': 'c11',
+          'cpp_std': 'c++20'})
+
+fs = import('fs')
 
 # hard-code the date here (for reproducibility); we derive the dates used in
 # e.g. documentation from this.
@@ -39,7 +41,7 @@ infodir   = prefixdir / get_option('infodir')
 
 # allow for configuring lispdir, as with autotools.
 if get_option('lispdir') == ''
-  mu4e_lispdir= datadir / join_paths('emacs', 'site-lisp', 'mu4e')
+  mu4e_lispdir= datadir / 'emacs' / 'site-lisp' / 'mu4e'
 else
   mu4e_lispdir= get_option('lispdir') / 'mu4e'
 endif
@@ -88,11 +90,8 @@ if get_option('buildtype') == 'debug'
 endif
 
 # extra arguments, if available
-foreach extra_arg : extra_flags + extra_cpp_flags
-  if cxx.has_argument (extra_arg)
-    add_project_arguments([extra_arg], language: 'cpp')
-  endif
-endforeach
+add_project_arguments(cxx.get_supported_arguments(extra_flags + extra_cpp_flags),
+                      language: 'cpp')
 
 # some clang don't have charconv, but we need it.
 # https://github.com/djcb/mu/issues/2347
@@ -171,7 +170,7 @@ if pthread_setname_np_check
   config_h_data.set('HAVE_PTHREAD_SETNAME_NP', 1)
 endif
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   # only needed for tests
   cp=find_program('cp')
   ln=find_program('ln')
@@ -254,8 +253,8 @@ endif
 #
 # use Compact Language Detector2 if we can find it
 #
-cld2_dep = meson.get_compiler('cpp').find_library('cld2', required: get_option('cld2'))
-if not get_option('cld2').disabled() and cld2_dep.found()
+cld2_dep = cxx.find_library('cld2', required: get_option('cld2'))
+if get_option('cld2').allowed() and cld2_dep.found()
   config_h_data.set('HAVE_CLD2', 1)
 else
   message('CLD2 not found or disabled; no support for language detection')
@@ -288,7 +287,7 @@ else
   if not install_info.found()
     message('install-info not found')
   else
-    install_info_script=join_paths(build_aux, 'meson-install-info.sh')
+    install_info_script=build_aux / 'meson-install-info.sh'
   endif
 endif
 
@@ -318,13 +317,13 @@ version_texi_data.set('UPDATEDYEAR', mu_year)
 configure_file(input:  build_aux / 'version.texi.in',
                output: 'version.texi',
                configuration: version_texi_data)
-configure_file(input: build_aux / 'fdl.texi',
-               output: 'fdl.texi', copy:true)
+# build-time copy; texinfo targets must declare 'depends: fdl_texi'
+fdl_texi = fs.copyfile(build_aux / 'fdl.texi')
 
 ################################################################################
 # install some data files
 install_data('NEWS.org', 'IDEAS.org',
-             install_dir : join_paths(datadir, 'doc', 'mu'))
+             install_dir : datadir / 'doc' / 'mu')
 
 ################################################################################
 # subdirs
@@ -337,7 +336,7 @@ mu_scm_dep = declare_dependency()
 if guile_dep.found()
 
   # modern guile support
-  if not get_option('scm').disabled()
+  if get_option('scm').allowed()
     config_h_data.set('BUILD_SCM', 1)
     subdir('scm')
   else
@@ -345,7 +344,7 @@ if guile_dep.found()
   endif
 
   # old-style guile-support (deprecated)
-  if not get_option('guile').disabled()
+  if get_option('guile').allowed()
     message('old-style guile support is deprecated')
     config_h_data.set('BUILD_GUILE', 1)
     config_h_data.set_quoted('GUILE_BINARY',
@@ -379,6 +378,37 @@ configure_file(output : 'config.h', configuration : config_h_data)
 if gmime_dep.version() == '3.2.13'
   warning('gmime version 3.2.13 detected, which has a decoding bug')
   warning('See: https://github.com/jstedfast/gmime/issues/133')
+endif
+
+################################################################################
+# summary
+summary({'prefix'       : prefixdir,
+         'buildtype'    : get_option('buildtype'),
+         'c compiler'   : cc.get_id() + ' ' + cc.version(),
+         'c++ compiler' : cxx.get_id() + ' ' + cxx.version()},
+        section: 'Build')
+
+summary({'glib'   : glib_dep.version(),
+         'gmime'  : gmime_dep.version(),
+         'xapian' : xapian_dep.version(),
+         'fmt'    : fmt_dep.type_name() == 'internal' ? 'embedded' : fmt_dep.version(),
+         'CLI11'  : cli11_dep.type_name() == 'internal' ? 'embedded' : cli11_dep.version(),
+         'guile'  : guile_dep.found() ? guile_dep.version() : 'not found'},
+        section: 'Dependencies')
+
+summary({'language detection (cld2)'    : get_option('cld2').allowed() and cld2_dep.found(),
+         'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),
+         'guile (old-style, deprecated)': guile_dep.found() and get_option('guile').allowed(),
+         'readline'                     : get_option('readline').enabled(),
+         'tests'                        : get_option('tests').allowed(),
+         'info docs (makeinfo)'         : makeinfo.found(),
+         'mu4e, man-pages (emacs)'      : emacs.found()},
+        section: 'Features', bool_yn: true)
+
+if emacs.found()
+  summary({'emacs version': emacs.version(),
+           'mu4e lispdir' : mu4e_lispdir},
+          section: 'Mu4e')
 endif
 
 # Local Variables:

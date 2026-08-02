@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -43,6 +43,6 @@ lib_mu_message_dep = declare_dependency(
   include_directories:
     include_directories(['.', '..']))
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   subdir('tests')
 endif

@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -139,8 +139,8 @@ test('test-store-query',
 #
 # benchmarks
 #
-bench_maildirs=join_paths(meson.current_build_dir(), 'maildirs')
-bench_store=join_paths(meson.current_build_dir(), 'store')
+bench_maildirs=meson.current_build_dir() / 'maildirs'
+bench_store=meson.current_build_dir() / 'store'
 bench_indexer_exe = executable(
   'bench-indexer',
   'bench-indexer.cc',

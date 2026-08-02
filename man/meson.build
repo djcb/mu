@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -30,15 +30,15 @@ incs=[
   'muhome.inc',
   'prefooter.inc',
 ]
+inc_targets=[]
 foreach inc: incs
   # configure the .in ones
   if inc.substring(-3) == '.in'
     configure_file(input: inc,
                    output: '@BASENAME@',
                    configuration: man_data)
-  else # and copy the rest
-    configure_file(input: inc, output:'@BASENAME@.inc',
-                   copy:true)
+  else # and copy the rest (at build time)
+    inc_targets += fs.copyfile(inc)
   endif
 endforeach
 
@@ -69,7 +69,7 @@ man_orgs = [
 foreach src : man_orgs
   # meson makes in tricky to use the results of e.g. configure_file
   # in custom_commands..., so this is admittedly a little hacky.
-  org = join_paths(meson.current_build_dir(), src)
+  org = meson.current_build_dir() / src
   man = '@BASENAME@'
   section = src.substring(-5, -4)
 
@@ -95,7 +95,7 @@ foreach src : man_orgs
     '        (replace-regexp-in-string zwsp "" text))))',
     '  (org-export-to-file \'man "@0@"))'])
   expr = expr_tmpl.format(org.substring(0,-4))
-  sectiondir = join_paths(mandir, 'man' + section)
+  sectiondir = mandir / ('man' + section)
 
   custom_target(src + '-to-man',
                 build_by_default: true,
@@ -104,6 +104,7 @@ foreach src : man_orgs
                 install: true,
                 install_dir: sectiondir,
                 depend_files: incs,
+                depends: inc_targets,
                 command: [emacs,
                           '--no-init-file',
                           '--batch',

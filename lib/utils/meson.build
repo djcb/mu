@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-thirdparty=join_paths('..', '..', 'thirdparty')
+thirdparty='..' / '..' / 'thirdparty'
 
 srcs = [
   'mu-command-handler.cc',
@@ -28,7 +28,7 @@ srcs = [
   'mu-utils.cc',
 ]
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   test_srcs =  [ 'mu-test-utils.cc' ]
 else
   test_srcs =  []
@@ -62,6 +62,6 @@ html2text = executable('mu-html2text',
   cpp_args: ['-DBUILD_HTML_TO_TEXT'],
   install: false)
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   subdir('tests')
 endif

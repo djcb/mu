@@ -1,4 +1,4 @@
-## Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ test('test-options',
                 install: false,
                 build_by_default: false,
                 cpp_args: ['-DBUILD_TESTS',
-                           '-DMU_SCRIPTS_DIR="'+ join_paths(datadir, 'mu', 'scripts') + '"'],
+                           '-DMU_SCRIPTS_DIR="' + datadir / 'mu' / 'scripts' + '"'],
                 dependencies: [glib_dep, config_h_dep, cli11_dep, lib_mu_dep]))
 
 gmime_test = executable(
