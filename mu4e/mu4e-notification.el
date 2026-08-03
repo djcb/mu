@@ -1,6 +1,6 @@
 ;;; mu4e-notification.el --- Mail notifications -*- lexical-binding: t-*-
 
-;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -110,10 +110,7 @@ support."
              :body body
              :app-name "mu4e@emacs"
              :replaces-id mu4e--notification-id
-             ;; a custom mu4e icon would be nice...
-             ;; :app-icon (ignore-errors
-             ;;             (image-search-load-path
-             ;;              "gnus/gnus.png"))
+             :app-icon mu4e-icon-path
              :actions '("Show" "Favorite bookmark"
                         "default" "Favorite bookmark")
              :on-action (lambda (_1 _2) (mu4e-jump-to-favorite)))))

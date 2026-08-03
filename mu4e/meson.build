@@ -27,7 +27,8 @@ mu4e_meta = configure_file(
       'VERSION'           : meson.project_version(),
       'MU_VERSION_EXTRA'  : version_extra,
       'MU_DOC_DIR'        : datadir / 'doc' / 'mu',
-    })
+      'MU_ICON_PATH'      : muiconpath
+})
 
 mu4e_pkg_desc = configure_file(
   input: 'mu4e-pkg.el.in',
