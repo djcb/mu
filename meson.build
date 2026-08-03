@@ -39,6 +39,9 @@ datadir   = prefixdir / get_option('datadir')
 mandir    = prefixdir / get_option('mandir')
 infodir   = prefixdir / get_option('infodir')
 
+svgicondir = datadir / 'icons' / 'hicolor' / 'scalable' / 'apps'
+muiconpath = svgicondir / 'mu-icon.svg'
+
 # allow for configuring lispdir, as with autotools.
 if get_option('lispdir') == ''
   mu4e_lispdir= datadir / 'emacs' / 'site-lisp' / 'mu4e'
@@ -327,6 +330,7 @@ install_data('NEWS.org', 'IDEAS.org',
 
 ################################################################################
 # subdirs
+subdir('assets')
 subdir('lib')
 
 # dummy-dep.
