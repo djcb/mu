@@ -39,7 +39,9 @@ mu = executable(
                   lib_mu_dep, mu_scm_dep, thread_dep, config_h_dep ],
   cpp_args: ['-DMU_SCRIPTS_DIR="' + datadir / 'mu' / 'scripts' + '"'],
   install: true)
-#
+
+subdir('completion')
+
 if get_option('tests').allowed()
   subdir('tests')
 endif

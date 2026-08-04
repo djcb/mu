@@ -415,6 +415,9 @@ if emacs.found()
           section: 'Mu4e')
 endif
 
+summary({'zsh' : get_option('zsh-completion').allowed()},
+        section: 'Completion', bool_yn: true)
+
 # Local Variables:
 # indent-tabs-mode: nil
 # End:
