@@ -3716,7 +3716,7 @@ session-bus, and at object-path @t{nl.djcbsoftware.Mu4e}, exposes the interface
 @t{/nl/djcbsoftware/Mu4e}.
 
 The interface is described as an XML string, in a constant
-@code{mu4e-dbus-intrspection-xml}. This currently looks like:
+@code{mu4e-dbus-introspection-xml}. This currently looks like:
 
 @verbatim
   <node>
