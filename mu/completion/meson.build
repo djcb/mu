@@ -14,9 +14,25 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+#
+# bash
+#
+if get_option('bash-completion').allowed()
+  if get_option('bash-completion-dir') == ''
+    bcdir = datadir / 'bash-completion' / 'completions'
+  else
+    bcdir = get_option('bash-completion-dir')
+  endif
 
+  install_data('mu-completion.bash',
+               rename: 'mu',
+               install_dir: bcdir)
+endif
+
+#
+# zsh
+#
 if get_option('zsh-completion').allowed()
-
   if get_option('zsh-completion-dir') == ''
     zcdir = datadir / 'zsh' / 'site-functions'
   else
