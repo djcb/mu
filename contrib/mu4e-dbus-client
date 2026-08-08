@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Read mu4e information via D-Bus.
+
+A little script to interpret the information from D-Bus and print it.
+
+Requires the 'dbus-next' package and Emacs with a running mu4e, with
+'mu4e-dbus-mode' enabled.
+
+For now, two output formats are available:
+
+1) "dump"   -> dump the information (default)
+2) "waybar" -> write out json, to be used by "Waybar"
+    (https://github.com/alexays/waybar)
+
+For waybar, you could add something like the following to your
+"config.jsonc" (update the "exec" path as needed):
+
+   "custom/mu4e": {
+      "exec": "~/src/mu/contrib/mu4e-dbus-client --format waybar",
+      "return-type": "json",
+      "interval": 120,
+      "format": "{text}{icon}",
+      "format-icons": {
+        "empty": "📭",
+        "unread": "📬",
+        "new": "📧"
+       },
+      "tooltip" : true
+     }
+"""
+
+import argparse
+import json
+
+from typing import Callable
+
+import asyncio
+import sys
+from dbus_next.aio import MessageBus
+from dbus_next import Variant
+
+SERVICE = "nl.djcbsoftware.Mu4e"
+OBJECT_PATH = "/nl/djcbsoftware/Mu4e"
+INTERFACE = "nl.djcbsoftware.Mu4e"
+PROPS_INTERFACE = "org.freedesktop.DBus.Properties"
+
+async def get_all_properties():
+    """Connect to mu4e's D-Bus service and read all properties."""
+    bus = await MessageBus().connect()
+
+    introspection = await bus.introspect(SERVICE, OBJECT_PATH)
+    proxy = bus.get_proxy_object(SERVICE, OBJECT_PATH, introspection)
+    props = proxy.get_interface(PROPS_INTERFACE)
+
+    all_props = await props.call_get_all(INTERFACE)
+
+    return all_props
+
+def unpack_variant(val):
+    """Recursively unpack D-Bus Variant types."""
+    if isinstance(val, Variant):
+        return unpack_variant(val.value)
+    if isinstance(val, list):
+        return [unpack_variant(v) for v in val]
+    if isinstance(val, dict):
+        return {k: unpack_variant(v) for k, v in val.items()}
+    return val
+
+def print_query_info(query_items: dict):
+    """Pretty-print the QueryInfo array of dicts."""
+    for i, item in enumerate(query_items):
+        print(f"\n  [{i}]")
+        for key, val in sorted(item.items()):
+            print(f"    {key}: {val}")
+
+def output_dump(props: dict):
+    """Dump the information acquired from dbus/mu4e."""
+    for key in ("Version", "DatabasePath", "RootMaildir", "Context"):
+        if key in props:
+            print(f"{key}: {props[key]}")
+
+    print(f"{props}")
+
+    if "QueryInfo" in props:
+        print("\nQueryInfo:")
+        print_query_info(props["QueryInfo"])
+
+def info_blob(props: dict):
+    """Get some info blob (e.g. for tooltips); use HTML format."""
+
+    info = "<big>Queries</big> (<i>unread</i>/<i>read</i>)\r\r"
+    if "QueryInfo" in props:
+        for item in props["QueryInfo"]:
+            info += f'''<b>{item['name']}</b>: {item["unread"]}/{item["count"]}\r'''
+
+    return info
+
+def output_waybar(props: dict):
+    """Output DBus information in Waybar format.
+
+    The 'alt' field is one of 'new', 'unread' or 'empty', so it can be used to
+    select an icon from Waybar's "format-icons" (which requires "{icon}" in the
+    module's "format").
+    """
+
+    qinfo = props.get("QueryInfo") or []
+    fav = next((item for item in qinfo if item.get("favorite")), None)
+
+    if fav is None:
+        print(json.dumps({"text": "", "alt": "empty", "tooltip":
+                          info_blob(props)}))
+        return
+
+    # favorite, which is the query shown on the bar.
+    if fav.get('delta-unread', 0) > 0:
+        alt = "new"
+        text = f"(<b>{fav['delta-unread']}</b>/{fav['unread']}/{fav['count']})"
+    elif fav.get('unread', 0) > 0:
+        alt = "unread"
+        text = f"({fav['unread']}/{fav['count']})"
+    else:
+        alt = "empty"
+        text = f"({fav['unread']}/{fav['count']})"
+
+    output = {
+        "text"    : text,
+        "alt"     : alt,
+        "class"   : alt,
+        "tooltip" : info_blob(props)
+    }
+    print(f"{json.dumps(output)}")
+
+Printer = Callable[[str], None]
+
+async def do_output(output_func: Printer):
+    """Grab the properties and output using output_func."""
+    all_props = await get_all_properties()
+    props = {k: unpack_variant(v) for k, v in all_props.items()}
+    output_func(props)
+
+# supported outputs
+outputs = {
+    "dump"   : output_dump,
+    "waybar" : output_waybar
+}
+
+async def main():
+    """Main routine"""
+
+    # os.system
+    parser = argparse.ArgumentParser(description="Mu4e D-Bus Client")
+    parser.add_argument("-f", "--format", metavar='FORMAT', type=str,
+                        default='dump', dest="format",
+                        help='Output format')
+
+    options = parser.parse_args()
+    output_func = outputs.get(options.format)
+
+    try:
+        if output_func is None:
+            raise ValueError(f"unknown format {options.format}")
+
+        await do_output(output_func)
+
+    except Exception as e:
+        print(f"Error: could not connect to mu4e D-Bus service: {e}",
+              file=sys.stderr)
+        print("Make sure mu4e is running with mu4e-dbus-mode enabled.",
+              file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    asyncio.run(main())
