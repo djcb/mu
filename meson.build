@@ -68,7 +68,7 @@ extra_flags = [
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
   '-Wno-stringop-overflow',
-  # c++23, in tabulate.hpp (3rd-party)
+  # c++23, in tabulate (3rd-party)
   '-Wno-deprecated-literal-operator'
 ]
 
@@ -218,28 +218,17 @@ endif
 #
 # soft dependencies
 #
-
-# use system's fmt if found, otherwise fall back to embedded version
-# we can probably get away with a lower version, but want to have (roughly)
-# the same in embedded / system.
-fmt_dep = dependency('fmt', version: '>=11.1', required:false)
-if not fmt_dep.found() or get_option('use-embedded-fmt')
-  message('using embedded fmt')
-  fmt_dep = declare_dependency(
-    include_directories : include_directories('thirdparty/fmt'),
-    compile_args: '-DFMT_HEADER_ONLY')
-endif
-
-# use system's CLI11 if found, otherwise fall back to embedded version. we can
-# probably get away with a lower version, but want to have (roughly) the same in
-# embedded / system.
-cli11_dep = dependency('CLI11', version: '>=2.4', required:false)
-if not cli11_dep.found() or get_option('use-embedded-cli11')
-  message('using embedded CLI11')
-  cli11_dep = declare_dependency(
-    compile_args: '-DUSE_EMBEDDED_CLI11',
-    include_directories : include_directories('thirdparty/cli11'))
-endif
+# for these, we use the system-installed version when it is found (and
+# recent enough); otherwise, meson falls back to the subproject (wrap)
+# version, see subprojects/*.wrap. To force the wrap version, use e.g.
+#   meson setup --force-fallback-for=fmt,CLI11
+#
+fmt_dep      = dependency('fmt', version: '>=11.1',
+                          default_options: {'default_library': 'static'})
+cli11_dep    = dependency('CLI11', version: '>=2.4')
+tabulate_dep = dependency('tabulate')
+tl_expected_dep = dependency('tl-expected')
+tl_optional_dep = dependency('tl-optional')
 
 #
 # logging
@@ -392,13 +381,20 @@ summary({'prefix'       : prefixdir,
          'c++ compiler' : cxx.get_id() + ' ' + cxx.version()},
         section: 'Build')
 
-summary({'glib'   : glib_dep.version(),
-         'gmime'  : gmime_dep.version(),
-         'xapian' : xapian_dep.version(),
-         'fmt'    : fmt_dep.type_name() == 'internal' ? 'embedded' : fmt_dep.version(),
-         'CLI11'  : cli11_dep.type_name() == 'internal' ? 'embedded' : cli11_dep.version(),
-         'guile'  : guile_dep.found() ? guile_dep.version() : 'not found'},
-        section: 'Dependencies')
+dep_summary = {'glib'   : glib_dep.version(),
+               'gmime'  : gmime_dep.version(),
+               'xapian' : xapian_dep.version(),
+               'guile'  : guile_dep.found() ? guile_dep.version() : 'not found'}
+# for wrap-capable deps, note whether we use the system or subproject version
+foreach name, dep : {'fmt'         : fmt_dep,
+                     'CLI11'       : cli11_dep,
+                     'tabulate'    : tabulate_dep,
+                     'tl-expected' : tl_expected_dep,
+                     'tl-optional' : tl_optional_dep}
+  dep_summary += {name: dep.version() +
+                        (dep.type_name() == 'internal' ? ' (subproject)' : '')}
+endforeach
+summary(dep_summary, section: 'Dependencies')
 
 summary({'language detection (cld2)'    : get_option('cld2').allowed() and cld2_dep.found(),
          'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),

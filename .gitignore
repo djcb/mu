@@ -139,3 +139,8 @@ compile_commands.json
 /mu/test-query
 /mu/test-threads
 /lib/test-threads
+
+# meson subprojects: only track the .wrap files
+/subprojects/*
+!/subprojects/*.wrap
+!/subprojects/packagefiles

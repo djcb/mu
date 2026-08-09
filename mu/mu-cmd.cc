@@ -43,7 +43,7 @@
 #include "utils/mu-utils-file.hh"
 #include "utils/mu-utils.hh"
 
-#include <thirdparty/tabulate.hpp>
+#include <tabulate/table.hpp>
 
 using namespace Mu;
 

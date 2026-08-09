@@ -28,7 +28,7 @@
 
 #include <fmt/ostream.h>
 
-#include <thirdparty/tabulate.hpp>
+#include <tabulate/table.hpp>
 
 using namespace Mu;
 using namespace tabulate;
