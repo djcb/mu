@@ -162,8 +162,11 @@ ContactsCache::Private::serialize() const
 			       ci.message_date, SepaChar2,
 			       ci.frequency);
 	}
-	config_db_.set<Config::Id::Contacts>(s);
-	dirty_ = 0;
+	if (const auto res{config_db_.set<Config::Id::Contacts>(s)}; res)
+		dirty_ = 0;
+	else
+		mu_error("failed to serialize contacts: {}",
+			 res.error());
 }
 
 ContactsCache::ContactsCache(Config& config_db)

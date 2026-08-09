@@ -103,8 +103,10 @@ struct Store::Private {
 		if (conf)
 			config.import_configurable(*conf);
 
-		config.set<Config::Id::RootMaildir>(remove_slash(root_maildir));
-		config.set<Config::Id::SchemaVersion>(ExpectedSchemaVersion);
+		if (const auto res{config.set<Config::Id::RootMaildir>(remove_slash(root_maildir))}; !res)
+			throw res.error();
+		if (const auto res{config.set<Config::Id::SchemaVersion>(ExpectedSchemaVersion)}; !res)
+			throw res.error();
 
 		return config;
 	}
@@ -420,8 +422,11 @@ Store::remove_message(const std::string& path)
 		for (auto&& label : doc.string_vec_value(Field::Id::Labels))
 			priv_->labels_cache_.decrease(label);
 
-		xapian_db().delete_document(term);
-		mu_debug("deleted message @ {} from store", path);
+		if (const auto res{xapian_db().delete_document(term)}; res)
+			mu_debug("deleted message @ {} from store", path);
+		else
+			mu_warning("failed to delete message @ {}: {}",
+				   path, res.error());
 
 		return true;
 	}
@@ -432,7 +437,8 @@ Store::remove_messages(const std::vector<Store::Id>& ids)
 {
 	std::lock_guard guard{priv_->lock_};
 
-	xapian_db().request_transaction();
+	if (const auto res{xapian_db().request_transaction()}; !res)
+		mu_warning("failed to request transaction: {}", res.error());
 
 	for (auto&& id : ids)
 		priv_->remove_message_by_id_unlocked(id);
@@ -464,7 +470,10 @@ Store::remove_messages_by_term(std::span<const std::string> terms,
 	std::vector<Xapian::Query> qvec;
 	std::vector<Store::Id> ids_to_remove;
 
-	xapian_db().request_transaction();
+	if (const auto res{xapian_db().request_transaction()}; !res) {
+		mu_error("failed to request transaction: {}", res.error());
+		return 0;
+	}
 
 	while (!terms.empty()) {
 		auto chunk = terms.subspan(0, std::min<size_t>(terms.size(), 1024));
@@ -810,7 +819,11 @@ Store::maildirs() const
 	};
 
 	Scanner scanner{root_maildir(), handler, Scanner::Mode::MaildirsOnly};
-	scanner.start();
+	if (const auto res{scanner.start()}; !res) {
+		mu_warning("failed to start scanner: {}", res.error());
+		return {};
+	}
+
 	std::ranges::sort(mdirs);
 
 	return mdirs;

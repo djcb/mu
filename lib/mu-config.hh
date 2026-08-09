@@ -430,6 +430,21 @@ public:
 	}
 
 	/**
+	 * Set a new value for some property; unlike set(), merely log a
+	 * warning if that fails. For callers that cannot meaningfully
+	 * handle the error.
+	 *
+	 * @param prop_id property-id
+	 * @param val the new value (of the correct type)
+	 */
+	template<Id ID, typename T>
+	void checked_set(const T& val) {
+		if (const auto res{set<ID>(val)}; !res)
+			mu_warning("failed to set config property '{}': {}",
+				   property<ID>().name, res.error());
+	}
+
+	/**
 	 * Is this a read-only Config?
 	 *
 	 *

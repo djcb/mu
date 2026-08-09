@@ -104,11 +104,13 @@ subr_cc_store_cfind(SCM store_scm, SCM pattern_scm, SCM personal_scm, SCM after_
 	// 0 means "unlimited"
 	const size_t maxnum = from_scm_with_default(max_results_scm, 0U, func, 5);
 
-	to_store(store_scm, func, 1).contacts_cache().for_each(
+	const auto res = to_store(store_scm, func, 1).contacts_cache().for_each(
 		[&](const auto& contact)->bool {
 			contacts = scm_cons(to_scm(contact), contacts);
 			return true;
 		}, pattern, personal, after, maxnum);
+	if (!res)
+		throw ScmError{ScmError::Id::WrongArg, func, 2, pattern_scm, "pattern"};
 
 	return scm_reverse_x(contacts, SCM_EOL);
 } catch (const ScmError& scm_err) {

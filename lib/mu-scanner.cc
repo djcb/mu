@@ -429,7 +429,10 @@ main (int argc, char *argv[])
 
 	Scanner scanner{argv[1], on_path, Mode::MaildirsOnly};
 
-	scanner.start();
+	if (const auto res{scanner.start()}; !res) {
+		mu_printerrln("scan failed: {}", res.error());
+		return 1;
+	}
 
 	return 0;
 }

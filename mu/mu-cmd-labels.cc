@@ -67,7 +67,9 @@ label_update(Mu::Store& store, const Options& opts)
 				mu_println("labels: apply {} to {}", labelstr, msg->path());
 
 			if (!opts.labels.dry_run) {
-				store.update_labels(*msg, deltas);
+				if (const auto res{store.update_labels(*msg, deltas)}; !res)
+					mu_warning("failed to update labels for {}: {}",
+						   msg->path(), res.error());
 			}
 			++n;
 		}
@@ -101,7 +103,9 @@ label_clear(Mu::Store& store, const Options& opts)
 				mu_println("labels: clear all from {}", msg->path());
 
 			if (!opts.labels.dry_run) {
-				store.clear_labels(*msg);
+				if (const auto res{store.clear_labels(*msg)}; !res)
+					mu_warning("failed to clear labels for {}: {}",
+						   msg->path(), res.error());
 			}
 			++n;
 		}
