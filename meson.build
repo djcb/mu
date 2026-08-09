@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.14.3-pre5',
+        version: '1.14.3',
         meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
         default_options : {
@@ -28,9 +28,9 @@ project('mu', ['c', 'cpp'],
 
 fs = import('fs')
 
-# hard-code the date here (for reproducibility); we derive the dates used in
+# hard-code the datxe here (for reproducibility); we derive the dates used in
 # e.g. documentation from this.
-mu_date='2026-07-31'
+mu_date='2026-08-09'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -415,7 +415,8 @@ if emacs.found()
           section: 'Mu4e')
 endif
 
-summary({'zsh' : get_option('zsh-completion').allowed()},
+summary({'bash' : get_option('bash-completion').allowed(),
+         'zsh'  : get_option('zsh-completion').allowed()},
         section: 'Completion', bool_yn: true)
 
 # Local Variables:
