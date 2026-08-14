@@ -80,6 +80,13 @@ struct Container {
 
 	std::string thread_date_key;
 
+	// The container's own date-key, set once from its query-match and never
+	// overwritten by the bubble-up above. Siblings must sort by this, not by
+	// thread_date_key -- otherwise a subthread gaining a new, later message
+	// (e.g. a reply to one message in a patch series) reorders it among its
+	// siblings, even though its own date didn't change.
+	std::string own_date_key;
+
 	Option<QueryMatch&> query_match;
 	bool                is_nuked{};
 	Container*          parent{};
@@ -191,9 +198,9 @@ determine_id_table(QueryResultsType& qres)
 		// know what query_matchs will be at the root level yet, so remember
 		// both. Moreover, even when sorting the top-level in descending
 		// order, still sort the thread levels below that in ascending
-		// order.
-		container.thread_date_key = container.query_match->date_key =
-		    mi.date_str().value_or("");
+		// order, keeping sibling order stable.
+		container.own_date_key = container.thread_date_key =
+		    container.query_match->date_key = mi.date_str().value_or("");
 		// initial guess for the thread-date; might be updated
 		// later.
 
@@ -487,9 +494,13 @@ sort_container(Container& container)
 	for (auto& child : container.children)
 		sort_container(*child);
 
-	// now sort this level; use a stable sort so messages with equal
-	// dates keep their original (mset) order.
-	std::ranges::stable_sort(container.children, {}, &Container::thread_date_key);
+	// now sort this level, by each child's own date, falling back to
+	// thread_date_key if the container has no message of its own; use a
+	// stable sort so messages with equal dates keep their original (mset)
+	// order.
+	std::ranges::stable_sort(container.children, {}, [](const Container* c) {
+		return c->own_date_key.empty() ? c->thread_date_key : c->own_date_key;
+	});
 
 	// and 'bubble up' the date of the *newest* message with a date. We
 	// reasonably assume that it's later than its parent.
@@ -699,6 +710,29 @@ test_sort_descending()
 
 	assert_thread_paths(results,
 			    {{"m1", "1:f:f:z"}, {"m2", "1:f:z"}, {"m3", "1:z"}, {"m4", "0:z"}});
+}
+
+static void
+test_sibling_order_stable()
+{
+	auto results = MockQueryResults{
+	    MockQueryResult{"cover", "1", {}},
+	    MockQueryResult{"m1", "2", {"cover"}},
+	    MockQueryResult{"m2", "3", {"cover"}},
+	    MockQueryResult{"m3", "4", {"cover"}},
+	    MockQueryResult{"reply-m2", "5", {"cover", "m2"}},
+	};
+
+	calculate_threads(results, false);
+
+	assert_thread_paths(results,
+			    {
+				{"cover", "0"},
+				{"m1", "0:0"},
+				{"m2", "0:1"},
+				{"reply-m2", "0:1:0"},
+				{"m3", "0:2"},
+			    });
 }
 
 static void
@@ -931,6 +965,7 @@ try {
 
 	g_test_add_func("/threader/sort/ascending", test_sort_ascending);
 	g_test_add_func("/threader/sort/decending", test_sort_descending);
+	g_test_add_func("/threader/sort/sibling-order-stable", test_sibling_order_stable);
 
 	g_test_add_func("/threader/id-table-inconsistent", test_id_table_inconsistent);
 	g_test_add_func("/threader/dups/dup-last", test_dups_dup_last);
