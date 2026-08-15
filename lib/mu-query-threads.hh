@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -27,6 +27,9 @@ namespace Mu {
  * Calculate the threads for these query results; that is, determine the
  * thread-paths for each message, so we can let Xapian order them in the correct
  * order.
+ *
+ * This is strongly inspired by the JWZ message threading algorithm
+ *    https://www.jwz.org/doc/threading.html
  *
  * Note - threads are sorted chronologically, and the messages below the top
  * level are always sorted in ascending orde
