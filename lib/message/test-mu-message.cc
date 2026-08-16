@@ -867,6 +867,44 @@ On Thu, Aug 04, 2022 at 05:31:39PM +0100, Robin Murphy wrote:
 
 
 static void
+test_message_references_capped()
+{
+	// a too-big References header must not produce an
+	// unbounded reference list (see MimeMessage::references): keep
+	// first (thread-id) + most-recent ancestors.
+	constexpr size_t n_refs = 1000;
+	constexpr size_t cap	= 256; // must match max_references
+
+	std::string hdr{"References:"};
+	for (size_t i = 0; i != n_refs; ++i)
+		hdr += mu_format(" <r{:04}@x>", i);
+
+	const auto msgtext =
+		hdr + "\n" +
+		"To: \"Robin Murphy\" <robin.murphy@arm.com>\n"
+		"From: \"Dan Carpenter\" <dan.carpenter@oracle.com>\n"
+		"Subject: capped\n"
+		"Date: Fri, 5 Aug 2022 09:37:02 +0300\n"
+		"Message-Id: <capped@kadam>\n"
+		"\n"
+		"body\n";
+
+	auto message{Message::make_from_text(
+			msgtext,
+			"/home/test/Maildir/inbox/cur/162342449279256.88888_1.evergrey:2,S")};
+	g_assert_true(!!message);
+
+	const auto refs{message->references()};
+	g_assert_cmpuint(refs.size(), ==, cap);
+	// thread-id (first) preserved, and the immediate parent (last) kept.
+	assert_equal(refs.front(), "r0000@x");
+	assert_equal(refs.back(), mu_format("r{:04}@x", n_refs - 1));
+	// the middle is dropped: second entry is the start of the kept tail.
+	assert_equal(refs.at(1), mu_format("r{:04}@x", n_refs - (cap - 1)));
+}
+
+
+static void
 test_message_outlook_body()
 {
 	constexpr auto msgtext =
@@ -1109,6 +1147,8 @@ main(int argc, char* argv[])
 			test_message_calendar);
 	g_test_add_func("/message/message/references",
 			test_message_references);
+	g_test_add_func("/message/message/references-capped",
+			test_message_references_capped);
 	g_test_add_func("/message/message/outlook-body",
 			test_message_outlook_body);
 	g_test_add_func("/message/message/message-id",
