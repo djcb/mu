@@ -26,6 +26,7 @@
 #include <mutex>
 #include <ranges>
 #include <regex>
+#include <unordered_set>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -476,16 +477,16 @@ MimeMessage::contacts(Contact::Type ctype) const noexcept
  * message-ids (in that order). Duplicates are removed.
  *
  * The _first_ one in the list determines the thread-id for the message.
+ *
+ * The number of references is capped (max_references), since the thread algo is
+ * recursive, and should still be plenty big.
  */
 std::vector<std::string>
 MimeMessage::references() const noexcept
 {
-	// is ref already in the list? O(n) but with small n.
-	auto is_dup = [](auto&& seq, const std::string& ref) {
-		return std::ranges::any_of(seq, [&](auto&& str) { return ref == str; });
-	};
+	constexpr size_t max_references = 256;
 
-	auto on_blacklist = [](auto&& msgid) {
+	const auto on_blacklist = [](const char* msgid) {
 		// don't include empty message-ids
 		if (!*msgid)
 			return true;
@@ -498,6 +499,7 @@ MimeMessage::references() const noexcept
 	};
 
 	std::vector<std::string> refs;
+	std::unordered_set<std::string> seen; // O(1) dup-check, keeps this O(n)
 	for (auto&& ref_header: { "References", "In-reply-to" }) {
 
 		auto hdr{header(ref_header)};
@@ -508,14 +510,26 @@ MimeMessage::references() const noexcept
 		if (!mime_refs)
 			continue; /* try the next header */
 
-		refs.reserve(refs.size() + g_mime_references_length(mime_refs));
+		const auto n_refs{g_mime_references_length(mime_refs)};
+		refs.reserve(refs.size() + n_refs);
 
-		for (auto i = 0; i != g_mime_references_length(mime_refs); ++i) {
+		for (auto i = 0; i != n_refs; ++i) {
 			const auto msgid{g_mime_references_get_message_id(mime_refs, i)};
-			if (msgid && !is_dup(refs, msgid) && !on_blacklist(msgid))
+			if (msgid && !on_blacklist(msgid) && seen.emplace(msgid).second)
 				refs.emplace_back(msgid);
 		}
 		g_mime_references_free(mime_refs);
+	}
+
+	// cap hostile/pathological headers: keep the first reference (thread-id)
+	// plus the most-recent ancestors (the tail).
+	if (refs.size() > max_references) {
+		std::vector<std::string> capped;
+		capped.reserve(max_references);
+		capped.emplace_back(std::move(refs.front()));
+		for (auto it = refs.end() - (max_references - 1); it != refs.end(); ++it)
+			capped.emplace_back(std::move(*it));
+		refs = std::move(capped);
 	}
 
 	return refs;
