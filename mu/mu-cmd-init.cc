@@ -53,15 +53,15 @@ Mu::mu_cmd_init(const Options& opts)
 		Config conf{mdb};
 
 		if (opts.init.max_msg_size)
-			conf.set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
+			conf.checked_set<Config::Id::MaxMessageSize>(*opts.init.max_msg_size);
 		if (opts.init.batch_size && *opts.init.batch_size != 0)
-			conf.set<Config::Id::BatchSize>(*opts.init.batch_size);
+			conf.checked_set<Config::Id::BatchSize>(*opts.init.batch_size);
 		if (!opts.init.personal_addresses.empty())
-			conf.set<Config::Id::PersonalAddresses>(opts.init.personal_addresses);
+			conf.checked_set<Config::Id::PersonalAddresses>(opts.init.personal_addresses);
 		if (!opts.init.ignored_addresses.empty())
-			conf.set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
+			conf.checked_set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
 		if (opts.init.support_ngrams)
-			conf.set<Config::Id::NgramsEnabled>(true);
+			conf.checked_set<Config::Id::NgramsEnabled>(true);
 
 		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
 				       opts.init.maildir, conf);
@@ -77,7 +77,9 @@ Mu::mu_cmd_init(const Options& opts)
 		// mildly hacky
 		Options opts_copy{opts};
 		opts_copy.info.topic = "store";
-		mu_cmd_info(*store, opts_copy);
+		if (const auto res{mu_cmd_info(*store, opts_copy)}; !res)
+			mu_warning("failed to show store info: {}",
+				   res.error());
 
 		mu_println("Database is empty. You can use 'mu index' to fill it.");
 	}

@@ -16,19 +16,10 @@
 
 
 #
-# mu contains some 'vendored' dependencies under thirdparty/; those
-# are only used if the corresponding system package is not found
-# (if such exists). But, we can override:
-
-option('use-embedded-fmt',
-       type: 'boolean',
-       value: false,
-       description: 'Use the embedded fmt, even if system package is found')
-
-option('use-embedded-cli11',
-       type: 'boolean',
-       value: false,
-       description: 'Use the embedded CLI11, even if system package is found')
+# some dependencies (fmt, CLI11, tabulate, tl-expected, tl-optional) have
+# meson-wrap fallbacks under subprojects/; those are only used if the
+# corresponding system package is not found. To force use of the wrap
+# version, use meson's --force-fallback-for=<dep>,... option.
 
 #
 # language detection

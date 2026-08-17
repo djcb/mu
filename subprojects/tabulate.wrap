@@ -1,0 +1,13 @@
+[wrap-file]
+directory = tabulate-1.5
+source_url = https://github.com/p-ranav/tabulate/archive/refs/tags/v1.5.tar.gz
+source_filename = tabulate-1.5.tar.gz
+source_hash = 16b289f46306283544bb593f4601e80d6ea51248fde52e910cc569ef08eba3fb
+patch_filename = tabulate_1.5-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/tabulate_1.5-1/get_patch
+patch_hash = 3c7c5f90b320d9096bc4335ff2c1f0c5b8e0c869d25c92eb4fce519609fb22f7
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/tabulate_1.5-1/tabulate-1.5.tar.gz
+wrapdb_version = 1.5-1
+
+[provide]
+tabulate = tabulate_dep

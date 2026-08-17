@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -107,7 +107,7 @@ struct Error final : public std::exception {
 	 *
 	 * @return
 	 */
-	virtual const char* what() const noexcept override { return what_.c_str(); }
+	const char* what() const noexcept override { return what_.c_str(); }
 
 	/**
 	 * Get the error-code for this error
@@ -183,7 +183,10 @@ private:
 	std::string		hint_;
 };
 
-inline auto
+/**
+ * Make Error formattable with libfmt
+ */
+inline std::string
 format_as(const Error& err) {
 	return mu_format("<{} ({}:{})>",
 			 err.what(),

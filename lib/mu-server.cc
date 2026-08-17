@@ -141,7 +141,9 @@ struct Server::Private {
 		if (have_indexer_)
 			indexer().stop();
 		if (!tmp_dir_.empty())
-			remove_directory(tmp_dir_);
+			if (const auto res{remove_directory(tmp_dir_)}; !res)
+				mu_warning("failed to remove '{}': {}",
+					   tmp_dir_, res.error());
 	}
 	//
 	// construction helpers
@@ -552,13 +554,15 @@ Server::Private::contacts_handler(const Command& cmd)
 	auto       n{0};
 	auto&& out{make_output_stream()};
 	mu_print(out, "(");
-	store().contacts_cache().for_each([&](const Contact& ci) {
+	const auto res = store().contacts_cache().for_each([&](const Contact& ci) {
 		if (!match_contact(ci))
 			return true; // continue
 		mu_println(out.out(), "{}", quote(ci.display_name()));
 		++n;
 		return maxnum == 0 || n <  maxnum;
 	});
+	if (!res)
+		mu_warning("contacts: {}", res.error());
 	mu_print(out, ")");
 	output(mu_format("(:contacts {}\n:tstamp \"{}\")",
 			 out.to_string(), g_get_monotonic_time()));
@@ -896,7 +900,8 @@ Server::Private::index_handler(const Command& cmd)
 		throw Error{Error::Code::Xapian, "indexer is already running"};
 
 	do_index(conf);
-	store().serialize();
+	if (const auto res{store().serialize()}; !res)
+		mu_warning("failed to serialize store: {}", res.error());
 }
 
 void

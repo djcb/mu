@@ -46,11 +46,7 @@
 #include "mu-options.hh"
 #include "mu-script.hh"
 
-#ifdef USE_EMBEDDED_CLI11
-#include "CLI11.hpp"
-#else
-#include "CLI/CLI.hpp"
-#endif
+#include <CLI/CLI.hpp>
 
 using namespace Mu;
 

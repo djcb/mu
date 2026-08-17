@@ -1,0 +1,14 @@
+[wrap-file]
+directory = optional-1.1.0
+source_url = https://github.com/TartanLlama/optional/archive/refs/tags/v1.1.0.tar.gz
+source_filename = optional-1.1.0.tar.gz
+source_hash = 88ece79f3de5ccaec4191951a222f95cc80c4381dafd3163bdb1ff87cedf3118
+source_fallback_url = https://wrapdb.mesonbuild.com/v2/tl-optional_1.1.0-1/get_source/optional-1.1.0.tar.gz
+patch_filename = tl-optional_1.1.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/tl-optional_1.1.0-1/get_patch
+patch_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/tl-optional_1.1.0-1/tl-optional_1.1.0-1_patch.zip
+patch_hash = b64e2a89e44279074d845de4fce85151a27ce65298849e87f6069a77967d4eb7
+wrapdb_version = 1.1.0-1
+
+[provide]
+dependency_names = tl-optional

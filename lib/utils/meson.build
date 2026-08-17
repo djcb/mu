@@ -14,8 +14,6 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-thirdparty='..' / '..' / 'thirdparty'
-
 srcs = [
   'mu-command-handler.cc',
   'mu-html-to-text.cc',
@@ -42,16 +40,19 @@ lib_mu_utils=static_library('mu-utils',
   config_h_dep,
   readline_dep,
   cld2_dep,
-  fmt_dep
+  fmt_dep,
+  tl_expected_dep,
+  tl_optional_dep
 ], include_directories:
-     include_directories(['.', '..', thirdparty]),
+     include_directories(['.', '..']),
 install: false)
 
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
-  dependencies: [fmt_dep],
+  # tl-expected/tl-optional propagate: mu-result.hh/mu-option.hh need them
+  dependencies: [fmt_dep, tl_expected_dep, tl_optional_dep],
   include_directories:
-    include_directories(['.', '..', thirdparty]))
+    include_directories(['.', '..']))
 
 #
 # tools

@@ -427,7 +427,7 @@ Indexer::Private::scan_worker()
 	if (!aborted && conf_.scan) {
 		// Store started time, not ending time, so that next time we run we know to scan
 		// anything that appeared during our scan.
-		store_.config().set<Mu::Config::Id::LastIndex>(started_.value());
+		store_.config().checked_set<Mu::Config::Id::LastIndex>(started_.value());
 	}
 
 	completed_ = ::time({});

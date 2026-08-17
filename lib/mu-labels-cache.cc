@@ -30,9 +30,12 @@ Mu::LabelsCache::serialize() const
 	for (const auto&[label, n]: label_map_)
 		s += mu_format("{}{}{}\n", label, SepaChar2, n);
 
-	config_.set<Config::Id::Labels>(s);
-	mu_debug("labels: serialized {} change(s)", dirty_);
-	dirty_ = 0;
+	if (const auto res{config_.set<Config::Id::Labels>(s)}; res) {
+		mu_debug("labels: serialized {} change(s)", dirty_);
+		dirty_ = 0;
+	} else
+		mu_warning("labels: fail to store labels: {}",
+			   res.error());
 }
 
 Mu::LabelsCache::Map
