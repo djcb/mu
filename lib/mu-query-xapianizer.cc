@@ -508,7 +508,7 @@ test_xapian()
 		assert_equal(xq->get_description(), test.second);
 	}
 
-	remove_directory(testhome);
+	assert_valid_result(remove_directory(testhome));
 }
 
 int

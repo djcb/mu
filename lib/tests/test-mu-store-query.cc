@@ -1043,7 +1043,7 @@ https://trac.xapian.org/ticket/719
 
 	MemDb mdb;
 	Config conf{mdb};
-	conf.set<Config::Id::NgramsEnabled>(true);
+	assert_valid_result(conf.set<Config::Id::NgramsEnabled>(true));
 
 	TempDir tdir;
 	auto store{make_test_store(tdir.path(), test_msgs, conf)};
@@ -1113,11 +1113,13 @@ Boo!
 
 		g_assert_true(msg.sexp().to_string().find("shrike") == std::string::npos);
 
-		store.update_labels(msg, Labels::parse_delta_labels("+shrike"," ").value());
+		assert_valid_result(store.update_labels(
+					    msg, Labels::parse_delta_labels("+shrike"," ").value()));
 
 		g_assert_true(msg.sexp().to_string().find("shrike") != std::string::npos);
 
-		store.update_labels(msg, Labels::parse_delta_labels("-shrike"," ").value());
+		assert_valid_result(store.update_labels(
+					    msg, Labels::parse_delta_labels("-shrike"," ").value()));
 		g_assert_true(msg.sexp().to_string().find("shrike") == std::string::npos);
 	}
 

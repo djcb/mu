@@ -64,10 +64,10 @@ test_store_reinit()
 	{
 		MemDb mdb;
 		Config conf{mdb};
-		conf.set<Config::Id::MaxMessageSize>(1234567);
-		conf.set<Config::Id::BatchSize>(7654321);
-		conf.set<Config::Id::PersonalAddresses>(
-			StringVec{ "foo@example.com", "bar@example.com" });
+		assert_valid_result(conf.set<Config::Id::MaxMessageSize>(1234567));
+		assert_valid_result(conf.set<Config::Id::BatchSize>(7654321));
+		assert_valid_result(conf.set<Config::Id::PersonalAddresses>(
+			StringVec{ "foo@example.com", "bar@example.com" }));
 
 		auto store{Store::make_new(tempdir.path(), MuTestMaildir, conf)};
 		assert_valid_result(store);
@@ -581,7 +581,7 @@ test_store_circular_symlink()
 	// there will be a lot of dups....
 	g_assert_false(store.empty());
 
-	remove_directory(testhome);
+	assert_valid_result(remove_directory(testhome));
 }
 
 static void

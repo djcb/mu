@@ -80,7 +80,7 @@ test_add_ok()
 	}
 
 
-	remove_directory(testhome);
+	assert_valid_result(remove_directory(testhome));
 }
 
 static void
@@ -108,7 +108,7 @@ test_add_fail()
 		g_assert_cmpuint(res->exit_code,!=,0);
 	}
 
-	remove_directory(testhome);
+	assert_valid_result(remove_directory(testhome));
 }
 
 

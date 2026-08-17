@@ -440,8 +440,8 @@ test_mu_contacts_cache_personal()
 {
 	MemDb xdb{};
 	Config cdb{xdb};
-	cdb.set<Config::Id::PersonalAddresses>
-		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}});
+	assert_valid_result(cdb.set<Config::Id::PersonalAddresses>
+		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}}));
 	ContactsCache  contacts{cdb};
 
 	g_assert_true(contacts.is_personal("foo@example.com"));
@@ -460,8 +460,8 @@ test_mu_contacts_cache_ignored()
 {
 	MemDb xdb{};
 	Config cdb{xdb};
-	cdb.set<Config::Id::IgnoredAddresses>
-		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}});
+	assert_valid_result(cdb.set<Config::Id::IgnoredAddresses>
+		(StringVec{{"foo@example.com", "bar@cuux.org", "/bar-.*@fnorb.f./"}}));
 	ContactsCache  contacts{cdb};
 
 	g_assert_true(contacts.is_ignored("foo@example.com"));
@@ -500,7 +500,7 @@ test_mu_contacts_cache_foreach()
 		size_t n{};
 		g_assert_false(ccache.empty());
 		g_assert_cmpuint(ccache.size(),==,2);
-		ccache.for_each([&](auto&& contact) { ++n; return false; });
+		assert_valid_result(ccache.for_each([&](auto&& contact) { ++n; return false; }));
 		g_assert_cmpuint(n,==,1);
 	}
 
@@ -508,7 +508,7 @@ test_mu_contacts_cache_foreach()
 		size_t n{};
 		g_assert_false(ccache.empty());
 		g_assert_cmpuint(ccache.size(),==,2);
-		ccache.for_each([&](auto&& contact) { ++n; return true; });
+		assert_valid_result(ccache.for_each([&](auto&& contact) { ++n; return true; }));
 		g_assert_cmpuint(n,==,2);
 	}
 
@@ -517,7 +517,7 @@ test_mu_contacts_cache_foreach()
 		ccache.clear();
 		g_assert_true(ccache.empty());
 		g_assert_cmpuint(ccache.size(),==,0);
-		ccache.for_each([&](auto&& contact) { ++n; return true; });
+		assert_valid_result(ccache.for_each([&](auto&& contact) { ++n; return true; }));
 		g_assert_cmpuint(n,==,0);
 	}
 }
@@ -530,12 +530,12 @@ test_mu_contacts_cache_sort()
 		if (g_test_verbose())
 			fmt::print("contacts-cache:\n");
 
-		ccache.for_each([&](auto&& contact) {
+		assert_valid_result(ccache.for_each([&](auto&& contact) {
 			if (g_test_verbose())
 				fmt::print("\t- {}\n", contact.display_name());
 			str += contact.name;
 			return true;
-		});
+		}));
 		return str;
 	};
 

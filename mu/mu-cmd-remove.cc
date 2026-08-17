@@ -77,7 +77,7 @@ test_remove_ok()
 		g_assert_cmpuint(::access(testmsg.c_str(), F_OK), ==, 0);
 	}
 
-	remove_directory(testhome);
+	assert_valid_result(remove_directory(testhome));
 }
 
 
