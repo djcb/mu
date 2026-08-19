@@ -73,26 +73,26 @@ combination fields for <empty> (combination fields are discussed below).
 We can use the mentioned *--analyze* option to show the difference:
 
 #+begin_example
-mu find subject:"hi there" --analyze
-* query:
+$ mu find subject:"hi there" --analyze
+,* query:
   subject:hi there
-* parsed query:
+,* parsed query:
   (and (subject "hi") (_ "there"))
-* parsed query (expanded):
+,* parsed query (expanded):
   (and (subject "hi") (or (to "there") (cc "there") (bcc "there") (from "there") (subject "there") (body "there") (embed "there")))
-* Xapian query:
+,* Xapian query:
   Query((Shi AND (Tthere OR Cthere OR Hthere OR Fthere OR Sthere OR Bthere OR Ethere)))
 #+end_example
 
 And with quotes escaped:
 
 #+begin_example
-mu find subject:\"hi there\" --analyze
-* query:
+$ mu find subject:\"hi there\" --analyze
+,* query:
   subject:"hi there"
-* parsed query:
+,* parsed query:
   (or (subject "hi there") (subject (phrase "hi there")))
-* Xapian query:
+,* Xapian query:
   Query((Shi there OR (Shi PHRASE 2 Sthere)))
 #+end_example
 
@@ -483,7 +483,7 @@ this.
 This uses the *--analyze* option to *mu find*.
 #+begin_example
 $ mu find subject:wombat AND date:3m.. size:..2000  --analyze
-,*query:
+,* query:
   subject:wombat AND date:3m.. size:..2000
 ,* parsed query:
   (and (subject "wombat") (date (range "2023-05-30T06:10:09Z" "")) (size (range "" "2000")))
