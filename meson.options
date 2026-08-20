@@ -21,29 +21,21 @@
 # corresponding system package is not found. To force use of the wrap
 # version, use meson's --force-fallback-for=<dep>,... option.
 
-#
-# language detection
-#
-
-option('cld2',
-       type : 'feature',
-       value: 'auto',
-       description: 'Add support for language-detection through cld2')
 
 #
-# emacs
+# emacs, needed for byte-compiling mu4e and producing man-pages from org
 #
-
 option('emacs',
        type: 'string',
        value: 'emacs',
        description: 'name/path of the emacs executable (for byte-compilation)')
-
 option('lispdir',
        type: 'string',
        description: 'path under which to install emacs-lisp files')
 
-
+#
+# optional libraries
+#
 #
 # scm & guile (both use GNU Guile)
 #
@@ -52,9 +44,8 @@ option('scm',
        value: 'auto',
        description: 'build the guile scripting support (requires guile-3.x)')
 
-
-# old-style guile has been deprecated for years, and is now
-# disabled by default. It will be removed in some future release.
+# old-style guile has been deprecated for years, and is now disabled by default.
+# It will be removed for the 1.16 release
 option('guile',
        type : 'feature',
        value: 'disabled',
@@ -65,6 +56,20 @@ option('guile',
 option('guile-extension-dir',
        type: 'string',
        description: 'custom install path for the guile extension module')
+
+
+# language detection
+option('cld2',
+       type : 'feature',
+       value: 'auto',
+       description: 'Add support for language-detection through cld2')
+
+# debug repl
+option('readline',
+       type: 'feature',
+       value: 'auto',
+       description: 'enable readline support for the mu4e repl')
+
 
 #
 # completion
@@ -85,16 +90,11 @@ option('zsh-completion-dir',
        type: 'string',
        description: 'custom install path for zsh completion')
 
+
 #
 # misc
 #
-
 option('tests',
        type : 'feature',
        value: 'auto',
        description: 'build unit tests')
-
-option('readline',
-       type: 'feature',
-       value: 'auto',
-       description: 'enable readline support for the mu4e repl')

@@ -243,10 +243,17 @@ if cc.has_function('g_log_writer_syslog',dependencies: glib_dep)
 endif
 
 #
-# use Compact Language Detector2 if we can find it
-#
-cld2_dep = cxx.find_library('cld2', required: get_option('cld2'))
-if get_option('cld2').allowed() and cld2_dep.found()
+# use CLD2 (Compact Language Detector2) if we can find it. When explicitly
+# enabled (-Dcld2=enabled) and not found, use the meson wrap
+if get_option('cld2').disabled()
+  cld2_dep = dependency('', required: false)
+else
+  cld2_dep = cxx.find_library('cld2', required: false)
+  if not cld2_dep.found() and get_option('cld2').enabled()
+    cld2_dep = subproject('cld2').get_variable('cld2_dep')
+  endif
+endif
+if cld2_dep.found()
   config_h_data.set('HAVE_CLD2', 1)
 else
   message('CLD2 not found or disabled; no support for language detection')
@@ -396,7 +403,8 @@ foreach name, dep : {'fmt'         : fmt_dep,
 endforeach
 summary(dep_summary, section: 'Dependencies')
 
-summary({'language detection (cld2)'    : get_option('cld2').allowed() and cld2_dep.found(),
+summary({'language detection (cld2)'    : cld2_dep.type_name() == 'internal' ? 'true (subproject)'
+                                          : cld2_dep.found().to_string(),
          'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),
          'guile (old-style, deprecated)': guile_dep.found() and get_option('guile').allowed(),
          'readline'                     : get_option('readline').enabled(),

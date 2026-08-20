@@ -1,0 +1,9 @@
+[wrap-file]
+directory = cld2-b56fa78a2fe44ac2851bae5bf4f4693a0644da7b
+source_url = https://github.com/CLD2Owners/cld2/archive/b56fa78a2fe44ac2851bae5bf4f4693a0644da7b.tar.gz
+source_filename = cld2-b56fa78a2fe44ac2851bae5bf4f4693a0644da7b.tar.gz
+source_hash = 2bd0f8aa344698c0ce6b2c89f5540af10e69e92d4c74f9fe66ffe25281be1111
+patch_directory = cld2
+
+[provide]
+cld2 = cld2_dep
