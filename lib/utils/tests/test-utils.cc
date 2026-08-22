@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2017-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2017-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 **  This library is free software; you can redistribute it and/or
 **  modify it under the terms of the GNU Lesser General Public License
@@ -27,6 +27,7 @@
 
 #include "mu-utils.hh"
 #include "mu-utils-file.hh"
+#include "mu-tabula.hh"
 
 #include "mu-test-utils.hh"
 
@@ -400,6 +401,66 @@ test_ascii_ctype()
 	g_assert_true(to_ascii_lower(uc) == uc);
 }
 
+static std::string
+strip_ansi(const std::string& str)
+{
+	// remove ANSI SGR sequences, e.g. "\x1b[1m"
+	std::string res;
+	res.reserve(str.size());
+	for (size_t i{}; i != str.size(); ++i) {
+		if (str[i] == '\x1b' && i + 1 != str.size() && str[i + 1] == '[') {
+			i += 2;
+			while (i != str.size() && str[i] != 'm')
+				++i;
+		} else
+			res += str[i];
+	}
+	return res;
+}
+
+static void
+test_tabula()
+{
+	using namespace Mu::Tabula;
+
+	Table table;
+	table.append(Row{"foo", Cell{"bar", fmt::fg(fmt::color::green)}, "fooewdfsdfs"}, fmt::emphasis::bold);
+	table.append(Row{"foo", "🫤🫤🫤🫤🫤🫤🫤🫤", "baz"});
+	table.append(Row{"foosdfsdfs", "bar", "cuux"});
+	table.append(Row{"foo", "barsdfsdfsd", "ëëëëëë"});
+
+	const std::string expected =
+		R"(+------------+------------------+-------------+
+| foo        | bar              | fooewdfsdfs |
++------------+------------------+-------------+
+| foo        | 🫤🫤🫤🫤🫤🫤🫤🫤 | baz         |
++------------+------------------+-------------+
+| foosdfsdfs | bar              | cuux        |
++------------+------------------+-------------+
+| foo        | barsdfsdfsd      | ëëëëëë      |
++------------+------------------+-------------+)";
+
+	const auto styled{mu_format("{}", table)};
+	// the styled cells must show up as ANSI escapes...
+	g_assert_true(styled.find('\x1b') != std::string::npos);
+	// ... but must not affect the layout.
+	assert_equal(strip_ansi(styled), expected);
+	// rows with fewer cells get padded with empty ones
+	Table ragged;
+	ragged.append(Row{"a", "b", "c"});
+	ragged.append(Row{"d"});
+
+	const std::string expected_ragged =
+		R"(+---+---+---+
+| a | b | c |
++---+---+---+
+| d |   |   |
++---+---+---+)";
+
+	assert_equal(mu_format("{}", ragged), expected_ragged);
+}
+
+
 int
 main(int argc, char* argv[])
 {
@@ -421,6 +482,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/to-from-lexnum", test_to_from_lexnum);
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
 	g_test_add_func("/utils/ascii-ctype", test_ascii_ctype);
+	g_test_add_func("/utils/tabula", test_tabula);
 
 	return g_test_run();
 }
