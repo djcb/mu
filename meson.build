@@ -67,10 +67,7 @@ extra_flags = [
   '-Wno-switch-enum',
   # assuming these are false alarm... (in fmt, with gcc13):
   '-Wno-array-bounds',
-  '-Wno-stringop-overflow',
-  # c++23, in tabulate (3rd-party)
-  '-Wno-deprecated-literal-operator'
-]
+  '-Wno-stringop-overflow']
 
 if (cxx.get_id() == 'clang')
   extra_flags += [
@@ -216,17 +213,17 @@ if xapver.version_compare('>= 1.4.23')
 endif
 
 #
-# soft dependencies
+# other dependencies
 #
-# for these, we use the system-installed version when it is found (and
-# recent enough); otherwise, meson falls back to the subproject (wrap)
-# version, see subprojects/*.wrap. To force the wrap version, use e.g.
-#   meson setup --force-fallback-for=fmt,CLI11
+# for these, we use the system-installed version when it is found (and recent
+# enough); otherwise, meson falls back to the subproject (wrap) version, see
+# subprojects/*.wrap. To force the wrap version, use e.g.
+#   meson setup --force-fallback-for=fmt
+# etc.
 #
-fmt_dep      = dependency('fmt', version: '>=11.1',
-                          default_options: {'default_library': 'static'})
-cli11_dep    = dependency('CLI11', version: '>=2.4')
-tabulate_dep = dependency('tabulate')
+fmt_dep          = dependency('fmt', version: '>=11.1',
+                              default_options: {'default_library': 'static'})
+cli11_dep       = dependency('CLI11', version: '>=2.4')
 tl_expected_dep = dependency('tl-expected')
 tl_optional_dep = dependency('tl-optional')
 
@@ -395,7 +392,6 @@ dep_summary = {'glib'   : glib_dep.version(),
 # for wrap-capable deps, note whether we use the system or subproject version
 foreach name, dep : {'fmt'         : fmt_dep,
                      'CLI11'       : cli11_dep,
-                     'tabulate'    : tabulate_dep,
                      'tl-expected' : tl_expected_dep,
                      'tl-optional' : tl_optional_dep}
   dep_summary += {name: dep.version() +
