@@ -18,79 +18,44 @@
 */
 
 #include "config.h"
-
 #include "mu-cmd.hh"
+
+#include <ranges>
+#include <array>
+
 #include <message/mu-message.hh>
 #include "utils/mu-utils.hh"
+#include "utils/mu-tabula.hh"
 
 #include <glib.h>
 #include <gmime/gmime.h>
-
 #include <fmt/ostream.h>
 
-#include <tabulate/table.hpp>
-
 using namespace Mu;
-using namespace tabulate;
+using namespace Mu::Tabula;
 
-template <> struct fmt::formatter<Table> : ostream_formatter {};
+//template <> struct fmt::formatter<Table> : ostream_formatter {};
 
 static void
 colorify(Table& table, const Options& opts)
 {
-	if (opts.nocolor || table.size() == 0)
+	if (opts.nocolor || table.rows.size() == 0)
 		return;
 
-	for (auto c = 0U; c != table.row(0).size(); ++c) {
-		switch (c) {
-		case 0:
-			table.column(c).format()
-				.font_color(Color::green)
-				.font_style({FontStyle::bold});
-			break;
-		case 1:
-			table.column(c).format()
-				.font_color(Color::blue);
-			break;
-		case 2:
-			table.column(c).format()
-				.font_color(Color::magenta);
-			break;
+	using enum fmt::color;
+	constexpr auto colors = std::to_array<fmt::color>({
+		green, blue, magenta, yellow, green, blue, magenta, yellow, gray,
+	});
 
-		case 3:
-			table.column(c).format()
-				.font_color(Color::yellow);
-			break;
-		case 4:
-			table.column(c).format()
-				.font_color(Color::green);
-			break;
-		case 5:
-			table.column(c).format()
-				.font_color(Color::blue);
-			break;
-		case 6:
-			table.column(c).format()
-				.font_color(Color::magenta);
-			break;
-
-		case 7:
-			table.column(c).format()
-				.font_color(Color::yellow);
-			break;
-		default:
-			table.column(c).format()
-				.font_color(Color::grey);
-			break;
+	for (auto [rownum, row]: table.rows | std::views::enumerate) {
+		fmt::text_style ts{rownum == 0 ? fmt::emphasis::bold : fmt::text_style{}};
+		for (auto [cellnum, cell]: row.cells | std::views::enumerate) {
+			cell.ts = ts;
+			if (rownum != 0)
+				cell.ts |= fmt::fg(colors.at(cellnum % colors.size()));
 		}
 	}
-
-	for (auto c = 0U; c != table.row(0).size(); ++c)
-		table[0][c].format()
-			.font_color(Color::white)
-			.font_style({FontStyle::bold});
 }
-
 
 static Result<void>
 topic_fields(const Options& opts)
@@ -98,7 +63,7 @@ topic_fields(const Options& opts)
 	using namespace std::string_literals;
 
 	Table fields;
-	fields.add_row({"field-name", "alias", "short", "search",
+	fields.append(Row{"field-name", "alias", "short", "search",
 			"value", "sexp", "example query", "description"});
 
 	auto searchable=[&](const Field& field)->std::string {
@@ -115,23 +80,25 @@ topic_fields(const Options& opts)
 
 	size_t row{};
 	field_for_each([&](auto&& field){
+
 		if (field.is_internal())
 			return; // skip.
 
-		fields.add_row({mu_format("{}", field.name),
-				field.alias.empty() ? "" : mu_format("{}", field.alias),
-				field.shortcut ? mu_format("{}", field.shortcut) : ""s,
-				searchable(field),
-				field.is_value() ? "yes" : "no",
-				field.include_in_sexp() ? "yes" : "no",
-				field.example_query,
-				field.description});
+		fields.append(Row{mu_format("{}", field.name),
+				  field.alias.empty() ? "" : mu_format("{}", field.alias),
+				  field.shortcut ? mu_format("{}", field.shortcut) : ""s,
+				  searchable(field),
+				  field.is_value() ? "yes" : "no",
+				  field.include_in_sexp() ? "yes" : "no",
+				  field.example_query,
+				  field.description});
 		++row;
 	});
 
 	colorify(fields, opts);
 
-	std::cout << "# Message fields\n" << fields << '\n';
+
+	mu_println("# Message fields\n{}\n", fields);
 
 	return Ok();
 }
@@ -142,7 +109,7 @@ topic_combi_fields(const Options& opts)
 	using namespace std::string_literals;
 
 	Table fields;
-	fields.add_row({"combi-field", "fields"});
+	fields.append(Row{"combi-field", "fields"});
 
 	std::ranges::for_each(combi_fields(), [&](const auto& cfield) {
 
@@ -155,26 +122,24 @@ topic_combi_fields(const Options& opts)
 
 		const std::string empty{"<empty>"};
 
-		fields.add_row({cfield.name.empty() ? empty : mu_format("{}", cfield.name),
-				fnames});
+		fields.append(Row{cfield.name.empty() ? empty :
+				  mu_format("{}", cfield.name),
+				  fnames});
 	});
 
 	colorify(fields, opts);
-	std::cout << "# Combination fields\n" << fields << '\n';
+	mu_println("# Combination fields\n{}", fields);
 
 	return Ok();
 }
 
-
-
 static Result<void>
 topic_flags(const Options& opts)
 {
-	using namespace tabulate;
 	using namespace std::string_literals;
 
 	Table flags;
-	flags.add_row({"flag", "shortcut", "category", "description"});
+	flags.append(Row{"flag", "shortcut", "category", "description"});
 
 	flag_infos_for_each([&](const MessageFlagInfo& info) {
 
@@ -194,7 +159,7 @@ topic_flags(const Options& opts)
 				}
 			}, info.category);
 
-		flags.add_row({mu_format("{}", info.name),
+		flags.append(Row{mu_format("{}", info.name),
 				mu_format("{}", info.shortcut),
 				catname,
 				std::string{info.description}});
@@ -202,7 +167,7 @@ topic_flags(const Options& opts)
 
 	colorify(flags, opts);
 
-	std::cout << "# Message flags\n" << flags << '\n';
+	mu_println("# Message flags\n{}", flags);
 
 	return Ok();
 }
@@ -212,9 +177,10 @@ topic_store(const Mu::Store& store, const Options& opts)
 {
 	Table info;
 	const auto conf{store.config()};
-	info.add_row({"property", "value", "description"});
-	info.add_row({"database-path", store.path(), "Path to xapian database"});
-	info.add_row({"message-number", mu_format("{}", store.size()),
+
+	info.append(Row{"property", "value", "description"});
+	info.append(Row{"database-path", store.path(), "Path to xapian database"});
+	info.append(Row{"message-number", mu_format("{}", store.size()),
 		      "Number of messages in store"});
 	for (const auto& prop: Config::properties) {
 		if (any_of(prop.flags & (Property::Flags::System|Property::Flags::Internal)))
@@ -224,17 +190,17 @@ topic_store(const Mu::Store& store, const Options& opts)
 		case Config::Id::IgnoredAddresses: {
 			const auto addrs{conf.decode<Config::Type::StringList>(conf.as_raw_string(prop))};
 			for (auto& addr: addrs) {
-				info.add_row({std::string{prop.name}, addr, std::string{prop.description}});
+				info.append(Row{std::string{prop.name}, addr, std::string{prop.description}});
 			}
 		} break;
 		default:
-			info.add_row({std::string{prop.name},conf.as_display_string(prop),
+			info.append(Row{std::string{prop.name},conf.as_display_string(prop),
 				      std::string{prop.description}});
 		}
 	}
 	colorify(info, opts);
 
-	std::cout << info << '\n';
+	mu_println("{}", info);
 
 	return Ok();
 }
@@ -251,21 +217,20 @@ topic_maildirs(const Mu::Store& store, const Options& opts)
 static Result<void>
 topic_mu(const Mu::Store& store, const Options& opts)
 {
-
 	Table info;
 	const auto conf{store.config()};
+	info.append(Row{"property", "value", "description"});
 
-	info.add_row({"property", "value", "description"});
 	for (const auto& prop: Config::properties) {
 		if (any_of(prop.flags & Property::Flags::System)) {
-			info.add_row({std::string{prop.name}, conf.as_display_string(prop),
-				      std::string{prop.description}});
+			info.append(Row{Cell{std::string{prop.name}},
+					Cell{conf.as_display_string(prop)},
+					Cell{std::string{prop.description}}});
 		}
 	}
 
 	colorify(info, opts);
-
-	std::cout << info << '\n';
+	mu_println("{}\n", info);
 
 	return Ok();
 }

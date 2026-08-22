@@ -43,8 +43,6 @@
 #include "utils/mu-utils-file.hh"
 #include "utils/mu-utils.hh"
 
-#include <tabulate/table.hpp>
-
 using namespace Mu;
 
 static Result<void>
