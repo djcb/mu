@@ -381,8 +381,7 @@ test_scm_script()
 
 	MemDb mdb;
 	Config conf{mdb};
-	conf.set<Config::Id::PersonalAddresses>(
-		std::vector<std::string>{"user@example.com"});
+	assert_valid_result(conf.set<Config::Id::PersonalAddresses>(std::vector<std::string>{"user@example.com"}));
 
 	auto store{Store::make_new(tempdir.path(), MuTestMaildir, conf)};
 	assert_valid_result(store);
