@@ -215,7 +215,7 @@ endif
 # it is found (and recent enough); otherwise, meson falls back to the subproject
 # (wrap) version, see subprojects/*.wrap. To force the wrap version, use e.g.
 # meson setup --force-fallback-for=fmt etc.
-fmt_dep          = dependency('fmt', version: '>=11.1',
+fmt_dep          = dependency('fmt', version: '>=10.1',
                               default_options: {'default_library': 'static'})
 cli11_dep       = dependency('CLI11', version: '>=2.4')
 # for the system version of tl-expected, we need to specify the cmake target

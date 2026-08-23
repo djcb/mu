@@ -35,8 +35,6 @@
 using namespace Mu;
 using namespace Mu::Tabula;
 
-//template <> struct fmt::formatter<Table> : ostream_formatter {};
-
 static void
 colorify(Table& table, const Options& opts)
 {
