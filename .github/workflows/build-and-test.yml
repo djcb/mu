@@ -22,7 +22,7 @@ jobs:
         name: ubuntu-deps
         run: |
           sudo apt update
-          sudo apt-get install meson ninja-build libglib2.0-dev libxapian-dev libgmime-3.0-dev libcld2-dev pkg-config guile-3.0-dev emacs texinfo
+          sudo apt-get install meson ninja-build pkg-config libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev libtl-optional-dev guile-3.0-dev libcld2-dev emacs texinfo
 
       - if: contains(matrix.os, 'macos')
         name: macos-deps

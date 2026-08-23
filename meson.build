@@ -197,11 +197,7 @@ glib_dep       = dependency('glib-2.0', version: '>= 2.80')
 gobject_dep    = dependency('gobject-2.0', version: '>= 2.80')
 gio_dep        = dependency('gio-2.0', version: '>= 2.80')
 gio_unix_dep   = dependency('gio-unix-2.0', version: '>= 2.80')
-
-# gmime
-gmime_dep       = dependency('gmime-3.0', version: '>= 3.2.13')
-# 3.2.13 version has  g_mime_object_write_content_to_stream
-
+gmime_dep      = dependency('gmime-3.0', version: '>= 3.2.13')
 thread_dep     = dependency('threads')
 
 # we need Xapian 1.4.22 or higher
@@ -212,20 +208,30 @@ if xapver.version_compare('>= 1.4.23')
   config_h_data.set('HAVE_XAPIAN_FLAG_NGRAMS', 1)
 endif
 
-#
-# other dependencies
-#
-# for these, we use the system-installed version when it is found (and recent
-# enough); otherwise, meson falls back to the subproject (wrap) version, see
-# subprojects/*.wrap. To force the wrap version, use e.g.
-#   meson setup --force-fallback-for=fmt
-# etc.
-#
+# some other dependencies
+
+# we earlier "vendored" (thirdparty/) fmt/cli11/expected; we now get either as a
+# system-package or as a meson 'wrap': we use the system-installed version when
+# it is found (and recent enough); otherwise, meson falls back to the subproject
+# (wrap) version, see subprojects/*.wrap. To force the wrap version, use e.g.
+# meson setup --force-fallback-for=fmt etc.
 fmt_dep          = dependency('fmt', version: '>=11.1',
                               default_options: {'default_library': 'static'})
 cli11_dep       = dependency('CLI11', version: '>=2.4')
-tl_expected_dep = dependency('tl-expected')
-tl_optional_dep = dependency('tl-optional')
+tl_expected_dep = dependency('tl-expected',
+                             modules: ['tl::expected']) # cmake target name
+
+# tl-optional is not packaged for Fedora, Debian; fall back to our in-tree copy.
+tl_optional_dep = dependency('tl-optional',
+                             modules: ['tl::optional'], # cmake target name
+                             required: false)
+if not tl_optional_dep.found()
+  message('using in-tree copy of tl-optional')
+  tl_optional_dep = declare_dependency(
+    version: '1.1.0', # keep in sync with thirdparty/tl-optional
+    include_directories: include_directories('thirdparty/tl-optional',
+                                             is_system: true))
+endif
 
 #
 # logging
@@ -392,11 +398,13 @@ dep_summary = {'glib'   : glib_dep.version(),
 # for wrap-capable deps, note whether we use the system or subproject version
 foreach name, dep : {'fmt'         : fmt_dep,
                      'CLI11'       : cli11_dep,
-                     'tl-expected' : tl_expected_dep,
-                     'tl-optional' : tl_optional_dep}
+                     'tl-expected' : tl_expected_dep}
   dep_summary += {name: dep.version() +
                         (dep.type_name() == 'internal' ? ' (subproject)' : '')}
 endforeach
+# tl-optional has an in-tree fallback rather than a wrap
+dep_summary += {'tl-optional': tl_optional_dep.version() +
+                (tl_optional_dep.type_name() == 'internal' ? ' (in-tree)' : '')}
 summary(dep_summary, section: 'Dependencies')
 
 summary({'language detection (cld2)'    : cld2_dep.type_name() == 'internal' ? 'true (subproject)'

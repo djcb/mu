@@ -57,9 +57,9 @@ Active development takes place on ~master~ (the 1.14 series), and we maintain th
 ~release/1.12~ branch as well, for any critical fixes.
 
 Every few months, we release a stable version (e.g. ~1.14.0~); development then
-continues in ~master~, with ~-pre<n>~ (e.g. ~1.14.1-pre1~): ~-pre~-suffixed versions
+continues in ~master~, with ~-pre<n>~ (e.g. ~1.14.3-pre1~): ~-pre~-suffixed versions
 refer to the current _development_ code, until it is released (and then looses its
-~-pre~ suffix, i.e., becomes the ~1.14.1~ release).
+~-pre~ suffix, i.e., becomes the ~1.14.3~ release).
 
 Hence, generally we recommend the latest 1.14 release; if you want to avoid any
 changes except critical bug-fixes, use the latest 1.12 [[https://github.com/djcb/mu/releases/][release]]; and finally, if
@@ -73,20 +73,35 @@ for example to update the versions of required libraries.
 Note: building from source is an /advanced/ subject, especially if something goes
 wrong. The below simple examples are a start, but all tools involved have many
 options; there are differences between systems, versions etc. So if this is all
-a bit daunting we recommend to wait for someone else to build it for you, such
-as a Linux distribution. Many have packages available.
+seems bit daunting, we recommend to wait for someone else to build it for you,
+such as a Linux distribution. Many have packages available.
 
 ** Requirements
 
 To be able to build ~mu~, ensure you have:
 
 - a C++20 compiler (~gcc~ and ~clang~ are known to work)
-- development packages for /Xapian/ and /GMime/ and /GLib/ (see ~meson.build~ for the
-  versions)
+- development packages for /Xapian/ and /GMime/ and /GLib/; package names for some
+  distros (the ones in [] are optional) (and see below for "Wrap support"):
+  - Fedora/RedHat: =xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel [guile30-devel cld2-devel emacs texinfo]=
+  - Debian/Ubuntu: =libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev libtl-optional-dev [guile-3.0-dev libcld2-dev emacs texinfo]=
 - basic tools such as ~make~, ~sed~, ~grep~
 - ~meson~
 
-For ~mu4e~, you also need ~emacs~, version 28 or later.
+For ~mu4e~, you also need ~emacs~, version 28 or later, and ~texinfo~ to build the
+~mu4e~ documentation.
+
+*** Wrap support
+
+~mu~ can use Meson's "wraps" for some of the dependencies; this will download &
+build the dependency as needed. This can be useful if you distribution does not
+provide a given dependency. But note, on any recentish Debian/Ubuntu and Fedora,
+the distro packages are enough.3
+
+However, if you'd like to /avoid/ that, pass `-Dwrap_mode=nodownload` to =meson
+setup= (see "Building" below).
+
+*** MS Windows support
 
 Note, support for Windows is very much _experimental_, that is, it works for some
 people, but we can't really support it due to lack of the specific expertise.
