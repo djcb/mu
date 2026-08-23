@@ -218,8 +218,17 @@ endif
 fmt_dep          = dependency('fmt', version: '>=11.1',
                               default_options: {'default_library': 'static'})
 cli11_dep       = dependency('CLI11', version: '>=2.4')
+# for the system version of tl-expected, we need to specify the cmake target
+# name ('modules'); however, that confuses the wrap-fallback (which does not
+# match a dependency with modules), so try the system version and the wrap
+# separately.
 tl_expected_dep = dependency('tl-expected',
-                             modules: ['tl::expected']) # cmake target name
+                             modules: ['tl::expected'], # cmake target name
+                             allow_fallback: false,
+                             required: false)
+if not tl_expected_dep.found()
+  tl_expected_dep = dependency('tl-expected') # use the wrap
+endif
 
 # tl-optional is not packaged for Fedora, Debian; fall back to our in-tree copy.
 tl_optional_dep = dependency('tl-optional',
