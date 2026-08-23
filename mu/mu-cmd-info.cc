@@ -48,13 +48,15 @@ colorify(Table& table, const Options& opts)
 		green, blue, magenta, yellow, green, blue, magenta, yellow, gray,
 	});
 
-	for (auto [rownum, row]: table.rows | std::views::enumerate) {
+	for (std::size_t rownum{}; auto& row: table.rows) {
 		fmt::text_style ts{rownum == 0 ? fmt::emphasis::bold : fmt::text_style{}};
-		for (auto [cellnum, cell]: row.cells | std::views::enumerate) {
+		for (std::size_t cellnum{}; auto& cell: row.cells) {
 			cell.ts = ts;
 			if (rownum != 0)
 				cell.ts |= fmt::fg(colors.at(cellnum % colors.size()));
+			++cellnum;
 		}
+		++rownum;
 	}
 }
 
