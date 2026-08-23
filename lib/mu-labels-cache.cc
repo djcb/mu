@@ -21,6 +21,8 @@
 #include "mu-store.hh"
 #include "message/mu-labels.hh"
 
+#include <sstream>
+
 using namespace Mu;
 
 void

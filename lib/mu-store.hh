@@ -37,7 +37,6 @@
 #include "mu-query-results.hh"
 
 #include <utils/mu-utils.hh>
-#include <utils/mu-utils.hh>
 #include <utils/mu-option.hh>
 
 #include <message/mu-message.hh>

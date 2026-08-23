@@ -22,6 +22,7 @@
 
 #include <ranges>
 #include <array>
+#include <iostream>
 
 #include <message/mu-message.hh>
 #include "utils/mu-utils.hh"

@@ -22,18 +22,16 @@
 
 #include <string>
 #include <string_view>
-#include <sstream>
 #include <vector>
 #include <chrono>
 #include <memory>
 #include <cstdarg>
 #include <glib.h>
 #include <ostream>
-#include <iostream>
 #include <type_traits>
 #include <concepts>
 #include <algorithm>
-#include <numeric>
+#include <limits>
 
 #include "mu-option.hh"
 
@@ -41,7 +39,7 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 #include <fmt/ostream.h>
-#include <fmt/xchar.h>
+#include <fmt/ranges.h> // fmt::join
 
 namespace Mu {
 
@@ -585,10 +583,7 @@ template <typename T>
 inline std::string
 to_string(const T& val)
 {
-	std::stringstream sstr;
-	sstr << val;
-
-	return sstr.str();
+	return fmt::format("{}", fmt::streamed(val));
 }
 /**
  * Convert to std::string to a std::string_view

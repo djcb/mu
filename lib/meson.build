@@ -63,31 +63,37 @@ lib_mu_dep = declare_dependency(
     include_directories(['.', '..']))
 
 #
-# dev helpers
+# dev helpers; not built by default (build on demand with e.g.
+# 'ninja lib/parse-query')
 #
 
 process_query = executable('process-query', [ 'mu-query-processor.cc'],
   install: false,
+  build_by_default: false,
   cpp_args: ['-DBUILD_PROCESS_QUERY'],
   dependencies: [glib_dep, lib_mu_dep])
 
 parse_query = executable(  'parse-query', [ 'mu-query-parser.cc' ],
   install: false,
+  build_by_default: false,
   cpp_args: ['-DBUILD_PARSE_QUERY'],
   dependencies: [glib_dep, lib_mu_dep])
 
 parse_query_expand = executable(  'parse-query-expand', [ 'mu-query-parser.cc' ],
   install: false,
+  build_by_default: false,
   cpp_args: ['-DBUILD_PARSE_QUERY_EXPAND'],
   dependencies: [glib_dep, lib_mu_dep])
 
 xapian_query = executable('xapianize-query', [ 'mu-query-xapianizer.cc' ],
   install: false,
+  build_by_default: false,
   cpp_args: ['-DBUILD_XAPIANIZE_QUERY'],
   dependencies: [glib_dep, lib_mu_dep])
 
 list_maildirs = executable('list-maildirs', 'mu-scanner.cc',
            install: false,
+           build_by_default: false,
            cpp_args: ['-DBUILD_LIST_MAILDIRS'],
            dependencies: [glib_dep, config_h_dep,
                                lib_mu_utils_dep])

@@ -22,6 +22,7 @@
 #include "mu-readline.hh"
 
 #include <string>
+#include <iostream>
 #include <unistd.h>
 
 #ifdef HAVE_LIBREADLINE
