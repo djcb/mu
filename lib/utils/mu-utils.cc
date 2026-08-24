@@ -207,57 +207,111 @@ Mu::utf8_clean(const std::string& dirty)
 	return std::string{g_strstrip(gstr->str)};
 }
 
+namespace {
+// Break text into space-separated words, mimicking Xapian's
+// TermGenerator
+
+constexpr bool is_wordchar(gunichar uc)
+{
+	return g_unichar_isalnum(uc) || g_unichar_ismark(uc) || uc == '_';
+}
+
+// characters that join words when followed by a word-character, e.g. "at&t", "don't"
+constexpr bool is_infix(gunichar uc)
+{
+	switch (uc) {
+	case '\'':
+	case '&':
+	case 0x00b7: // MIDDLE DOT
+	case 0x05f4: // HEBREW PUNCTUATION GERSHAYIM
+	case 0x2019: // RIGHT SINGLE QUOTATION MARK
+	case 0x201b: // SINGLE HIGH-REVERSED-9 QUOTATION MARK
+	case 0x2027: // HYPHENATION POINT
+		return true;
+	default:
+		return false;
+	}
+}
+
+// characters that join digits, e.g. "3.14", "1,000"
+constexpr bool is_digit_infix(gunichar uc)
+{
+	switch (uc) {
+	case ',':
+	case '.':
+	case ';':
+	case 0x037e: // GREEK QUESTION MARK
+	case 0x0589: // ARMENIAN FULL STOP
+	case 0x060d: // ARABIC DATE SEPARATOR
+	case 0x07f8: // NKO COMMA
+	case 0x2044: // FRACTION SLASH
+	case 0xfe10: // PRESENTATION FORM FOR VERTICAL COMMA
+	case 0xfe13: // PRESENTATION FORM FOR VERTICAL COLON
+	case 0xfe14: // PRESENTATION FORM FOR VERTICAL SEMICOLON
+		return true;
+	default:
+		return false;
+	}
+}
+} // anonymous namespace
 
 std::string
 Mu::utf8_wordbreak(const std::string& txt)
 {
+	// use GString, it has unicode support, unlike std::string
 	g_autoptr(GString) gstr = g_string_sized_new(txt.length());
 
-	bool spc{};
-	for (auto cur = txt.c_str(); cur && *cur; cur = g_utf8_next_char(cur)) {
-		const gunichar uc = g_utf8_get_char(cur);
-
-		if (g_unichar_iscntrl(uc)) {
-			g_string_append_c(gstr, ' ');
+	const char *cur{txt.c_str()};
+	while (*cur) {
+		if (!is_wordchar(g_utf8_get_char(cur))) {
+			cur = g_utf8_next_char(cur);
 			continue;
 		}
-		// inspired by Xapian's termgenerator.
-
-		switch(uc) {
-		case '\'':
-		case '&':
-		case 0xb7:
-		case 0x5f4:
-		case 0x2019:
-		case 0x201b:
-		case 0x2027:
-		case ',':
-		case '.':
-		case ';':
-		case '+':
-		case '#':
-		case '-':
-		case 0x037e: // GREEK QUESTION MARK
-		case 0x0589: // ARMENIAN FULL STOP
-		case 0x060D: // ARABIC DATE SEPARATOR
-		case 0x07F8: // NKO COMMA
-		case 0x2044: // FRACTION SLASH
-		case 0xFE10: // PRESENTATION FORM FOR VERTICAL COMMA
-		case 0xFE13: // PRESENTATION FORM FOR VERTICAL COLON
-		case 0xFE14: // PRESENTATION FORM FOR VERTICAL SEMICOLON
-			if (spc)
-				break;
-			spc = true;
+		// start of a word.
+		if (gstr->len > 0)
 			g_string_append_c(gstr, ' ');
+
+		gunichar prev{};
+		while (*cur) {
+			const gunichar uc = g_utf8_get_char(cur);
+			if (is_wordchar(uc)) {
+				g_string_append_unichar(gstr, uc);
+				prev = uc;
+				cur  = g_utf8_next_char(cur);
+				continue;
+			}
+			// non-word char; but it may join two words.
+			const char *nxt = g_utf8_next_char(cur);
+			const gunichar nuc = *nxt ? g_utf8_get_char(nxt) : 0;
+			if (nuc && is_wordchar(nuc) &&
+			    (is_infix(uc) ||
+			     (is_digit_infix(uc) &&
+			      g_unichar_isdigit(prev) && g_unichar_isdigit(nuc)))) {
+				g_string_append_unichar(gstr, uc);
+				prev = uc;
+				cur  = nxt;
+				continue;
+			}
 			break;
-		default:
-			spc = false;
-			g_string_append_unichar(gstr, uc);
-			break;
+		}
+		// up to 3 trailing '+' or '#' stick to the word (e.g. "c++",
+		// "c#"), unless a word-character follows directly.
+		const char *suf{cur};
+		unsigned n{};
+		while (*suf && n < 3) {
+			const gunichar suc = g_utf8_get_char(suf);
+			if (suc != '+' && suc != '#')
+				break;
+			++n;
+			suf = g_utf8_next_char(suf);
+		}
+		if (n > 0 && (!*suf || !is_wordchar(g_utf8_get_char(suf)))) {
+			g_string_append_len(gstr, cur, suf - cur);
+			cur = suf;
 		}
 	}
 
-	return std::string{g_strstrip(gstr->str)};
+	return std::string{gstr->str, gstr->len};
 }
 
 

@@ -214,11 +214,25 @@ test_clean()
 static void
 test_word_break()
 {
+	// these should match the terms Xapian's TermGenerator produces
+	// (without case-folding)
 	CaseVec cases = {
-	    {"aap+noot&mies",            true, "aap noot mies"},
 	    {"hallo",                    true, "hallo"},
 	    {"  foo-bar###cuux,fnorb  ", true, "foo bar cuux fnorb"},
 	    {"eyes\nof\tMedusa",         true, "eyes of Medusa"},
+	    // '&', '\'' join words; '+' does not
+	    {"aap+noot&mies",            true, "aap noot&mies"},
+	    {"AT&T don't",               true, "AT&T don't"},
+	    {"w&&v q&. r&",              true, "w v q r"},
+	    // ',', '.' join digits only
+	    {"3.14 1,000 e.g. a.4",      true, "3.14 1,000 e g a 4"},
+	    // up to 3 trailing '+'/'#' stick to a word
+	    {"c++ C# c++x",              true, "c++ C# c x"},
+	    // other punctuation separates words
+	    {"[urgent] (x) a*b x>y",     true, "urgent x a b x y"},
+	    {"_under_score_",            true, "_under_score_"},
+	    {"& ][ *>",                  true, ""},
+	    {"",                         true, ""},
 	};
 
 	test_cases(cases, [](auto s, auto f) { return utf8_wordbreak(s); });
