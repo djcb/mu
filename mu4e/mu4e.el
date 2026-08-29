@@ -210,7 +210,7 @@ invoke FUNC (if available) afterwards."
   (mapc
    (lambda (buf)
      ;; the view buffer has the kill-buffer-hook function
-     ;; mu4e--view-kill-mime-handles which kills the mm-* buffers created by
+     ;; mu4e--view-buffer-cleanup which kills the mm-* buffers created by
      ;; Gnus' article mode. Those have been returned by `buffer-list' but might
      ;; already be deleted in case the view buffer has been killed first. So we
      ;; need a `buffer-live-p' check here.
