@@ -89,6 +89,7 @@ struct TokenStream {
 		return pos_ < toks_.size() && toks_[pos_].symbolp(sym);
 	}
 	void pop_front() { ++pos_; }
+	size_t position() const { return pos_; }
 
 private:
 	Sexp::List&	toks_;
@@ -111,15 +112,17 @@ phrasify(const Field& field, const Sexp& val)
 		return Nothing; // nothing to phrasify
 
 	auto words{utf8_wordbreak(val.string())};
-	if (words.find(' ') == std::string::npos)
+	if (words.empty() || (words == val.string() &&
+			      words.find(' ') == std::string::npos))
 		return Nothing; // nothing to phrasify
 
 	auto phrase = Sexp {
 		Sexp::Symbol{field.name},
 		Sexp{phrase_sym, Sexp{std::move(words)}}};
 
-	// if the field both a normal term & phrasable, match both
-	// if they are different
+	// if the value differs from its wordbroken version (e.g., it
+	// contains punctuation), match the literal value as well, for
+	// the case where the field is both a normal term & phrasable
 	if (val.string() != words)
 		return Sexp{or_sym,
 			Sexp {Sexp::Symbol{field.name}, Sexp(val.string())},
@@ -141,14 +144,46 @@ phrasify(const Field& field, const Sexp& val)
 static Sexp query(TokenStream& tokens, ParseContext& ctx);
 
 
+/**
+ * Is this a matcher for a text-ish (indexed) field with a value that
+ * cannot match anything?
+ *
+ * I.e. 'subject:&' or a bare '['.
+ * Xapian does not generate punctuation-only terms,
+ * so drop them here as well.
+ *
+ * @param val a matcher sexp (field "value")
+ *
+ * @return true if this matcher should be dropped; false otherwise.
+ */
+static bool
+is_unmatchable(Sexp& val)
+{
+	const auto& fieldsym{val.front().symbol()};
+	const auto v{second(val)};
+	if (!v || !v->stringp() || v->string().empty())
+		return false;
+
+	if (fieldsym != placeholder_sym) {
+		const auto field{field_from_name(fieldsym.name)};
+		if (!field || !(field->is_phrasable_term() || field->is_contact()))
+			return false; // punctuation may be meaningful
+	}
+
+	return utf8_wordbreak(v->string()).empty();
+}
+
 static Sexp
 finalize_matcher(Sexp&& val, ParseContext& ctx)
 {
+	if (is_unmatchable(val))
+		return {};
+
 	const auto fieldsym{val.front().symbol()};
 
-	// Note the _expand_ case is what we use when processing the query 'for real';
-	// the non-expand case is only to have a bit more human-readable Sexp for use
-	// mu find's '--analyze'
+	// Note the _expand_ case is what we use when processing the query 'for
+	// real'; the non-expand case is only to have a bit more human-readable
+	// Sexp for use mu find's '--analyze'
 	//
 	// Re: phrase-fields We map something like 'subject:hello-world'
 	// to
@@ -207,8 +242,10 @@ unit(TokenStream& tokens, ParseContext& ctx)
 		}
 		Sexp sub{unit(tokens, ctx)};
 
-		/* special case: interpret a trailing "not" as a matcher instead */
 		if (sub.empty()) {
+			if (!tokens.empty())
+				return {}; /* dropped sub-unit; drop the 'not' too */
+			/* special case: interpret a trailing "not" as a matcher instead */
 			sub = finalize_matcher(Sexp{placeholder_sym, not_sym.name}, ctx);
 			neg = !neg;
 		}
@@ -266,10 +303,16 @@ factor(TokenStream& tokens, ParseContext& ctx)
 		else if (!implicit_and())
 			break;
 
-		if (auto&& un2 = unit(tokens, ctx); !un2.empty())
-			uns.add(std::move(un2));
-		else
-			break;
+		const auto pos{tokens.position()};
+		auto&& un2 = unit(tokens, ctx);
+		if (!un2.empty()) {
+			if (un.empty())
+				un = std::move(un2); /* replace dropped unit */
+			else
+				uns.add(std::move(un2));
+		} else if (tokens.position() == pos)
+			break; /* no progress; avoid looping forever */
+		/* otherwise: dropped (unmatchable) unit; skip it */
 	}
 
 	if (!uns.empty()) {
@@ -298,9 +341,18 @@ query(TokenStream& tokens, ParseContext& ctx)
 			break;
 
 		tokens.pop_front();
+		const auto pos{tokens.position()};
 		Sexp rhs = factor(tokens, ctx);
-		if (rhs.empty())
-			break; /* trailing op; ignore */
+		if (rhs.empty()) {
+			if (tokens.position() == pos)
+				break; /* trailing op; ignore */
+			continue; /* dropped (unmatchable) factor; keep going */
+		}
+
+		if (fact.empty()) { /* lhs was dropped (unmatchable) */
+			fact = std::move(rhs);
+			continue;
+		}
 
 		if (!fact.head_symbolp(*opsym))
 			fact = Sexp{*opsym, std::move(fact)};
@@ -503,6 +555,39 @@ test_parser_range()
 }
 
 static void
+test_parser_unmatchable()
+{
+	g_test_bug("2944");
+
+	// Drop punctuation like xapian does, so we don't sabotage the match
+	std::vector<TestCase> cases = {
+		TestCase{R"(foo & bar)", R"((and (_ "foo") (_ "bar")))"},
+		TestCase{R"(& foo)", R"((_ "foo"))"},
+		TestCase{R"(foo or & or bar)", R"((or (_ "foo") (_ "bar")))"},
+		TestCase{R"(not & and foo)", R"((_ "foo"))"},
+		// punctuation is word-broken away for phrasable fields
+		// (keeping the literal match, too)...
+		TestCase{R"(subject:[urgent])",
+			R"((or (subject "[urgent]") (subject (phrase "urgent"))))"},
+		TestCase{R"(subject:"foo & bar")",
+			R"((or (subject "foo & bar") (subject (phrase "foo bar"))))"},
+		// ...but '&' etc. _join_ words, as in the indexer
+		TestCase{R"(subject:at&t)", R"((subject "at&t"))"},
+		// non-indexed fields are left alone
+		TestCase{R"(maildir:/[gmail]/all)", R"((maildir "/[gmail]/all"))"},
+	};
+
+	for (auto&& test: cases) {
+		auto&& sexp{parse_query(test.first)};
+		assert_equal(sexp.to_string(), test.second);
+	}
+
+	// queries with only unmatchable terms become empty
+	g_assert_true(parse_query(R"(&)").empty());
+	g_assert_true(parse_query(R"(& ][ *>)").empty());
+}
+
+static void
 test_parser_optimize()
 {
 	std::vector<TestCase> cases = {
@@ -530,6 +615,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/query-parser/fields", test_parser_fields);
 	g_test_add_func("/query-parser/range", test_parser_range);
 	g_test_add_func("/query-parser/expand", test_parser_expand);
+	g_test_add_func("/query-parser/unmatchable", test_parser_unmatchable);
 	g_test_add_func("/query-parser/optimize", test_parser_optimize);
 
 	return g_test_run();

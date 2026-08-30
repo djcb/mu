@@ -97,8 +97,11 @@ phrase(const Field& field, Sexp&& s)
 		auto&& words{split(s.front().string(), " ")};
 		std::vector<Xapian::Query> phvec;
 		phvec.reserve(words.size());
-		for(auto&& w: words)
+		for(auto&& w: words) {
+			if (w.empty())
+				continue;
 			phvec.emplace_back(Xapian::Query{field.xapian_term(std::move(w))});
+		}
 		return Xapian::Query{Xapian::Query::OP_PHRASE,
 			phvec.begin(), phvec.end()};
 	} else
@@ -374,10 +377,14 @@ Mu::make_xapian_query(const Store& store, const std::string& expr, Mu::ParserFla
 	// note: the try-wrapper, since Xapian may throw (e.g. when the
 	// database was modified while we're querying)
 	return xapian_try_result([&]()->Result<Xapian::Query> {
+
 		if (any_of(flags & Mu::ParserFlags::XapianParser))
 			return Ok(xapian_query_classic(expr, flags));
 
-		return parse(store, Mu::parse_query(expr,  true/*expand*/), flags);
+		if (auto&& sexp{Mu::parse_query(expr, true/*expand*/)}; sexp.empty())
+			return Ok(Xapian::Query::MatchNothing); /* only unmatchables? */
+		else
+			return parse(store, std::move(sexp), flags);
 	});
 }
 
