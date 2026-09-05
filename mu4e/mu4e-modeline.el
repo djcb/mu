@@ -80,7 +80,9 @@ The string is truncated to fit if its length exceeds
 `mu4e-modeline-max-width'."
   (replace-regexp-in-string
    "%" "%%"
-   (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)))
+   (if (> (string-width str) mu4e-modeline-max-width)
+       (truncate-string-to-width str mu4e-modeline-max-width 0 nil t)
+     str)))
 
 (defvar mu4e--modeline-item nil
   "Mu4e item for the global-mode-line.")
