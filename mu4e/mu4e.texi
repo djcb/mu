@@ -5001,7 +5001,10 @@ headings, you can try something like the following:
         header-line-format)
   ;; Ensure `text-scale-adjust' scales the header line with the headers themselves
   ;; by ensuring the `default' face is in the inheritance hierarchy.
-  (face-remap-add-relative 'header-line '(:inherit (mu4e-header-face default)))
+  (face-remap-add-relative 'header-line '(:inherit (mu4e-header-face default))))
+  ;; In Emacs 31+, use these two lines instead:
+  ;; (face-remap-add-relative 'header-line-active '(:inherit (mu4e-header-face default)))
+  ;; (face-remap-add-relative 'header-line-inactive '(:inherit (mu4e-header-face default))))
 @end lisp
 
 This does not solve all possible issues; that would require a thorough rework of
