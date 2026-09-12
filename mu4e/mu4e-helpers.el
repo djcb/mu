@@ -713,6 +713,9 @@ which we need to avoid #2661."
                   (save-excursion
                     (goto-char end-of-headers)
                     (insert-before-markers header))))))))
+      ;; `syntax-propertize' can't widen, so make sure it won't need to
+      ;; (Emacs bug#81035).
+      (syntax-propertize end-of-headers)
       (narrow-to-region end-of-headers (point-max)))))
 
 (defun mu4e-key-description (cmd)
