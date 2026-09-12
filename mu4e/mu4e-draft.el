@@ -497,14 +497,13 @@ appropriate flag at the message forwarded or replied-to."
 
 (defun mu4e--compose-message-sent ()
   "Mu4e's `message-sent-hook' handling."
-  ;; Update flags for related messages, i.e. for Forwarded ('Passed') and
-  ;; Replied messages, try to set the appropriate flag at the message forwarded
-  ;; or replied-to.
   (when-let* ((path (buffer-file-name)))
-    (mu4e--set-parent-flags path))
-  ;; remove draft
-  (when-let* ((draft (buffer-file-name)))
-    (mu4e--server-remove draft)))
+    ;; Update flags for related messages, i.e. for Forwarded ('Passed') and
+    ;; Replied messages, try to set the appropriate flag at the message
+    ;; forwarded or replied-to.
+    (mu4e--set-parent-flags path)
+    ;; remove draft
+    (mu4e--server-remove path)))
 
 (defun mu4e--compose-before-send ()
   "Function called just before sending a message."
