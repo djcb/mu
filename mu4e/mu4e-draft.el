@@ -497,15 +497,11 @@ appropriate flag at the message forwarded or replied-to."
 
 (defun mu4e--compose-message-sent ()
   "Mu4e's `message-sent-hook' handling."
-  ;; typically, draft is gone and the sent message appears in sent. Update flags
-  ;; for related messages, i.e. for Forwarded ('Passed') and Replied messages,
-  ;; try to set the appropriate flag at the message forwarded or replied-to.
-  (when-let* ((fcc-path (message-field-value "Fcc")))
-    (mu4e--set-parent-flags fcc-path)
-    ;; we end up with a ((buried) buffer here, visiting the
-    ;; fcc-path; not quite sure why. But let's get rid of it (#2681)
-    (when-let* ((buf (find-buffer-visiting fcc-path)))
-      (kill-buffer buf)))
+  ;; Update flags for related messages, i.e. for Forwarded ('Passed') and
+  ;; Replied messages, try to set the appropriate flag at the message forwarded
+  ;; or replied-to.
+  (when-let* ((path (buffer-file-name)))
+    (mu4e--set-parent-flags path))
   ;; remove draft
   (when-let* ((draft (buffer-file-name)))
     (mu4e--server-remove draft)))
