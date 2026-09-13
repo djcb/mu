@@ -3101,19 +3101,14 @@ message. An example should clarify this:
   (lambda (msg)
     (cond
       ;; messages to the mu mailing list go to the /mu folder
-      ((mu4e-message-contact-field-matches msg :to
-         "mu-discuss@@googlegroups.com")
-        "/mu")
+      ((mu4e-has-address-p msg :to "mu-discuss@@googlegroups.com") "/mu")
       ;; messages sent directly to some specific address go to /private
-      ((mu4e-message-contact-field-matches msg :to "me@@example.com")
-        "/private")
+      ((mu4e-has-address-p msg :to "me@@example.com") "/private")
       ;; messages with football or soccer in the subject go to /football
-      ((string-match "football\\|soccer"
-         (mu4e-message-field msg :subject))
+      ((string-match "football\\|soccer" (mu4e-message-field msg :subject))
         "/football")
       ;; messages sent by me go to the sent folder
-      ((mu4e-message-sent-by-me msg)
-       mu4e-sent-folder)
+      ((mu4e-message-sent-by-me msg) mu4e-sent-folder)
       ;; everything else goes to /archive
       ;; important to have a catch-all at the end!
       (t  "/archive"))))
@@ -3131,14 +3126,16 @@ function takes one argument, a message plist@footnote{a property list
 describing a message}. The plist corresponds to the message at point. See
 @ref{Message functions} for a discussion on how to deal with them.
 @item In our function, we use a @t{cond} control structure; the function
-returns the first of the clauses that matche. It's important to make the last
+returns the first of the clauses that matches. It's important to make the last
 clause a catch-all, so we always return @emph{some} folder.
-@item We use
-the convenience function @code{mu4e-message-contact-field-matches},
-which evaluates to @code{t} if any of the names or e-mail addresses in a
-contact field (in this case, the @t{To:}-field) matches the regular
-expression. With @code{mu4e} version 0.9.16 or newer, the contact field can
-in fact be a list instead of a single value, such as @code{'(:to :cc)'}.
+@item We use the function @code{mu4e-has-address-p}
+@footnote{This is a convenience alias for
+@code{mu4e-message-contact-field-matches}, since 1.14.4}, which evaluates to
+non-nil if any of the names or e-mail addresses in a contact field (in this
+case, the @t{To:}-field) matches the regular expression. The contact-field
+parameter can also be a list of such fields, e.g .@code{(:to :cc)}, the special
+value @code{:recip} which matches @code{(:to :cc :bcc)} or the special value
+@code{:any} to match all contact-fields (the latter two since 1.14.4).
 @end itemize
 
 @node Other dynamic folders

@@ -1,6 +1,6 @@
 ;;; mu4e-message.el --- Working with mu4e-message plists -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2025 Dirk-Jan C. Binnema
+;; Copyright (C) 2012-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -31,9 +31,7 @@
 (require 'mu4e-window)
 (require 'mu4e-helpers)
 (require 'flow-fill)
-(require 'shr)
 (require 'pp)
-
 
 (declare-function mu4e-determine-attachment-dir  "mu4e-helpers")
 (declare-function mu4e-personal-address-p "mu4e-contacts")
@@ -123,49 +121,81 @@ This is equivalent to:
   (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
-(defun mu4e-message-contact-field-matches (msg cfield rx)
-  "Does MSG's contact-field CFIELD match regexp RX?
-Check if any of the of the CFIELD in MSG matches RX. I.e.
-anything in field CFIELD (either :to, :from, :cc or :bcc, or a
-list of those) of msg MSG matches (with their name or e-mail
-address) regular expressions RX. If there is a match, return
-non-nil; otherwise return nil. RX can also be a list of regular
-expressions, in which case any of those are tried for a match."
-  (cond
-   ((null cfield))
-   ((listp cfield)
-    (seq-find (lambda (cf) (mu4e-message-contact-field-matches msg cf rx))
-              cfield))
-   ((listp rx)
-    ;; if rx is a list, try each one of them for a match
-    (seq-find
-     (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
-     rx))
-   (t
-    ;; not a list, check the rx
-    (seq-find
-     (lambda (ct)
-       (let ((name (mu4e-contact-name ct))
-             (email (mu4e-contact-email ct))
-             ;; the 'rx' may be some `/rx/` from mu4e-personal-addresses;
-             ;; so let's detect and extract in that case.
-             (rx (if (string-match-p  "^\\(.*\\)/$" rx)
-                     (substring rx  1 -1) rx)))
-         (or
-          (and name  (string-match rx name))
-          (and email (string-match rx email)))))
-     (mu4e-message-field msg cfield)))))
+(defun mu4e-message-contact-field-matches (msg cfield regexp)
+  "Does MSG's contact-field CFIELD match regexp REGEXP?
+
+Check if any of the of the contact fields CFIELD in MSG matches REGEXP.
+
+CFIELD is either:
+0) nil matches nothing
+1) a contact field, one of :to :from, :cc, :bcc
+2) a list of such contact fields
+3) :recip, which is equivalent to the list (:to :cc :bcc)
+4) :any, which is equivalent to the list (:to :from :cc :bcc).
+
+REGEXP is a regular expression or a list of such; in the case each
+is tried until a match is found.
+
+Return non-nil if a match is found, nil otherwise."
+  (pcase cfield
+    ('nil nil)
+    (:recip (mu4e-message-contact-field-matches msg '(:to :cc :bcc) regexp))
+    (:any (mu4e-message-contact-field-matches msg '(:to :from :cc :bcc) regexp))
+    ((pred listp)
+     (seq-some (lambda (cf) (mu4e-message-contact-field-matches msg cf regexp))
+               cfield))
+    (_
+     (if (listp regexp)
+         ;; if regexp is a list, try each one of them
+         (seq-some
+          (lambda (a-rx) (mu4e-message-contact-field-matches msg cfield a-rx))
+          regexp)
+       ;; not a list, check the regexp
+       (seq-some
+        (lambda (ct)
+          (let ((name (mu4e-contact-name ct))
+                (email (mu4e-contact-email ct))
+                ;; REGEXP may be some `/regexp/` from mu4e-personal-addresses;
+                ;; so let's detect and extract in that case.
+                (ptrn (if (string-match-p (rx bol "/" (* anything) "/" eol) regexp)
+                        (substring regexp 1 -1) regexp)))
+            (or
+             (and name  (string-match ptrn name))
+             (and email (string-match ptrn email)))))
+        (mu4e-message-field msg cfield))))))
+
+(defalias 'mu4e-has-address-p #'mu4e-message-contact-field-matches
+ "Shorthand.")
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
   "Does contact-field CFIELD in MSG match me?
-Checks whether any
-of the of the contacts in field CFIELD (either :to, :from, :cc or
-:bcc) of msg MSG matches *me*, that is, any of the addresses for
-which `mu4e-personal-address-p' return t. Returns the contact
-cell that matched, or nil."
-  (seq-find (lambda (cell)
-              (mu4e-personal-address-p (mu4e-contact-email cell)))
-            (mu4e-message-field msg cfield)))
+
+I.e., does any of the contact fields evaluate
+`mu4e-personal-address-p' to non-nil.
+
+CFIELD is either:
+0) nil matches nothing
+1) a contact field, one of :to :from, :cc, :bcc
+2) a list of such contact fields
+3) :recip, which is equivalent to the list (:to :cc :bcc)
+4) :any, which is equivalent to the list (:to :from :cc :bcc).
+
+Returns the contact cell that matched, or nil."
+  (pcase cfield
+    ('nil nil)
+    (:recip (mu4e-message-contact-field-matches-me msg '(:to :cc :bcc)))
+    (:any (mu4e-message-contact-field-matches-me msg '(:to :from :cc :bcc)))
+    ((pred listp)
+     (seq-some (lambda (cf) (mu4e-message-contact-field-matches-me msg cf))
+               cfield))
+    (_
+     (seq-some (lambda (cell)
+                 (and (mu4e-personal-address-p (mu4e-contact-email cell))
+                      cell))
+               (mu4e-message-field msg cfield)))))
+
+(defalias 'mu4e-has-my-address-p #'mu4e-message-contact-field-matches-me
+  "Shorthand.")
 
 (defun mu4e-message-sent-by-me (msg)
   "Is this MSG (to be) sent by me?

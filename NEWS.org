@@ -30,6 +30,22 @@
 
 *** mu4e
 
+**** Work-around
+
+     In Emacs 31.1 (and later) there appears to be a problem with the =substring=
+     completion style when completion addresses (see #2946); if you encounter
+     this, you can try something like:
+
+   #+begin_src elisp
+     (add-hook 'mu4e-compose-mode-hook
+         (lambda () (setq-local completion-styles '(basic emacs22))))
+   #+end_src
+
+     If installed, the [[https://elpa.gnu.org/packages/orderless.html][orderless]] style can be a good replacement for ~substring~.
+     (put before ~basic~ in the example above).
+
+**** Updates
+
    - ~mu4e-main-hide-personal-addresses~ can now also be a number, which
      is the maximum number of addresses to show. This can be useful if you have
      so many personal addresses that they clutter up the main view. (1.14.0)
@@ -82,17 +98,14 @@
    - In the main-view, the message-queue options are now hidden when
      ~smtpmail-queue-dir~ is set to ~nil~. (1.14.3)
 
-   - In Emacs 31.1 (and later) there appears to be a problem with the =substring=
-     completion style when completion addresses (see #2946); if you encounter
-     this, you can try something like:
+   - ~mu4e-message-contact-field-matches~ and ~mu4e-message-contact-field-matches~
+     now accept a special contact-field =:any= which matches /all/ contact fields
+     and =:recip= which matches the recipient contact fields, To:/Cc:/Bcc:.
 
-   #+begin_src elisp
-     (add-hook 'mu4e-compose-mode-hook
-         (lambda () (setq-local completion-styles '(basic emacs22))))
-   #+end_src
-
-     If installed, the [[https://elpa.gnu.org/packages/orderless.html][orderless]] style can be a good replacement for ~substring~.
-     (put before ~basic~ in the example above).
+     Since the names are so long, and frequently useful in user-code (e.g. in
+     ~mu4e-refile-folder~ implementations), we also add some ~defalias~ for them:
+     ~mu4e-has-address-p~ => ~mu4e-message-contact-field-matches~
+     ~mu4e-has-my-address-p~ => ~mu4e-message-contact-field-matches-me~ (1.14.4)
 
 *** scm
 
