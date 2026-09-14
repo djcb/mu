@@ -310,7 +310,7 @@ for aligning them."
       (let* ((inhibit-read-only t)
              (pos (point))
              (max-length (seq-reduce (lambda (a b)
-                                       (max a (length (plist-get b :name))))
+                                       (max a (string-width (plist-get b :name))))
                                      (mu4e-query-items) 0)))
 
         ;; must be in mu4e-main-mode, or the bindings
