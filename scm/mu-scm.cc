@@ -21,6 +21,10 @@
 #include "mu-scm.hh"
 
 #include <thread>
+#include <mutex>
+#include <memory>
+#include <functional>
+#include <optional>
 #include <unistd.h>
 #include <errno.h>
 
@@ -197,16 +201,20 @@ std::string mu_scm_path;
 std::string mu_scm_repl_path;
 std::string mu_scm_socket_path;
 constexpr auto SOCKET_PATH_ENV = "MU_SCM_SOCKET_PATH";
-using StrVec = std::vector<std::string>;
-StrVec scm_args;
-std::thread scm_worker;
 }
 
+/**
+ * Resolve the paths to the mu-scm Scheme sources; idempotent.
+ *
+ * Done as a check _before_ entering guile, so we get a bit more civilized
+ * error message in case something's missing.
+ */
 static Result<void>
-prepare_run(const Mu::Options& opts, StrVec& args)
+prepare_paths()
 {
-	// do a checks _before_ entering guile, so we get a bit more civilized
-	// error message.
+	if (!mu_scm_path.empty())
+		return Ok(); // already resolved.
+
 	if (const auto path = make_mu_scm_path("mu-scm.scm"); path)
 		mu_scm_path = *path;
 	else
@@ -217,10 +225,88 @@ prepare_run(const Mu::Options& opts, StrVec& args)
 	else
 		return Err(path.error());
 
-	args = {"mu", "-l", mu_scm_path};
+	return Ok();
+}
+
+namespace {
+
+/**
+ * Run fn (some code that calls into Scheme) and catch any Scm-conditions
+ * Call from Guile-mode, i.e. from within a function invoked via
+ * scm_with_guile().
+ */
+struct GuardedBody   { const std::function<void()>& fn; };
+struct GuardedCatch  { bool errored{}; std::string message; };
+
+SCM
+guarded_body(void *data)
+{
+	reinterpret_cast<GuardedBody*>(data)->fn();
+	return SCM_UNSPECIFIED;
+}
+
+std::string
+scm_to_display_string(SCM obj)
+{
+	SCM port{scm_open_output_string()};
+	scm_display(obj, port);
+	size_t len{};
+	auto *cstr{scm_to_utf8_stringn(scm_get_output_string(port), &len)};
+	std::string str{cstr, len};
+	::free(cstr);
+	return str;
+}
+
+std::string
+format_condition(SCM key, SCM args)
+{
+	// Attempt to massage guile error into something printable.
+	if (scm_is_true(scm_list_p(args)) && scm_is_true(scm_eq_p(scm_length(args), scm_from_int(4))) &&
+	    scm_is_string(scm_cadr(args))) {
+		const SCM formatted{scm_simple_format(SCM_BOOL_F, scm_cadr(args), scm_caddr(args))};
+		return scm_to_display_string(key) + ": " + scm_to_display_string(formatted);
+	}
+
+	return scm_to_display_string(key) + ": " + scm_to_display_string(args);
+}
+
+SCM
+guarded_handler(void *data, SCM key, SCM args)
+{
+	// (exit ...)/(quit ...) work by throwing a 'quit condition, handle
+	// here.
+	if (scm_is_eq(key, scm_from_utf8_symbol("quit"))) {
+		const SCM code_scm = scm_is_pair(args) ? scm_car(args) : SCM_UNDEFINED;
+		const auto code = scm_is_integer(code_scm) ? scm_to_int(code_scm) : 0;
+		scm_flush_all_ports();
+		::exit(code);
+	}
+
+	auto& caught{*reinterpret_cast<GuardedCatch*>(data)};
+	caught.errored = true;
+	caught.message = format_condition(key, args);
+
+	return SCM_BOOL_F;
+}
+
+Result<void>
+guarded(const std::function<void()>& fn)
+{
+	GuardedBody  body{fn};
+	GuardedCatch caught{};
+
+	scm_c_catch(SCM_BOOL_T,
+		   guarded_body, &body,
+		   guarded_handler, &caught,
+		   nullptr, nullptr);
+
+	if (caught.errored)
+		return Err(Error::Code::Script, "{}", caught.message);
 
 	return Ok();
 }
+
+} // namespace
 
 static void
 maybe_remove_socket_path()
@@ -260,35 +346,77 @@ init_module_mu(void* data)
 	init_mime();
 }
 
-static void
-run_scm(const Mu::Store& store, const Mu::Options& opts)
+namespace {
+
+std::once_flag                guile_boot_once;
+std::optional<Result<void>>   guile_boot_result;
+
+void*
+boot_trampoline(void *data)
 {
+	auto& mu_data{*reinterpret_cast<ModMuData*>(data)};
+
+	guile_boot_result.emplace(guarded([&]{
+		mu_mod = scm_c_define_module("mu", init_module_mu, &mu_data);
+		scm_c_primitive_load(mu_scm_path.c_str());
+	}));
+
+	return nullptr;
+}
+
+} // namespace
+
+/**
+ * Boot Guile and define/load the "mu" module, exactly once per process
+ * MT-safe / idempotent; returns to caller.
+ */
+static Result<void>
+ensure_booted(const Mu::Store& store, const Mu::Options& opts)
+{
+	if (const auto res = prepare_paths(); !res)
+		return Err(res.error());
+
 	static ModMuData mu_data{store, opts};
 
-	scm_boot_guile(0, {},
-		       [](auto _data, auto _argc, auto _argv) {
-			       mu_mod = scm_c_define_module ("mu", init_module_mu, &mu_data);
-		std::vector<char*> args;
-		std::ranges::transform(scm_args, std::back_inserter(args),
-				       [](const std::string& strarg){
-					       /* ahem...*/
-					       return const_cast<char*>(strarg.c_str());
-		});
-		scm_shell(args.size(), args.data());
+	std::call_once(guile_boot_once, [&]{
+		scm_with_guile(boot_trampoline, &mu_data);
+	});
 
-	}, {}); // never returns.
+	return *guile_boot_result;
 }
+
+namespace {
+
+struct ReplData { std::vector<std::string> args; };
+
+void*
+run_repl_trampoline(void *data)
+{
+	auto& rd{*reinterpret_cast<ReplData*>(data)};
+
+	std::vector<char*> argv;
+	argv.reserve(rd.args.size());
+	std::ranges::transform(rd.args, std::back_inserter(argv),
+			       [](const std::string& arg){
+				       /* ahem...*/
+				       return const_cast<char*>(arg.c_str());
+			       });
+	scm_shell(static_cast<int>(argv.size()), argv.data());
+
+	return nullptr;
+}
+
+} // namespace
 
 Result<void>
 Mu::Scm::run_repl(const Mu::Store& store, const Mu::Options& opts,
 		  const std::string& socket_path)
 {
-	if (const auto res = prepare_run(opts, scm_args); !res)
+	if (const auto res = ensure_booted(store, opts); !res)
 		return Err(res.error());
 
-	scm_args.emplace_back("--no-auto-compile");
-	scm_args.emplace_back("-l");
-	scm_args.emplace_back(mu_scm_repl_path);
+	auto rd{std::make_shared<ReplData>()};
+	rd->args = {"mu", "--no-auto-compile", "-l", mu_scm_repl_path};
 
 	if (!socket_path.empty()) {
 		mu_scm_socket_path = socket_path;
@@ -297,23 +425,57 @@ Mu::Scm::run_repl(const Mu::Store& store, const Mu::Options& opts,
 		::atexit(maybe_remove_socket_path); //opportunistic cleanup
 
 		// if a socket-path is provided, run in a background thread
-		// and offer a REPL on a Unix domain socket on said socket_path
-		auto worker = std::thread([&](){
+		// and offer a REPL on a Unix domain socket on said socket_path.
+		// `rd` is kept alive by the shared_ptr captured in the thread.
+		auto worker = std::thread([rd](){
 			set_thread_name("mu-scm");
-			run_scm(store, opts);
+			scm_with_guile(run_repl_trampoline, rd.get());
 		});
 		worker.detach();
 	} else { // otherwise, a normal, interactive shell
 		g_unsetenv(SOCKET_PATH_ENV);
-		run_scm(store, opts);
+		scm_with_guile(run_repl_trampoline, rd.get());
 	}
 
 	return Ok();
 }
 
+namespace {
+
+struct ScriptData {
+	const std::string&          script_path;
+	const StringVec&            params;
+	bool                        run_main;
+	std::optional<Result<void>> result;
+};
+
+void*
+run_script_trampoline(void *data)
+{
+	auto& sd{*reinterpret_cast<ScriptData*>(data)};
+
+	sd.result.emplace(guarded([&]{
+		scm_c_primitive_load(sd.script_path.c_str());
+
+		if (!sd.run_main)
+			return;
+
+		const SCM main_proc{scm_variable_ref(scm_c_lookup("main"))};
+
+		StringVec args{sd.script_path};
+		args.insert(args.end(), sd.params.begin(), sd.params.end());
+
+		scm_apply_0(main_proc, to_scm(args));
+	}));
+
+	return nullptr;
+}
+
+} // namespace
+
 Result<void>
 Mu::Scm::run_script(const Mu::Store& store, const Mu::Options& opts,
-		    const std::string& script_path)
+		    const std::string& script_path, bool run_main)
 {
 	if (script_path.empty())
 		return Err(Error::Code::InvalidArgument, "missing script path");
@@ -322,41 +484,46 @@ Mu::Scm::run_script(const Mu::Store& store, const Mu::Options& opts,
 		return Err(Error::Code::InvalidArgument,
 			   "cannot read '{}': {}", script_path, ::strerror(errno));
 
-	if (const auto res = prepare_run(opts, scm_args); !res)
+	if (const auto res = ensure_booted(store, opts); !res)
 		return Err(res.error());
 
-	// XXX: couldn't get another combination of -l/-s/-e/-c to work
-	// a) invokes `main' with arguments, and
-	// b) exits (rather than drop to a shell)
-	// but, what works is to manually specify (main ....)
-	std::string cmd = "(main " + quote(script_path);
-	for (const auto& scriptarg : opts.scm.params)
-		cmd += " " + quote(scriptarg);
-	cmd += ")";
+	ScriptData sd{script_path, opts.scm.params, run_main, {}};
+	scm_with_guile(run_script_trampoline, &sd);
 
-	scm_args.emplace_back("-l");
-	scm_args.emplace_back(script_path);
-	scm_args.emplace_back("-c");
-	scm_args.emplace_back(cmd);
-
-	run_scm(store, opts);
-
-	return Ok();
+	return *sd.result;
 }
+
+namespace {
+
+struct EvalData {
+	const std::string&          expr;
+	std::optional<Result<void>> result;
+};
+
+void*
+run_eval_trampoline(void *data)
+{
+	auto& ed{*reinterpret_cast<EvalData*>(data)};
+
+	ed.result.emplace(guarded([&]{
+		scm_c_eval_string_in_module(ed.expr.c_str(), mu_mod);
+	}));
+
+	return nullptr;
+}
+
+} // namespace
 
 Result<void>
 Mu::Scm::run_eval(const Mu::Store& store, const Mu::Options& opts, const std::string& expr)
 {
-	if (const auto res = prepare_run(opts, scm_args); !res)
+	if (const auto res = ensure_booted(store, opts); !res)
 		return Err(res.error());
 
-	scm_args.emplace_back("-c");
-	// a little hacky...
-	scm_args.emplace_back("(use-modules ((mu))) " + expr);
+	EvalData ed{expr, {}};
+	scm_with_guile(run_eval_trampoline, &ed);
 
-	run_scm(store, opts);
-
-	return Ok();
+	return *ed.result;
 }
 
 
@@ -408,7 +575,7 @@ test_scm_script()
 	Mu::Options opts{};
 	{
 		const auto script_path{join_paths(MU_SCM_SRCDIR, "mu-scm-test.scm")};
-		const auto res = Mu::Scm::run_script(*store, opts, script_path);
+		const auto res = Mu::Scm::run_script(*store, opts, script_path, true/*run main*/);
 		assert_valid_result(res);
 	}
 }

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -46,7 +46,7 @@ namespace Mu::Scm {
 	 * configuration.
 	 *
 	 * @param store a Store object
-	 * @param opts options; opts.scm.script_path must be Nothing
+	 * @param opts options
 	 * @param socket_path if non-empty, run in the background on the
 	 * socket path (Unix domain socket); otherwise, run an
 	 * interactive shell in blocking mode.
@@ -59,19 +59,21 @@ namespace Mu::Scm {
 	/**
 	 * Run a Guile/SCM script
 	 *
-	 * Initialize the Scm sub-system, then start run a script,
-	 * based on the configuration.
+	 * Initialize the Scm sub-system, then load a script, optionally
+	 * calling its main() function, and return to caller.
 	 *
 	 * @param store a Store object
 	 * @param opts options
 	 * @param a path to the script
+	 * @param run_main whether to look up and call the script's main()
+	 * function (with the script path and opts.scm.params as arguments);
+	 * if false, the script is loaded only for its side-effects.
 	 *
 	 * @return Ok() or some error
 	 */
 	Result<void> run_script(const Store& store, const Options& opts,
-				const std::string& script_path);
-
-
+				const std::string& script_path,
+				bool run_main=true);
 
 	/**
 	 * Evaluate a Guile/SCM expression
@@ -314,18 +316,6 @@ namespace Mu::Scm {
 		SCM res = scm_acons(to_scm(key), to_scm(val), alist);
 		return alist_add(res, std::forward<KeyVals>(keyvals)...);
 	}
-
-	//template<scm_t_catch_body Func, scm_t_catch_handler Handler>
-	static inline SCM try_scm(scm_t_catch_body func, scm_t_catch_handler handler) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-function-type"
-		return scm_internal_catch(
-			SCM_BOOL_F,
-			func, SCM_BOOL_F,
-			handler, SCM_BOOL_F);
-#pragma GCC diagnostic pop
-	}
-
 
 	/**@}*/
 }
