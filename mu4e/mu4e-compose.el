@@ -212,7 +212,11 @@ I.e., either \"name <email>\" or \"email\". Return nil if not found.
 This function can be used for `completion-at-point-functions', to
 complete addresses. This can be used from outside mu4e, but mu4e
 must be active (running) for this to work."
-  (let* ((end (point))
+  (let* ((end (save-excursion
+                (let ((p (point)))
+                  (skip-chars-forward "^,\n")
+                  (skip-chars-backward " \t" p))
+                (point)))
          (start (save-excursion
                   (re-search-backward "\\(\\`\\|[\n:,]\\)[ \t]*")
                   (goto-char (match-end 0))
