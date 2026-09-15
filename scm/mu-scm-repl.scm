@@ -1,4 +1,4 @@
-;; Copyright (C) 2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; Copyright (C) 2025-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;;
 ;; This program is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the
@@ -16,6 +16,10 @@
 (use-modules (system repl server)
 	     (ice-9 threads))
 (use-modules (mu))
+
+;; Guile's own top-repl always does (set-current-module (resolve-module
+;; '(guile-user))), ensure mu is available.
+(module-use! (resolve-module '(guile-user)) (resolve-module '(mu)))
 
 ;; when a socket path is defined, listen on it (blocking)
 ;; after printing UNIX-CONNECT:<socket-file>\n on stdout

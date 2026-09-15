@@ -394,6 +394,8 @@ run_repl_trampoline(void *data)
 {
 	auto& rd{*reinterpret_cast<ReplData*>(data)};
 
+	scm_set_current_module(mu_mod);
+
 	std::vector<char*> argv;
 	argv.reserve(rd.args.size());
 	std::ranges::transform(rd.args, std::back_inserter(argv),
@@ -455,6 +457,8 @@ run_script_trampoline(void *data)
 	auto& sd{*reinterpret_cast<ScriptData*>(data)};
 
 	sd.result.emplace(guarded([&]{
+
+		scm_set_current_module(mu_mod);
 		scm_c_primitive_load(sd.script_path.c_str());
 
 		if (!sd.run_main)
