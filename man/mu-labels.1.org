@@ -121,7 +121,7 @@ See *EXPORT FORMAT* below for details on the format.
 restrictions on what is accepted as a label.
 
 - a *valid label character* is any character that is not a control-character, not
-  a blank, nor anything matching the regular expression ~[\"$',/\\`]~
+  a blank, nor anything matching =["$',/\`]=
 - a *valid label* consists of one or more valid label characters, the first of
   which must *not* be either *+* or *-*
 
