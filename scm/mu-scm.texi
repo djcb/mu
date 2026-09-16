@@ -437,9 +437,9 @@ name. In the future, other fields may be added.
 see the @t{pcre(3)} man-page for details
 @item @var{#:personal?} if true, only match @emph{personal} contacts
 A personal contact is a contact seen in message where ``you'' were an explicit
-sender or recipient, thus excluding mailing-list. Personal addresses are those
-that were specified at store creation time - see the @t{mu-init} man-page, in
-particular the @t{--personal-address} parameter
+sender or recipient, thus excluding mailing-list messages. Personal addresses
+are those that were specified at store creation time - see the @t{mu-init}
+man-page, in particular the @t{--personal-address} parameter
 @item @var{#:after} only include contacts last-seen after some time-point
 Specified as the number of seconds since epoch. Helper-function
 @code{iso-date->time-t} can be useful here.
@@ -719,7 +719,6 @@ Determine a filename for the given MIME-part.
 This is either taken from the @t{filename} property of the MIME-part alist, or,
 If that does not exist, a generic name.
 
-
 @subsection Contacts
 
 Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain @emph{contacts}.
@@ -827,7 +826,7 @@ Does the message have an attachment? Returns @t{#t} or @t{#f}.
 @end deffn
 Is this message unread? I.e., either new or not seen? Returns @t{#t} or @t{#f}.
 
-@deffn {Scheme Procedure} list? message
+@deffn {Scheme Procedure} mailing-list? message
 @end deffn
 Is this a mailing-list message? Returns @t{#t} or @t{#f}.
 

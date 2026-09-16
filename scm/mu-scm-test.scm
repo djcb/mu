@@ -134,6 +134,8 @@
 (define (test-message-recips)
   (test-begin "test-recips")
   (let* ((msg (car (mfind "message-id:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com"))))
+    (test-assert (mailing-list? msg))
+    (test-equal "help-gnu-emacs.gnu.org" (mailing-list msg))
     (test-equal "Re: basic question: going back to dired" (subject msg))
     (test-equal '(((email . "help-gnu-emacs@gnu.org"))) (cc msg))
     (test-equal '(((email . "juanma_bellon@yahoo.es") (name . "Juanma"))) (to msg))

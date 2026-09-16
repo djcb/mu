@@ -79,7 +79,7 @@
 	    encrypted?
 	    attach?
 	    unread?
-	    list?
+	    mailing-list?
 	    personal?
 	    calendar?
 
@@ -509,9 +509,9 @@ This is method is useful to determine the thread a message is in."
   "Is MESSAGE unread?"
   (flag? message 'unread))
 
-(define-method (list? (message <message>))
+(define-method (mailing-list? (message <message>))
   "Is MESSAGE from some mailing-list?"
-  (flag? message 'list))
+  (flag? message 'list)) ;; list, not mailing-list.
 
 (define-method (personal? (message <message>))
   "Is MESSAGE personal?"

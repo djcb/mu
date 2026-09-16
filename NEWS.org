@@ -117,13 +117,24 @@
    (1.14.0)
 
    - Add procedures ~configuration~ (an alist with the system configuration) and
-     ~fields~/~field~ (alists with metadata about database fields). See the SCM
+     ~fields/field~ (alists with metadata about database fields). See the SCM
      reference documentation for further details (1.14.3).
 
    - Add procedures ~date-object~ which is like ~date~, but returns message's
      sent-date as an SRFI-19 object; and ~utc-offset~ to get the UTC (timezone)
      offset for a date. Similarly, add ~changed-object~ to complement ~changed~
      (1.14.3)
+
+   - add convenience procedures ~language?~ for testing a message's language;
+     ~label?~ for testing if a message has a given label (1.14.4)
+
+   - add procedure ~recipients~ to get _all_ To/Cc/Bcc recipients of a message
+     (1.14.4)
+
+   - rename procedure ~list?~ into ~mailing-list?~, since the former is core binding
+     we should not override. This is a breaking change, unfortunately, but
+     hopefully should not affect too many users. (1.14.4)
+
 
 * 1.12 (released on February 24, 2024)
 
