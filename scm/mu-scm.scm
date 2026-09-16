@@ -51,7 +51,9 @@
 	    path
 	    priority
 	    subject
+
 	    labels
+            label?
 
 	    references
 	    thread-id
@@ -59,6 +61,8 @@
 	    mailing-list
 
 	    language
+            language?
+
 	    size
 
 	    ;; message flags / predicates
@@ -84,6 +88,7 @@
 	    to
 	    cc
 	    bcc
+            recipients
 
 	    ;; message-body
 	    body
@@ -371,7 +376,7 @@ This is the number of seconds since epoch; #f if not found."
 
 (define-method (utc-offset (message <message>))
   "Get the UTC offset in seconds for this MESSAGE.
-I.e., the offset from the UTC for the time the message was sent.
+I.e., the offset from the UTC for the time and place the message was sent.
 #f if not available."
     (assoc-ref (message->alist message) 'utc-offset))
 
@@ -408,6 +413,13 @@ Return #f otherwise."
   (when-let ((lang (assoc-ref (message->alist message) 'language)))
     (string->symbol lang)))
 
+(define-method (language? (message <message>) langs)
+  "Is the message written in (one of) LANGS?
+LANG can be either an ISO-639-1 language symbol or a list thereof."
+  (when-let* ((msglang (language message))
+              (langs (if (list? langs) langs (list langs))))
+    (if (memq msglang langs) #t #f)))
+
 (define-method (size (message <message>))
   "Get the size of the MESSAGE in bytes or #f if not available."
   (assoc-ref (message->alist message) 'size))
@@ -423,6 +435,13 @@ the empty list."
 (define-method (labels (message <message>))
   "Get the list of labels for MESSAGE."
   (or (assoc-ref (message->alist message) 'labels) '()))
+
+(define-method (label? (message <message>) labs)
+  "Does the message have any of the labels in LABS?
+LABS is either a label or a list of labels."
+  (when-let* ((msglabs (labels message))
+              (labs (if (list? labs) labs (list labs))))
+    (if (any (lambda(lab) (member lab labs)) msglabs) #t #f)))
 
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
@@ -518,6 +537,10 @@ This is method is useful to determine the thread a message is in."
   "Get the list of (intended) blind carbon-copy recipient for MESSAGE (the Bcc:
 field)."
   (or (assoc-ref (message->alist message) 'bcc) '()))
+
+(define-method (recipients (message <message>))
+  "Get the list of To/Cc/Bcc for message."
+  (append (to message) (cc message) (bcc message)))
 
 (define* (body message #:key (html? #f))
   "Get the MESSAGE body or #f if not found

@@ -119,12 +119,28 @@
     (test-equal (language msg)
       (if (assoc-ref (configuration) 'language-enabled?) 'en #f))
 
+    (when (assoc-ref (configuration) 'language-enabled?)
+      (test-assert (language? msg 'en))
+      (test-assert (language? msg '(fi nl en)))
+      (test-assert (not(language? msg '(fr uk)))))
+
     ;; cc, bc, labels
     (test-equal '() (cc msg))
     (test-equal '() (bcc msg))
     (test-equal '() (labels msg)))
 
   (test-end "test-message-more"))
+
+(define (test-message-recips)
+  (test-begin "test-recips")
+  (let* ((msg (car (mfind "message-id:f7ccd24b0808061357t453f5962w8b61f9a453b684d0@mail.gmail.com"))))
+    (test-equal "Re: basic question: going back to dired" (subject msg))
+    (test-equal '(((email . "help-gnu-emacs@gnu.org"))) (cc msg))
+    (test-equal '(((email . "juanma_bellon@yahoo.es") (name . "Juanma"))) (to msg))
+    (test-equal '(((email . "juanma_bellon@yahoo.es") (name . "Juanma"))
+                  ((email . "help-gnu-emacs@gnu.org"))) (recipients msg)))
+
+  (test-end "test-recips"))
 
 (define (test-message-parts)
   (test-begin "test-message-parts")
@@ -148,13 +164,17 @@
 
 (define (test-message-labels)
   (test-begin "test-message-labels")
-  (let* ((perfmsgs (mfind "label:performance")))
+  (let* ((perfmsgs (mfind "label:performance"))
+	 (msg (car perfmsgs)))
     (test-equal 4 (length perfmsgs))
     (for-each (lambda (msg)
 		(test-equal 1 (length (labels msg)))
 		(test-equal "performance" (car (labels msg))))
-	      perfmsgs))
-    (test-end "test-message-labels"))
+	      perfmsgs)
+    (test-assert (label? msg "performance"))
+    (test-assert (label? msg '("performance" "antlers")))
+    (test-assert (not (label? msg '("mars" "twix")))))
+  (test-end "test-message-labels"))
 
 (define (test-message-new)
   (test-begin "test-message-new")
@@ -229,6 +249,7 @@
       (test-mfind)
       (test-message-full)
       (test-message-more)
+      (test-message-recips)
       (test-message-parts)
       (test-message-labels)
       (test-message-new)

@@ -712,7 +712,6 @@ the name using the @code{filename} procedure.
 If @code{overwrite?} is true, overwrite existing files of the same name;
 otherwise, raise an error if the file already exists.
 
-
 @deffn {Scheme Procedure} filename mime-part
 @end deffn
 Determine a filename for the given MIME-part.
@@ -748,6 +747,10 @@ Get the message's intended carbon-copy @t{Cc:} recipients list.
 @deffn {Scheme Procedure} bcc message
 @end deffn
 Get the message's intended blind carbon-copy @t{Bcc:} recipients list.
+
+@deffn {Scheme Procedure} recipients message
+@end deffn
+Get the message's combined To/Cc/Bcc recipients.
 
 @subsection Flags
 
@@ -887,6 +890,19 @@ For example:
 => ("foo" "bar")
 @end lisp
 
+@deffn {Scheme Procedure} label? message labs
+@end deffn
+
+Check whether the message has the given label in @code{labs} (which can be
+either a single label or a list). Return non-@t{#f} if message has the label,
+@t{#f} otherwise.
+
+For example:
+@lisp
+(label? msg "koyaanisqatsy"))
+=> #t
+@end lisp
+
 @deffn {Scheme Procedure} language message
 @end deffn
 Get the ISO-639-1 language code for message's primary language or @code{#f} if not
@@ -898,6 +914,18 @@ For example:
 @lisp
 (language msg)
 => en
+@end lisp
+
+@deffn {Scheme Procedure} language? message langs
+@end deffn
+Check whether the message has the ISO-639-1 language code in @code{langs} (which
+can be either single language code or a list). Return non-@t{#f} if language
+matches, @t{#f} otherwise.
+
+For example:
+@lisp
+(language? msg '(nl de en))
+=> #t
 @end lisp
 
 @deffn {Scheme Procedure} header message
