@@ -1,6 +1,6 @@
 ;; unit tests
 
-(use-modules (mu) (srfi srfi-64)
+(use-modules (mu) (srfi srfi-64) (ice-9 regex)
              (srfi srfi-19)
 	     (ice-9 textual-ports))
 
@@ -140,9 +140,28 @@
     (test-equal '(((email . "help-gnu-emacs@gnu.org"))) (cc msg))
     (test-equal '(((email . "juanma_bellon@yahoo.es") (name . "Juanma"))) (to msg))
     (test-equal '(((email . "juanma_bellon@yahoo.es") (name . "Juanma"))
-                  ((email . "help-gnu-emacs@gnu.org"))) (recipients msg)))
-
+                  ((email . "help-gnu-emacs@gnu.org"))) (recipients msg))
+    (test-equal '(((email . "anon@example.com"))
+                  ((email . "juanma_bellon@yahoo.es") (name . "Juanma"))
+                  ((email . "help-gnu-emacs@gnu.org"))) (contacts msg)))
   (test-end "test-recips"))
+
+(define (test-match-contact)
+  (test-begin "match-contact")
+  (let ((contacts '(((email . "foo@example.com") (name . "Foo Bar"))
+                 ((email . "fnorb@example.com") (name . "Fnorb")))))
+    (test-assert (match-contact? contacts "Foo"))
+    (test-assert (match-contact? contacts "fnorb"))
+    (test-assert (match-contact? (cadr contacts) "Fnorb"))
+    (test-assert (not (match-contact? contacts "cuux")))
+    (test-assert (not (match-contact? contacts "Example")))
+
+    (test-assert (not (match-contact? contacts "foo bar")))
+    (test-assert (match-contact? contacts (make-regexp "foo bar" regexp/icase)))
+    (test-assert (imatch-contact? contacts "foo bar"))
+
+    (test-assert (match-contact? contacts (make-regexp "F.o.b" ))))
+  (test-end "match-contact"))
 
 (define (test-message-parts)
   (test-begin "test-message-parts")
@@ -254,6 +273,7 @@
       (test-message-recips)
       (test-message-parts)
       (test-message-labels)
+      (test-match-contact)
       (test-message-new)
       (test-options)
       (test-helpers)

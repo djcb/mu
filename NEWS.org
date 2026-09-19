@@ -112,8 +112,9 @@
    - add convenience procedures ~language?~ for testing a message's language;
      ~label?~ for testing if a message has a given label (1.14.4)
 
-   - add procedure ~recipients~ to get _all_ To/Cc/Bcc recipients of a message
-     (1.14.4)
+   - Add procedures to get contact list for messages: ~contacts~ (From/To/Cc/Bcc)
+     and ~recipients~ (To/Cc/Bcc). Add ~match-contact?~, ~imatch-contact?~ to match
+     (lists of) contacts against regular expressions (1.14.4)
 
    - rename procedure ~list?~ into ~mailing-list?~, since the former is core binding
      we should not override. This is a breaking change, unfortunately, but

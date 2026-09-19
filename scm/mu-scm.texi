@@ -106,8 +106,8 @@ Indices
 * Building it yourself::
 * Starting the REPL::
 * Listening on a Unix Domain Socket::
-* Hooking up with GNU/Emacs and Geiser::
-* Hooking up with Mu4e::
+* Connecting through GNU/Emacs and Geiser::
+* Connecting through Mu4e::
 @end menu
 
 This chapter walks you through the installation and basic setup.
@@ -116,9 +116,8 @@ This chapter walks you through the installation and basic setup.
 @section Using distributions
 
 At the time of writing, few distributions ship with an SCM-enabled @t{mu}, but
-we know at least Guix@footnote{@url{https://guix.gnu.org/}}. For other
-distributions, you need to build it yourself for now. Of course, this is fully
-optional.
+at least Guix@footnote{@url{https://guix.gnu.org/}} does. For other
+distributions, you need to build it yourself for now.
 
 @node Building it yourself
 @section Building it yourself
@@ -126,10 +125,13 @@ optional.
 To build @t{mu} with SCM support, first you need to ensure you have installed
 the required Guile development packages. The details of getting those vary
 across environments / distributions, e.g.: on Fedora (as root):
+
 @example
 # dnf install guile30-devel
 @end example
+
 or on Debian/Ubuntu and derivatives:
+
 @example
 $ sudo apt install guile-3.0-dev
 @end example
@@ -205,16 +207,19 @@ scheme@@(guile-user)>
 @end example
 
 That is not much of improvement over the normal Guile shell, but you can of
-course use more advanced tools; @xref{Hooking up with GNU/Emacs and Geiser}.
+course use more advanced tools; @xref{Connecting through GNU/Emacs and Geiser}.
 
-@node Hooking up with GNU/Emacs and Geiser
-@section Hooking up with GNU/Emacs and Geiser
+@node Connecting through GNU/Emacs and Geiser
+@section Connecting through GNU/Emacs and Geiser
 @cindex GNU/Emacs
 @cindex Geiser
 
 Many people like interacting with Guile through Emacs and the ``Geiser''
 package, and that is possible with @command{mu scm} as well, using the Unix
 domain socket, as discussed in @xref{Listening on a Unix Domain Socket}.
+
+If you also happen to use @code{mu4e}, see @xref{Connecting through Mu4e};
+otherwise, read on.
 
 Assuming you have installed the @code{guile-geiser} package (available through
 the ELPA package archive), the following snippet makes that easy:
@@ -239,8 +244,8 @@ Connect to mu's scm (guile) interface through Geiser."
 After evaluating this, you can use @command{M-x mu-scm-geiser-connect} to start
 the REPL, with all the Geiser bells & whistles.
 
-@node Hooking up with Mu4e
-@section Hooking up with Mu4e
+@node Connecting through Mu4e
+@section Connecting through Mu4e
 @cindex Mu4e
 
 If you use @code{mu4e}, connecting to the SCM REPL is even easier than with
@@ -253,7 +258,7 @@ First tell @code{mu4e} to starts it server with with @t{--listen} parameter:
 After that, (re)start @code{mu4e}.
 
 Now should be able to connect to the REPL using @kbd{M-x mu4e-mu-scm-repl}. Like
-@ref{Hooking up with GNU/Emacs and Geiser}, this depends on the
+@ref{Connecting through GNU/Emacs and Geiser}, this depends on the
 @code{geiser-guile} package.
 
 The SCM instance uses the same database/store instance that @code{mu4e} uses.
@@ -365,7 +370,7 @@ few key concepts, represented in some GOOP objects and other data-structures:
 @item the @t{<store>} represents the mu database with information about messages
 @item from the store, you can find @t{<message>} objects, each of which represent a specific message
 (similar to what you get from @code{mu find})
-@item the store also exposes tha contacts in the store as alists (``association lists'')
+@item the store also exposes addresses (such as To:, From:) in the store as alists (``association lists'')
 (similar to what you get from @code{mu cfind})
 @end itemize
 
@@ -427,10 +432,11 @@ Example usage:
 @deffn {Scheme Procedure} cfind pattern [#:personal? #f] [#:after #f] [#:max-results #f]
 @end deffn
 
-Search for contacts in the store, and return a list of contacts for the matches.
-Each contact is an association list with at least a key (symbol @t{email}) with
-e-mail address as its value, and possibly a @t{name} key with the contact's
-name. In the future, other fields may be added.
+Search for contacts (combinations of an email-address and optionally a name) in
+the store, and return a list of contacts for the matches. Each contact is an
+association list with at least a key (symbol @t{email}) with e-mail address as
+its value, and possibly a @t{name} key with the contact's name. In the future,
+other fields may be added.
 
 @itemize
 @item @var{pattern} is a basic case-insensitive PCRE-compatible regular expression
@@ -721,10 +727,9 @@ If that does not exist, a generic name.
 
 @subsection Contacts
 
-Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain @emph{contacts}.
-@t{mu-scm} represents those as list of contact-alists, or contacts for short.
-Each contact is an alist with at least an @code{email} and optionally a
-@code{name} field. For instance:
+Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain lists of
+@emph{contacts}, which are are association-lists with a @code{email} field and
+optionally a @code{name} field. For instance:
 @lisp
 (to msg)
 => (((name . "Hannibal Smith") (email . "jhs@@example.com"))
@@ -749,7 +754,44 @@ Get the message's intended blind carbon-copy @t{Bcc:} recipients list.
 
 @deffn {Scheme Procedure} recipients message
 @end deffn
-Get the message's combined To/Cc/Bcc recipients.
+Get the message's combined list To/Cc/Bcc recipients.
+
+@deffn {Scheme Procedure} contacts message
+@end deffn
+Get the message's combined list of sender and recipients.
+
+To make it easy to match messages by their addresses, there is
+
+@deffn {Scheme Procedure} match-contact? contacts regexp
+@end deffn
+
+Check whether @code{contacts} contains any contact for which either email or
+name matches some regular expression @code{regexp}.
+
+@code{addresses} can be either a single address or a list.
+
+@code{regexp} can be either a string or a regexp object as per @code{(ice-9
+regex)} (@xref{(guile) Regular Expressions}).
+
+Example:
+@lisp
+(match-address? (recipients msg) "murdock")
+=> #t
+@end lisp
+
+@deffn {Scheme Procedure} imatch-address? addresses regexp
+@end deffn
+
+Like @code{match-address?}, but match case-insensitively. @code{regexp} must be
+be a string.
+
+Example:
+@lisp
+(match-address? (recipients msg) "hannibal")
+=> #f
+(imatch-address? (recipients msg) "hannibal")
+=> #t
+@end lisp
 
 @subsection Flags
 
