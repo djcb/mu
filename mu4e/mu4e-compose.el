@@ -1,6 +1,6 @@
 ;;; mu4e-compose.el --- Compose and send messages -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2024 Dirk-Jan C. Binnema
+;; Copyright (C) 2011-2026 Dirk-Jan C. Binnema
 
 ;; Author: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ;; Maintainer: Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
@@ -40,7 +40,6 @@
 (require 'mu4e-folders)
 
 (require 'mu4e-draft)
-
 
 ;;; User configuration for compose-mode
 (defgroup mu4e-compose nil
@@ -170,6 +169,8 @@ the file under our feet, which is a bit fragile."
     (unless (and name (not force) (eq old-context name))
       (unless (and (not force)
                    (eq old-context (mu4e-context-switch nil name)))
+        ;; remember the new context, to be re-applied when sending.
+        (setq mu4e--compose-context (mu4e-context-name (mu4e-context-current)))
         (save-excursion
           ;; Change From / Organization if needed.
           (message-replace-header "Organization"
@@ -184,7 +185,6 @@ the file under our feet, which is a bit fragile."
             (delete-region (point) (point-max)))
           (when message-signature
               (save-excursion (message-insert-signature))))))))
-
 
 ;;; Address completion
 
