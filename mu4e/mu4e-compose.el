@@ -474,8 +474,13 @@ variables ‘message-forward-as-mime’ and
 ;;;###autoload
 (defun mu4e-compose-resend (address)
   "Re-send the message at point to ADDRESS.
-The message is resent as-is, without any editing. See
-`message-resend' for details."
+
+This wraps `message-resend' - the message is resent as-is,
+without any editing.
+
+However, note that while `message-resend' does not handle
+Fcc: (and won't save copies of outgoing mail),
+`mu4e-compose-resend' does honor `mu4e-sent-messages-behavior'."
   (interactive
    (list (completing-read
           "Resend message to address: " mu4e--contacts-set)))
@@ -483,7 +488,7 @@ The message is resent as-is, without any editing. See
          (fcc-path (mu4e--fcc-path (mu4e--draft-basename) msg))
          (fcc-handler
           (lambda ()
-            ;; set up Fcc so we can honor mu4e-sent-messages-behavior
+            ;; set up Fcc for mu4e-sent-messages-behavior
             (let ((buf (current-buffer)))
               (with-temp-buffer
                 (insert-buffer-substring buf)
@@ -495,7 +500,6 @@ The message is resent as-is, without any editing. See
       (unwind-protect
           (progn
             ;; run `message-resend', honor `mu4e-sent-messages-behavior'
-            ;; note: plain `message-resend' does not follow the normal path.
             (add-hook 'message-sent-hook fcc-handler)
             (message-resend address))
         (remove-hook 'message-sent-hook fcc-handler)))))

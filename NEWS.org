@@ -91,6 +91,8 @@
      ~mu4e-has-address-p~ => ~mu4e-message-contact-field-matches~
      ~mu4e-has-my-address-p~ => ~mu4e-message-contact-field-matches-me~ (1.14.4)
 
+   - ~mu4e-compose-resend~ now honors ~mu4e-sent-messages-behavior~ (1.14.4)
+
 *** scm
 
    - Added new ~--eval~ command-line option, so you can do e.g.
