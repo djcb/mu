@@ -479,11 +479,26 @@ The message is resent as-is, without any editing. See
   (interactive
    (list (completing-read
           "Resend message to address: " mu4e--contacts-set)))
-  (let ((msg (mu4e-message-at-point)))
+  (let* ((msg (mu4e-message-at-point))
+         (fcc-path (mu4e--fcc-path (mu4e--draft-basename) msg))
+         (fcc-handler
+          (lambda ()
+            ;; set up Fcc so we can honor mu4e-sent-messages-behavior
+            (let ((buf (current-buffer)))
+              (with-temp-buffer
+                (insert-buffer-substring buf)
+                (mu4e--delimit-headers 'undelimit)
+                (mu4e--fcc-handler fcc-path))))))
     (with-temp-buffer
       (mu4e--prepare-draft msg)
       (insert-file-contents (mu4e-message-readable-path msg))
-      (message-resend address))))
+      (unwind-protect
+          (progn
+            ;; run `message-resend', honor `mu4e-sent-messages-behavior'
+            ;; note: plain `message-resend' does not follow the normal path.
+            (add-hook 'message-sent-hook fcc-handler)
+            (message-resend address))
+        (remove-hook 'message-sent-hook fcc-handler)))))
 
 ;;; Compose-mode
 
