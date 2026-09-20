@@ -54,7 +54,9 @@
 	    subject
 
 	    labels
-            label?
+            match-label?
+
+            tags
 
 	    references
 	    thread-id
@@ -437,7 +439,8 @@ the empty list."
   (or (assoc-ref (message->alist message) 'references) '()))
 
 (define-method (labels (message <message>))
-  "Get the list of labels for MESSAGE."
+  "Get the list of labels for MESSAGE.
+If no labels are present, return the empty list."
   (or (assoc-ref (message->alist message) 'labels) '()))
 
 (define-method (label? (message <message>) labs)
@@ -447,12 +450,30 @@ LABS is either a label or a list of labels."
               (labs (if (list? labs) labs (list labs))))
     (if (any (lambda(lab) (member lab labs)) msglabs) #t #f)))
 
+(define (match-strlist? lst rx)
+  "Helper to match RX against a string or list of strings.
+LST can be either a single strong or a list.
+RX can be either a string or a regex object."
+  (let ((lst (if (list? lst) lst (list lst)))
+        (rx (if (regexp? rx) rx (make-regexp rx))))
+    (if (any (lambda (str) (regexp-exec rx str)) lst) #t #f)))
+
+(define-method (match-label? (message <message>) regexp)
+  "Do the message's labels match regular expression REGEXP?
+LABS is either a label or a list of labels."
+  (match-strlist? (labels message) regexp))
+
+(define-method (tags (message <message>))
+  "Get the list of tags for MESSAGE.
+If no tags are present, return the empty list."
+  (or (assoc-ref (message->alist message) 'tags) '()))
+
 (define-method (thread-id (message <message>))
   "Get the oldest (first) reference for MESSAGE, or message-id if there are none.
 If neither are available, return #f.
 This is method is useful to determine the thread a message is in."
   (if-let* ((refs (references message)) (_ (not (null? refs))))
-    (car refs)
+      (car refs)
     (message-id message)))
 
 (define-method (mailing-list (message <message>))

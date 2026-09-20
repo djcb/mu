@@ -773,6 +773,8 @@ name matches some regular expression @code{regexp}.
 @code{regexp} can be either a string or a regexp object as per @code{(ice-9
 regex)} (@xref{(guile) Regular Expressions}).
 
+Return @code{#t} if there is a match, @code{#f} otherwise.
+
 Example:
 @lisp
 (match-address? (recipients msg) "murdock")
@@ -931,16 +933,21 @@ For example:
 => ("foo" "bar")
 @end lisp
 
-@deffn {Scheme Procedure} label? message labs
+@deffn {Scheme Procedure} match-label? message regexp
 @end deffn
 
-Check whether the message has the given label in @code{labs} (which can be
-either a single label or a list). Return non-@t{#f} if message has the label,
-@t{#f} otherwise.
+Check whether @code{message} has any label matching some regular expression
+@code{regexp}.
+
+@code{regexp} can be either a regular expression string or a regexp object as
+per @code{(ice-9 regex)} (@xref{(guile) Regular Expressions}).
+
+Return @code{#t} if the message's labels match the regular expression, @code{#f}
+otherwise.
 
 For example:
 @lisp
-(label? msg "koyaanisqatsy"))
+(match-label? msg "koyaanisqatsy"))
 => #t
 @end lisp
 
@@ -1032,6 +1039,9 @@ For example:
 => "gnu-emacs-sources.gnu.org"
 @end lisp
 
+@deffn {Scheme Procedure} tags message
+@end deffn
+Get the list of tags for this message.
 
 @c @deffn {Scheme Procedure} sexp message
 @c @end deffn

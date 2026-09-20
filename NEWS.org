@@ -112,7 +112,8 @@
      (1.14.3)
 
    - add convenience procedures ~language?~ for testing a message's language;
-     ~label?~ for testing if a message has a given label (1.14.4)
+     ~match-label?~ for testing if a message has a given label, ~tags~ for getting
+     the message tags (1.14.4)
 
    - Add procedures to get contact list for messages: ~contacts~ (From/To/Cc/Bcc)
      and ~recipients~ (To/Cc/Bcc). Add ~match-contact?~, ~imatch-contact?~ to match
