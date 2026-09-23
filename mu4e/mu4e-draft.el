@@ -356,7 +356,8 @@ With HEADERS-ONLY non-nil, only include the headers part."
       (rfc822-goto-eoh)
       (decode-coding-region (point-min) (point) 'utf-8))
     (mm-enable-multibyte)
-    (ignore-errors (run-hooks 'gnus-article-decode-hook))
+    (let ((rfc2047-quote-decoded-words-containing-tspecials t))
+      (ignore-errors (run-hooks 'gnus-article-decode-hook)))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defvar mu4e--draft-buffer-max-name-length 48)
