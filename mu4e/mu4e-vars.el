@@ -32,6 +32,10 @@
   "Mu4e - an email-client for Emacs."
   :group 'mail)
 
+(defgroup mu4e-view nil
+  "Settings for the message view."
+  :group 'mu4e)
+
 (defcustom mu4e-confirm-quit t
   "Whether to confirm to quit mu4e."
   :type 'boolean
