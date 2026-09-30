@@ -51,10 +51,6 @@ future.
   complicating the search (i.e., the message hash?). Maybe leave as is?
   https://github.com/djcb/mu/issues/2527
 
-- Perhaps better support file names with commas.. perhaps temporarily add some
-  invisible unicode to fool CRM-separator?
-  https://github.com/djcb/mu/issues/2768
-
 - More general, make the MIME-part handling in the viewer a bit better, we have
   the ~e~-path and the ~A~-path which is a bit confusing. Perhaps we should generate
   the MIME parts off-screen (buffer).
@@ -89,6 +85,12 @@ future.
   number of addresses or hide them completely.
 
 * Done
+
+** DONE Perhaps better support file names with commas.. perhaps temporarily add some
+  invisible unicode to fool CRM-separator?
+  https://github.com/djcb/mu/issues/2768 Magical CRM separators are problematic
+  (no lookback in the regexps), but we now try different separators until we
+  find one that is not part of any of the candidates (1.14.4)
 
 ** DONE Support mu4e-mark-handle-when also for when leaving emacs
   (kill-emacs-query-functions).

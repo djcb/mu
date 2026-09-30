@@ -31,6 +31,7 @@
 (require 'cl-lib)
 (require 'bookmark)
 (require 'message)
+(require 'crm)
 
 (require 'mu4e-window)
 (require 'mu4e-config)
@@ -342,6 +343,43 @@ Function returns the value (cdr) of the matching cell."
                 (characterp (plist-get item :key)))
               lst))
 
+;;;; Completing multiple candidates
+
+(defconst mu4e--separator ",;|"
+  "Characters to try as separator for `mu4e--completing-read-multiple'.")
+
+(defun mu4e--find-suitable-separator (table)
+  "Find a separator for completing multiple candidates from TABLE.
+TABLE is a completion table. Return the first character in
+`mu4e--separator' that is not part of any of the candidates in
+TABLE, or nil if there is none."
+  (let ((candidates (all-completions "" table)))
+    (seq-find (lambda (sep)
+                (not (seq-some (lambda (candidate)
+                                 (string-search (string sep) candidate))
+                               candidates)))
+              mu4e--separator)))
+
+(defvar crm-prompt) ;; emacs 31
+
+(defun mu4e--completing-read-multiple (prompt table)
+  "Read multiple candidates from completion TABLE, with PROMPT.
+This is like `completing-read-multiple', but chooses a separator
+as per `mu4e--find-suitable-separator'; raise an error if there is none.
+
+Only candidates in TABLE are accepted.
+
+Return list of the chosen candidates."
+  (let* ((sep (string
+               (or (mu4e--find-suitable-separator table)
+                   (mu4e-error "No suitable separator for candidates"))))
+         (crm-separator (propertize (rx (* blank) (literal sep) (* blank))
+                                    'separator sep))
+         ;; we add our own separator description.
+         (crm-prompt "%p"))
+    (completing-read-multiple
+     (format "%s (%s-separated list): " prompt sep) table nil t)))
+
 ;;; Logging / debugging
 
 (defcustom mu4e-debug nil
@@ -525,7 +563,9 @@ This includes expanding e.g. 3-5 into 3,4,5. If the letter
          (mu4e-warn "Attachment %d bigger than maximum (%d)" x n))
         ((< x 1)
          (mu4e-warn "Attachment number must be greater than 0 (%d)" x))))
-     list)))
+     list)
+    ;; the numbers were pushed, so restore the order
+    (nreverse list)))
 
 (defun mu4e-get-time-date (prompt)
   "Determine the Emacs time value for time/date entered by user.

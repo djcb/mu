@@ -1657,10 +1657,11 @@ the Helm-mechanism for selecting multiple}.
 which is requirement of the underlying completion mechanism works. If there are
 duplicates, only one is recognized.
 
-Furthermore, file names that match @code{crm-separator} (by default, commas) are
-@emph{not} supported (see @code{completing-read-multiple} for further details). For
-such corner-cases, it is recommended to use @code{mu4e-view-mime-part-action}
-instead, which does not have this limitation.
+When choosing multiple files, they must be separated by some character;
+typically this is a comma, but if there is a comma in any of the files, @t{mu4e}
+picks some other character; the prompt shows which. In the unlikely case that
+the file names contain all of those, it is recommended to use
+@code{mu4e-view-mime-part-action} instead, which does not have this limitation.
 
 @subsection Other MIME-parts
 
@@ -4783,7 +4784,6 @@ your configuration (courtesy of user @t{kpachnis}):
       mml2015-encrypt-to-self t
       mml2015-sign-with-sender t)
 @end lisp
-
 
 @subsection Some plain-text attachments get corrupted, how can I avoid that?
 @code{mu4e} (or, more precisely, its Gnus helpers) automatically convert CR-LF
