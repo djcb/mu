@@ -88,8 +88,8 @@
 
      Since the names are so long, and frequently useful in user-code (e.g. in
      ~mu4e-refile-folder~ implementations), we also add some ~defalias~ for them:
-     ~mu4e-has-address-p~ => ~mu4e-message-contact-field-matches~
-     ~mu4e-has-my-address-p~ => ~mu4e-message-contact-field-matches-me~ (1.14.4)
+     ~mu4e-matches-contact-p~ => ~mu4e-message-contact-field-matches~
+     ~mu4e-matches-me-p~ => ~mu4e-message-contact-field-matches-me~ (1.14.4)
 
    - ~mu4e-compose-resend~ now honors ~mu4e-sent-messages-behavior~ (1.14.4)
 

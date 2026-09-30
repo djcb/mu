@@ -58,10 +58,11 @@ attachments or other MIME-parts."
 (defcustom mu4e-refile-folder "/archive"
   "Folder for refiling, relative to the root maildir.
 
-For instance \"/Archive\". Instead of a string, may also be a
-function that takes a message (a msg plist, see
-`mu4e-message-field'), and returns a folder. Note that the
-message parameter refers to the message-at-point."
+For instance \"/Archive\".
+
+Instead of a string, may also be a function that takes a
+message (a msg plist, see `mu4e-message-field'), and returns a
+folder. The message parameter refers to the message-at-point."
   :type '(choice
           (string :tag "Folder name")
           (function :tag "Function which returns a folder name"))
@@ -203,7 +204,7 @@ the result."
                   '(mu4e-sent-folder mu4e-drafts-folder
                                      mu4e-trash-folder mu4e-refile-folder))
     (mu4e-error "Folder must be one of mu4e-(sent|drafts|trash|refile)-folder"))
-  ;; get the value with the vars for the relevants context let-bound
+  ;; get the value with the vars for the relevant context let-bound
   (with-mu4e-context-vars (mu4e-context-determine msg nil)
       (let* ((folder (symbol-value foldervar))
              (val
@@ -219,15 +220,18 @@ See `mu4e-drafts-folder'." (mu4e--get-folder 'mu4e-drafts-folder msg))
 
 (defun mu4e-get-refile-folder (&optional msg)
   "Get the folder for refiling, optionally based on MSG.
-See `mu4e-refile-folder'." (mu4e--get-folder 'mu4e-refile-folder msg))
+See `mu4e-refile-folder'."
+  (mu4e--get-folder 'mu4e-refile-folder msg))
 
 (defun mu4e-get-sent-folder (&optional msg)
   "Get the sent folder, optionally based on MSG.
-See `mu4e-sent-folder'." (mu4e--get-folder 'mu4e-sent-folder msg))
+See `mu4e-sent-folder'."
+  (mu4e--get-folder 'mu4e-sent-folder msg))
 
 (defun mu4e-get-trash-folder (&optional msg)
   "Get the trash folder, optionally based on MSG.
-See `mu4e-trash-folder'." (mu4e--get-folder 'mu4e-trash-folder msg))
+See `mu4e-trash-folder'."
+  (mu4e--get-folder 'mu4e-trash-folder msg))
 
 ;;; Maildirs
 (defun mu4e--guess-maildir (path)

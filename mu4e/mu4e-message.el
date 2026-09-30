@@ -121,6 +121,16 @@ This is equivalent to:
   (mu4e-message-field (mu4e-message-at-point) FIELD)."
   (mu4e-message-field (mu4e-message-at-point) field))
 
+(defun mu4e-message-subject-matches (msg regexp)
+  "Does MSG's subject match REGEXP?
+Case-sensitivity is controlled through the value of
+`case-fold-search'."
+  (when-let* ((subj (mu4e-message-field msg :subject)))
+    (string-match-p regexp subj)))
+
+(defalias 'mu4e-matches-subject-p 'mu4e-message-subject-matches
+  "Shorthand.")
+
 (defun mu4e-message-contact-field-matches (msg cfield regexp)
   "Does MSG's contact-field CFIELD match regexp REGEXP?
 
@@ -135,6 +145,9 @@ CFIELD is either:
 
 REGEXP is a regular expression or a list of such; in the case each
 is tried until a match is found.
+
+Case-sensitivity is controlled through the value of
+`case-fold-search'.
 
 Return non-nil if a match is found, nil otherwise."
   (pcase cfield
@@ -158,14 +171,14 @@ Return non-nil if a match is found, nil otherwise."
                 ;; REGEXP may be some `/regexp/` from mu4e-personal-addresses;
                 ;; so let's detect and extract in that case.
                 (ptrn (if (string-match-p (rx bol "/" (* anything) "/" eol) regexp)
-                        (substring regexp 1 -1) regexp)))
+                          (substring regexp 1 -1) regexp)))
             (or
-             (and name  (string-match ptrn name))
-             (and email (string-match ptrn email)))))
+             (and name  (string-match-p ptrn name))
+             (and email (string-match-p ptrn email)))))
         (mu4e-message-field msg cfield))))))
 
-(defalias 'mu4e-has-address-p #'mu4e-message-contact-field-matches
- "Shorthand.")
+(defalias 'mu4e-matches-contact-p #'mu4e-message-contact-field-matches
+  "Shorthand.")
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
   "Does contact-field CFIELD in MSG match me?
@@ -194,7 +207,7 @@ Returns the contact cell that matched, or nil."
                       cell))
                (mu4e-message-field msg cfield)))))
 
-(defalias 'mu4e-has-my-address-p #'mu4e-message-contact-field-matches-me
+(defalias 'mu4e-matches-me-p #'mu4e-message-contact-field-matches-me
   "Shorthand.")
 
 (defun mu4e-message-sent-by-me (msg)
