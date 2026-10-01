@@ -1443,7 +1443,7 @@ from @code{gnus-article-mode}.
 * Overview: MSGV Overview. What is the Message View.
 * Keybindings: MSGV Keybindings. Do things with your keyboard.
 * Rich-text and images: MSGV Rich-text and images. Reading rich-text messages.
-* Links: MSGV Links. Handling hyperlinks in messages.
+@c* Links: MSGV Links. Handling hyperlinks in messages.
 * Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts.
 * Custom headers: MSGV Custom headers. Your very own headers.
 * Actions: MSGV Actions. Defining and using actions.
