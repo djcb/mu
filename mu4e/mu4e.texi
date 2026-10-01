@@ -3942,9 +3942,9 @@ An external program could use this information display such status information.
 Enabling and disabling the service is through a minor-mode
 @code{mu4e-dbus-mode}. @code{M-x mu4e-dbus-mode}.
 
-This starts a DBus service with the name @t{nl.djcbsoftware.nl} on the
-session-bus, and at object-path @t{nl.djcbsoftware.Mu4e}, exposes the interface
-@t{/nl/djcbsoftware/Mu4e}.
+This starts a DBus service with the name @t{nl.djcbsoftware.Mu4e} on the
+session-bus, and at object-path @t{/nl/djcbsoftware/Mu4e}, exposes the interface
+@t{nl.djcbsoftware.Mu4e}.
 
 @vindex mu4e-dbus-introspection-xml
 The interface is described as an XML string, in a constant
