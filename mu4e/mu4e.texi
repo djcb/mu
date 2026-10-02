@@ -1443,7 +1443,7 @@ from @code{gnus-article-mode}.
 * Overview: MSGV Overview. What is the Message View.
 * Keybindings: MSGV Keybindings. Do things with your keyboard.
 * Rich-text and images: MSGV Rich-text and images. Reading rich-text messages.
-@c* Links: MSGV Links. Handling hyperlinks in messages.
+* Links: MSGV Links. Handling hyperlinks in messages.
 * Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts.
 * Custom headers: MSGV Custom headers. Your very own headers.
 * Actions: MSGV Actions. Defining and using actions.
@@ -1622,8 +1622,8 @@ These influence both display of message and what is used when citing them in a
 reply.
 
 You can toggle between the plain-text and HTML versions of a message using
-@kbd{mu4e-view-toggle-html}. For plain-text messages without an HTML-part, an
-HTML part is generated.
+@kbd{M-x mu4e-view-toggle-html}. For plain-text messages without an HTML-part,
+an HTML part is generated.
 
 When displaying rich-text messages inline, @code{mu4e} (through @code{gnus})
 uses the @code{shr} built-in HTML-renderer. If you're using a dark color
@@ -1686,6 +1686,47 @@ Finally, for some message with big images it can be useful to enable buttons and
 full display, e.g. for saving inline images. For this you can try @kbd{M-x
 mu4e-view-show-mime-parts}. This can be a little slow.
 
+@node MSGV Links
+@section Links
+@cindex links
+@cindex hyperlinks
+
+Many e-mail messages contain (hyper) links for URLs, typically pointing to
+web-addresses (@t{http:}/@t{https:}) and e-mail addresses (@t{mailto:}).
+
+You can ``follow'' these links in @code{mu4e} using @kbd{M-x
+mu4e-view-go-to-url} or save them in the kill-ring using @kbd{M-x
+mu4e-view-save-url}. The user-interface for these commands depends on whether
+you are viewing the message in ``plain-text'' or HTML-mode:
+@itemize
+@item
+@vindex mu4e-view-always-show-url-indicators
+@vindex mu4e-view-always-use-completion
+@emph{Plain text}: the view shows indicators like @t{[1]}, @t{[2]} next to the link
+when you invoke @kbd{mu4e-view-go-to-url} or @kbd{mu4e-view-save-url}, and you
+choose one in the mini-buffer@footnote{If you @emph{always} want to see these
+indicators, set @code{mu4e-view-always-show-url-indicators} to non-@t{nil}; if
+you prefer to use the completion-interface (as used for HTML-messages) instead,
+set @code{mu4e-view-always-use-completion} to non-@t{nil}}.
+@item
+@emph{HTML}: choose links through Emacs' completion interface
+(as per @code{completing-read})
+@end itemize
+
+@findex browse-url-mail
+E-mail-addresses are handled through @code{browse-url-mail}, which (when using
+@code{mu4e}) means that you are presented with a window to compose a message to
+the given address.
+
+For other kinds of addresses, @code{mu4e} uses @command{browse-url}; the exact
+behavior can be configured (@pxref{(emacs) Browse-URL}); typically this
+launches some web-browser, visiting the address.
+
+Both @code{mu4e-view-go-to-url} and @code{mu4e-view-save-url} also accept a
+prefix-argument (@kbd{C-u}), and allow for handling @emph{multiple} links at
+once. You can do so by selecting multiple, separated by some character.
+Typically, the separator is a comma, but if there is a comma in one of the URLs,
+@t{mu4e} picks some other character; the prompt shows which.
 
 @node MSGV Attachments and MIME-parts
 @section Attachments and MIME-parts

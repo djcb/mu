@@ -93,6 +93,10 @@
 
    - ~mu4e-compose-resend~ now honors ~mu4e-sent-messages-behavior~ (1.14.4)
 
+   - ~mu4e-view-go-to-url~ and ~mu4e-view-save-url~ now also work when viewing
+     messages in HTML-mode. See the section info:mu4e#Links in the Mu4e
+     reference manual (1.14.4)
+
 *** scm
 
    - Added new ~--eval~ command-line option, so you can do e.g.

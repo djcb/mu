@@ -22,15 +22,41 @@
 
 ;;; Commentary:
 
-;; Render a message as html. The message's html part is used if it has one;
-;; otherwise, the text-part is converted.
+;; Render a message as html, and handle the links (URLs, e-mail
+;; addresses) in messages.
 
 ;;; Code:
 
 (require 'mm-decode)
 (require 'gnus-art)
+(require 'browse-url)
 (require 'mu4e-helpers)
 (require 'mu4e-message)
+(require 'mu4e-folders)
+(require 'mu4e-vars)
+
+(declare-function mu4e--view-html-p "mu4e-view")
+
+;;; Customization
+
+(defcustom mu4e-view-always-show-url-indicators nil
+  "Whether to always show link-indicators in plain-text messages.
+
+If nil, only show when `mu4e-view-go-to-url' or
+`mu4e-view-save-url' or `mu4e-view-fetch-url' are invoked."
+  :type 'boolean
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-always-use-completion nil
+  "Whether to always use completing-read for choosing URLs in messages.
+
+For html-messages, we always use completion when choosing
+URLs (`mu4e-view-go-to-url', `mu4e-view-save-url' and
+`mu4e-view-fetch-url'), but setting this to non-nil, also does so
+for plain-text messages (which by default use the URL [1] [2]
+numbers in the message."
+  :type 'boolean
+  :group 'mu4e-view)
 
 ;;; HTML fragments
 
@@ -113,13 +139,22 @@ The %s, %s for key, value.")
     match))
 
 (defun mu4e--view-linkify-html (text)
-  "Turn URLs/e-mail addresses into HTML links."
-  (replace-regexp-in-string
-   mu4e--view-linkable-regexp
-   (lambda (match)
-     (format mu4e--view-html-link-template
-             (mu4e--view-linkable-url match) match))
-   text t t))
+  "HTML-escape TEXT and turn its URLs/e-mail addresses into links.
+TEXT is the raw, unescaped text."
+  (let ((start 0) (chunks))
+    (while (string-match mu4e--view-linkable-regexp text start)
+      (let ((match (match-string 0 text)))
+        (push (mu4e--view-html-escape
+               (substring text start (match-beginning 0)))
+              chunks)
+        (push (format mu4e--view-html-link-template
+                      (mu4e--view-html-escape
+                       (mu4e--view-linkable-url match))
+                      (mu4e--view-html-escape match))
+              chunks)
+        (setq start (match-end 0))))
+    (push (mu4e--view-html-escape (substring text start)) chunks)
+    (apply #'concat (nreverse chunks))))
 
 ;;; MIME parts
 
@@ -177,6 +212,41 @@ Return updated HTML."
                   (regexp-quote (concat "cid:" (car part)))
                   data-uri html t t)))))
 
+;;; Alternatives
+
+(defvar mu4e-view-prefer-plain-text)
+
+(defun mu4e--view-discouraged-alternatives ()
+  "Return the value of `mm-discouraged-alternatives' for viewing.
+This adds html to it if `mu4e-view-prefer-plain-text' is non-nil."
+  (if mu4e-view-prefer-plain-text
+      (seq-union mm-discouraged-alternatives '("text/html" "text/richtext"))
+    mm-discouraged-alternatives))
+
+(defun mu4e--view-alternatives (handles)
+  "Return the parts of the first multipart/alternative in HANDLES, or nil."
+  (cond
+   ((not (listp handles)) nil)
+   ((bufferp (car handles)) nil)
+   ((equal (car handles) "multipart/alternative") (cdr handles))
+   (t (seq-some #'mu4e--view-alternatives (cdr handles)))))
+
+(defun mu4e--view-raw-plain-preferred-p ()
+  "Return non-nil if we would show a plain-text version."
+  (let ((raw (current-buffer)))
+    (with-temp-buffer
+      (insert-buffer-substring raw)
+      (article-remove-cr)
+      (let ((handles (mm-dissect-buffer t t)))
+        (unwind-protect
+            (when-let* ((alternatives (mu4e--view-alternatives handles))
+                        (preferred
+                         (let ((mm-discouraged-alternatives
+                                (mu4e--view-discouraged-alternatives)))
+                           (mm-preferred-alternative alternatives))))
+              (not (mu4e--view-mime-part preferred "text/html")))
+          (mm-destroy-parts handles))))))
+
 ;;; Document structure
 
 (defun mu4e--view-html-insert-after-tag (html tag text)
@@ -189,15 +259,22 @@ Return updated HTML, or nil."
     (when (string-match regexp html)
       (replace-match (concat (match-string 0 html) text) t t html))))
 
+(defconst mu4e--view-html-doctype-regexp
+  (rx bos (? ?\uFEFF) ;; byte-order mark
+      (? (* (any " \t\n\f\r")) "<!doctype" (* (not (any ">"))) ">"))
+  "Regexp matching the start of an HTML document.
+I.e., an optional byte-order mark followed by an optional doctype.")
+
 (defun mu4e--view-html-inject-meta (html)
-  "Insert `mu4e--view-html-meta' into the head of HTML.
-Add head or doc structure. Return updated HTML."
-  (or (mu4e--view-html-insert-after-tag html "head" mu4e--view-html-meta)
-      (mu4e--view-html-insert-after-tag
-       html "html" (format mu4e--view-html-head-template
-                           mu4e--view-html-meta))
-      (format mu4e--view-html-document-template
-              mu4e--view-html-meta html)))
+  "Insert `mu4e--view-html-meta' at the start of HTML.
+Return the updated HTML.
+
+A Content-Security-Policy in a meta-tag lives in the document
+head, and applies to what follows it. So, let's put it first."
+  (let* ((case-fold-search t)
+         (pos (and (string-match mu4e--view-html-doctype-regexp html)
+                   (match-end 0))))
+    (concat (substring html 0 pos) mu4e--view-html-meta (substring html pos))))
 
 (defun mu4e--view-html-prepend-headers (html headers)
   "Insert the HEADERS block into HTML."
@@ -232,8 +309,7 @@ Use html-part or text-part if there is none."
               mu4e--view-html-plain-text-style
               (format mu4e--view-html-plain-text-template
                       (mu4e--view-linkify-html
-                       (mu4e--view-html-escape
-                        (mu4e--view-mime-part-string handle))))))))
+                       (mu4e--view-mime-part-string handle)))))))
 
 (defun mu4e--view-html-render (handles &optional headers)
   "Return a self-contained HTML document for MIME HANDLES, or nil.
@@ -241,10 +317,10 @@ Prepend HEADERS if non-nil."
   (when-let* ((html (mu4e--view-html-body handles)))
     (when-let* ((cid-parts (mu4e--view-cid-parts handles)))
       (setq html (mu4e--view-resolve-cids html cid-parts)))
-    (setq html (mu4e--view-html-inject-meta html))
-    (if headers
-        (mu4e--view-html-prepend-headers html headers)
-      html)))
+    (when headers
+      (setq html (mu4e--view-html-prepend-headers html headers)))
+    ;; this must be last; see `mu4e--view-html-inject-meta'.
+    (mu4e--view-html-inject-meta html)))
 
 (defun mu4e-view-html-text (msg &optional headers)
   "Return an HTML rendering of MSG as a string.
@@ -280,6 +356,304 @@ plain-text part."
     (with-temp-file tmpfile
       (insert html))
     tmpfile))
+
+;;; Links
+
+(defvar-local mu4e--view-link-map nil
+  "A map of some number->url so we can jump to url by number.")
+(put 'mu4e--view-link-map 'permanent-local t)
+
+(defvar-local mu4e--view-link-labels nil
+  "A map of url->label, for annotating URL completions.")
+(put 'mu4e--view-link-labels 'permanent-local t)
+
+(defvar mu4e-view-active-urls-keymap
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "<mouse-2>")  #'mu4e--view-browse-url-from-binding)
+    (define-key map (kbd "M-<return>") #'mu4e--view-browse-url-from-binding)
+    map)
+  "Keymap used for the URLs inside the body.")
+
+(defun mu4e--view-browse-url-from-binding (&optional url)
+  "View in browser the url at point, or click location.
+If the optional argument URL is provided, browse that instead.
+If the url is mailto link, start writing an email to that address."
+  (interactive)
+  (let* (( url (or url (mu4e--view-get-property-from-event 'mu4e-url))))
+    (when url
+      (if (string-match-p "^mailto:" url)
+          (browse-url-mail url)
+        (browse-url url)))))
+
+(defun mu4e--view-get-property-from-event (prop)
+  "Get the property PROP at point, or the location of the mouse.
+The action is chosen based on the `last-command-event'.
+Meant to be evoked from interactive commands."
+  (if (and (eventp last-command-event)
+           (mouse-event-p last-command-event))
+      (let ((posn (event-end last-command-event)))
+        (when (numberp (posn-point posn))
+          (get-text-property
+           (posn-point posn)
+           prop
+           (window-buffer (posn-window posn)))))
+    (get-text-property (point) prop)))
+
+(defun mu4e--view-linkable-links ()
+  "Return the linkable things in the buffer.
+These are the URLs and e-mail addresses matching
+`mu4e--view-linkable-regexp', as a list of (BEG END URL LABEL),
+where LABEL is always nil."
+  (save-excursion
+    (goto-char (point-min))
+    (let ((links))
+      (while (re-search-forward mu4e--view-linkable-regexp nil t)
+        (push (list (match-beginning 0) (match-end 0)
+                    (mu4e--view-linkable-url (match-string-no-properties 0))
+                    nil)
+              links))
+      (nreverse links))))
+
+(defun mu4e--view-shr-links ()
+  "Return the links in shr-rendered html in the buffer.
+Return a list of (BEG END URL LABEL), where LABEL is the link
+text, or nil if it is the same as the URL."
+  (let ((pos (point-min)) (links))
+    (while (setq pos (text-property-not-all pos (point-max) 'shr-url nil))
+      (let* ((end (next-single-property-change pos 'shr-url nil (point-max)))
+             (url (get-text-property pos 'shr-url))
+             (label (mapconcat #'identity
+                               (split-string
+                                (buffer-substring-no-properties pos end))
+                               " ")))
+        (when (and (stringp url) (not (string-prefix-p "#" url)))
+          (push (list pos end url
+                      (unless (member label (list "" url)) label))
+                links))
+        (setq pos end)))
+    (nreverse links)))
+
+(defun mu4e--visualize-link (beg end url num body-start)
+  "Make the link from BEG to END for URL clickable.
+Add an indicator for the link's NUM. Links before BODY-START (the
+headers) keep their face."
+  (let ((ov (make-overlay beg end)))
+    (add-text-properties
+     beg end
+     `(,@(when (>= beg body-start)
+           '(face mu4e-link-face))
+       mouse-face highlight
+       mu4e-url ,url
+       keymap ,mu4e-view-active-urls-keymap))
+    (overlay-put ov 'mu4e-overlay t)
+    (overlay-put ov 'after-string
+                 (propertize (format "\u200B[%d]" num)
+                             'face 'mu4e-url-number-face
+                             'invisible 'mu4e-url-indicator))))
+
+(defun mu4e--view-linkify-buffer-text (&optional non-visual)
+  "Collect the URLs and e-mail addresses in the buffer.
+
+Number them so they can be opened using `mu4e-view-go-to-url' and
+friends.
+
+If NON-VISUAL is nil, turn them into visual clickables. Otherwise
+leave the buffer as-is, but still collect the links."
+  (let ((num 0)
+        (body-start (save-excursion
+                      (goto-char (point-min))
+                      (or (search-forward "\n\n" nil t) (point-min))))
+        (links (mu4e--view-linkable-links)))
+    (setq mu4e--view-link-map (make-hash-table :size 32)
+          mu4e--view-link-labels (make-hash-table :size 32 :test #'equal))
+    (when non-visual
+      (setq links (seq-uniq
+                   (sort (append links (mu4e--view-shr-links))
+                         (lambda (l1 l2) (< (car l1) (car l2))))
+                   (lambda (l1 l2) (equal (nth 2 l1) (nth 2 l2))))))
+    (dolist (link links)
+      (seq-let (beg end url label) link
+        (puthash (cl-incf num) url mu4e--view-link-map)
+        (unless label
+          (setq label (pcase url
+                        ((rx bos "mailto:") "Mail")
+                        ((rx bos "http") "Visit")
+                        (_ ""))))
+        (puthash url label mu4e--view-link-labels)
+        (unless non-visual
+          (mu4e--visualize-link beg end url num body-start))))
+    (unless non-visual
+      (mu4e--view-url-indicator-display
+       mu4e-view-always-show-url-indicators))))
+
+(defun mu4e--view-url-indicator-display (show)
+  "Show the URL indicators in the current buffer if SHOW is non-nil.
+Otherwise, hide them."
+  (when (eq buffer-invisibility-spec t)
+    (setq buffer-invisibility-spec (list t)))
+  (if show
+      (remove-from-invisibility-spec 'mu4e-url-indicator)
+    (add-to-invisibility-spec 'mu4e-url-indicator)))
+
+(defun mu4e--view-remove-url-activations ()
+  "Remove URL activations previously added by `mu4e--view-linkify-buffer-text'."
+  (dolist (ov (overlays-in (point-min) (point-max)))
+    (when (overlay-get ov 'mu4e-overlay)
+      (delete-overlay ov)))
+  (setq mu4e--view-link-map (make-hash-table :size 32)
+        mu4e--view-link-labels (make-hash-table :size 32 :test #'equal)))
+
+(defun mu4e--view-get-urls-num (prompt &optional multi)
+  "Ask the user with PROMPT for an URL number for current message.
+The number is [1..n] for URLs \[0..(n-1)] in the message. If
+MULTI is nil, return the number for the URL; otherwise (MULTI is
+non-nil), accept ranges of URL numbers, as per
+`mu4e-split-ranges-to-numbers', and return the corresponding
+string.
+
+While prompting show the URL indicators."
+  (let ((count (hash-table-count mu4e--view-link-map))
+        (hidden (and (listp buffer-invisibility-spec)
+                     (memq 'mu4e-url-indicator buffer-invisibility-spec))))
+    (when (zerop count) (mu4e-error "No links for this message"))
+    (unwind-protect
+        (progn
+          (mu4e--view-url-indicator-display t)
+          (if (not multi)
+              (if (= count 1)
+                  (read-number (mu4e-format "%s: " prompt) 1)
+                (read-number (mu4e-format "%s (1-%d): " prompt count)))
+            (let ((def (if (= count 1) "1" (format "1-%d" count))))
+              (read-string (mu4e-format "%s (default %s): " prompt def)
+                           nil nil def))))
+      (mu4e--view-url-indicator-display (not hidden)))))
+
+(defun mu4e-view-go-to-url (&optional multi)
+  "Offer to go visit one or more URLs.
+If MULTI (prefix-argument) is non-nil, offer to go to a range of URLs."
+  (interactive "P")
+  (mu4e--view-handle-urls
+   "Link to follow"
+   multi
+   (lambda (url) (mu4e--view-browse-url-from-binding url))))
+
+(defun mu4e-view-save-url (&optional multi)
+  "Offer to save URLs to the kill ring.
+
+Save a single one, or (MULTI (prefix-argument) non-nil, offer to
+save a range of URLs. E-mail addresses are saved without their
+\"mailto:\" prefix."
+  (interactive "P")
+  (mu4e--view-handle-urls
+   "Link to save" multi
+   (lambda (url)
+     (let ((url (if (string-prefix-p "mailto:" url)
+                    (substring url 7) url)))
+       (kill-new url)
+       (mu4e-message "Saved %s to the kill-ring" url)))))
+
+(defun mu4e-view-fetch-url (&optional multi)
+  "Offer to fetch (download) URLs.
+
+If MULTI (prefix-argument) is nil,
+download a single one, otherwise, offer to fetch a range of
+URLs. The urls are fetched to `mu4e-attachment-dir'."
+  (interactive "P")
+  (mu4e--view-handle-urls
+   "Link to fetch" multi
+   (lambda (url)
+     (let ((target (concat (mu4e-determine-attachment-dir url) "/"
+                           (file-name-nondirectory url))))
+       (url-copy-file url target)
+       (mu4e-message "Fetched %s -> %s" url target)))))
+
+(defun mu4e--view-link-urls ()
+  "Return the unique URLs in the current message, in order."
+  (let ((links))
+    (maphash (lambda (num url) (push (cons num url) links))
+             mu4e--view-link-map)
+    (seq-uniq (mapcar #'cdr (sort links (lambda (l1 l2)
+                                          (< (car l1) (car l2))))))))
+
+(defconst mu4e--view-link-label-width 32
+  "Maximum width of link labels in URL completions.")
+
+(defun mu4e--view-url-affixation (labels width completions)
+  "Calculate the affixation for URL COMPLETIONS.
+I.e., `:affixation-function' (see `completion-extra-properties').
+
+Returns a list of (CANDIDATE PREFIX SUFFIX) triples, where the
+prefix is the link label (if any) from LABELS, a hash-table of
+url->label, padded or truncated to WIDTH."
+  (mapcar
+   (lambda (url)
+     (list url
+           (if (zerop width) ""
+             (concat (propertize
+                      (truncate-string-to-width
+                       (gethash url labels "") width nil ?\s t)
+                      'face 'mu4e-header-key-face)
+                     "  "))
+           ""))
+   completions))
+
+(defun mu4e--view-completing-read-urls (prompt multi)
+  "Read URLs using completion, with PROMPT.
+If MULTI is nil, read a single URL; otherwise, read any number of
+them. Return a list of URLs, which is empty if none were chosen."
+  (let* ((urls (or (mu4e--view-link-urls)
+                   (mu4e-error "No links for this message")))
+         (labels mu4e--view-link-labels)
+         (width (min mu4e--view-link-label-width
+                     (seq-max (cons 0 (seq-map (lambda (url)
+                                                 (string-width
+                                                  (gethash url labels "")))
+                                               urls)))))
+         (affixation-func (lambda (completions)
+                            (mu4e--view-url-affixation labels width
+                                                       completions)))
+         (table (lambda (string pred action)
+                  (if (eq action 'metadata)
+                      `(metadata
+                        (category . url)
+                        (affixation-function . ,affixation-func))
+                    (complete-with-action action urls string pred)))))
+    (if multi
+        (mu4e--completing-read-multiple (mu4e-format "%s" prompt) table)
+      (let ((url (completing-read (mu4e-format "%s: " prompt) table nil t)))
+        (unless (string-empty-p url)
+          (list url))))))
+
+(defun mu4e--view-handle-urls (prompt multi urlfunc)
+  "Apply URLFUNC to URLs in the current message.
+If MULTI is nil, apply it to a single URL; otherwise, apply it to
+any number of them. PROMPT is the query to present to the user.
+
+Use completion for choosing the URLs if either
+`mu4e-view-always-use-completion' is non-nil, or if we are viewing html.
+
+Otherwise, choose the URLs by their number. If MULTI is non-nil,
+the default is all URLs, [1..n], where n is the number of URLs.
+You can type multiple values separated by space, e.g., 1 3-6 8
+selects URLs 1,3,4,5,6 and 8. Furthermore, there is a shortcut
+\"a\" which means all URLs, but as this is the default, you may
+not need it."
+  (mapc urlfunc
+        (if (or mu4e-view-always-use-completion (mu4e--view-html-p))
+            (mu4e--view-completing-read-urls prompt multi)
+          (seq-map (lambda (num)
+                     (or (gethash num mu4e--view-link-map)
+                         (mu4e-warn "Invalid number for URL")))
+                   (if multi
+                       (mu4e-split-ranges-to-numbers
+                        (mu4e--view-get-urls-num
+                         "URL number range (or 'a' for 'all')" t)
+                        (hash-table-count mu4e--view-link-map))
+                     (list (mu4e--view-get-urls-num prompt)))))))
+
+(defun mu4e-view-for-each-uri (func)
+  "Evaluate FUNC(uri) for each uri in the current message."
+  (maphash (lambda (_num uri) (funcall func uri)) mu4e--view-link-map))
 
 (provide 'mu4e-view-html)
 ;;; mu4e-view-html.el ends here

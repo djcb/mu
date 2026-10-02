@@ -109,13 +109,6 @@ The first letter of NAME is used as a shortcut character."
   :type 'integer
   :group 'mu4e-view)
 
-(defcustom mu4e-view-always-show-url-indicators nil
-  "Whether to always show the indicators for URLs.
-If nil, only show when `mu4e-view-go-to-url' or
-`mu4e-view-save-url' is invoked."
-  :type 'boolean
-  :group 'mu4e-view)
-
 (defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
   "Name for the raw message view buffer.")
 
@@ -265,198 +258,6 @@ any further, go the next message."
   "Scroll text of selected window down one line."
   (interactive)
   (scroll-down 1))
-
-;;; URL handling
-
-(defvar mu4e--view-link-map nil
-  "A map of some number->url so we can jump to url by number.")
-(put 'mu4e--view-link-map 'permanent-local t)
-
-(defvar mu4e-view-active-urls-keymap
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<mouse-2>")  #'mu4e--view-browse-url-from-binding)
-    (define-key map (kbd "M-<return>") #'mu4e--view-browse-url-from-binding)
-    map)
-  "Keymap used for the URLs inside the body.")
-
-(defun mu4e--view-browse-url-from-binding (&optional url)
-  "View in browser the url at point, or click location.
-If the optional argument URL is provided, browse that instead.
-If the url is mailto link, start writing an email to that address."
-  (interactive)
-  (let* (( url (or url (mu4e--view-get-property-from-event 'mu4e-url))))
-    (when url
-      (if (string-match-p "^mailto:" url)
-          (browse-url-mail url)
-        (browse-url url)))))
-
-(defun mu4e--view-get-property-from-event (prop)
-  "Get the property PROP at point, or the location of the mouse.
-The action is chosen based on the `last-command-event'.
-Meant to be evoked from interactive commands."
-  (if (and (eventp last-command-event)
-           (mouse-event-p last-command-event))
-      (let ((posn (event-end last-command-event)))
-        (when (numberp (posn-point posn))
-          (get-text-property
-           (posn-point posn)
-           prop
-           (window-buffer (posn-window posn)))))
-    (get-text-property (point) prop)))
-
-(defun mu4e--view-linkify-buffer-text ()
-  "Turn URLs and e-mail addresses in the buffer into clickable things.
-Also number them so they can be opened using
-`mu4e-view-go-to-url'.  Matches in the headers (before the first
-empty line) keep their header face."
-  (let ((num 0)
-        (body-start (save-excursion
-                      (goto-char (point-min))
-                      (or (search-forward "\n\n" nil t) (point-min)))))
-    (save-excursion
-      (setq mu4e--view-link-map ;; buffer local
-            (make-hash-table :size 32 :weakness nil))
-      (goto-char (point-min))
-      (while (re-search-forward mu4e--view-linkable-regexp nil t)
-        (let* ((beg (match-beginning 0))
-               (end (match-end 0))
-               (url (mu4e--view-linkable-url
-                     (match-string-no-properties 0)))
-               (ov (make-overlay beg end)))
-          (puthash (cl-incf num) url mu4e--view-link-map)
-          (add-text-properties
-           beg end
-           `(,@(when (>= beg body-start)
-                 '(face mu4e-link-face))
-             mouse-face highlight
-             mu4e-url ,url
-             keymap ,mu4e-view-active-urls-keymap
-             help-echo
-             "[mouse-1] or [M-RET] to open the link"))
-          (overlay-put ov 'mu4e-overlay t)
-          (overlay-put ov 'after-string
-                       (propertize (format "\u200B[%d]" num)
-                                   'face 'mu4e-url-number-face
-                                   'invisible 'mu4e-url-indicator))))
-      (mu4e--view-url-indicator-display
-       mu4e-view-always-show-url-indicators))))
-
-(defun mu4e--view-url-indicator-display (show)
-  "Show the URL indicators in the current buffer if SHOW is non-nil.
-Otherwise, hide them."
-  (when (eq buffer-invisibility-spec t)
-    (setq buffer-invisibility-spec (list t)))
-  (if show
-      (remove-from-invisibility-spec 'mu4e-url-indicator)
-    (add-to-invisibility-spec 'mu4e-url-indicator)))
-
-(defun mu4e--view-remove-url-activations ()
-  "Remove URL activations previously added by `mu4e--view-linkify-buffer-text'."
-  (dolist (ov (overlays-in (point-min) (point-max)))
-    (when (overlay-get ov 'mu4e-overlay)
-      (delete-overlay ov)))
-  (setq mu4e--view-link-map
-        (make-hash-table :size 32 :weakness nil)))
-
-(defun mu4e--view-get-urls-num (prompt &optional multi)
-  "Ask the user with PROMPT for an URL number for MSG.
-The number is [1..n] for URLs \[0..(n-1)] in the message. If
-MULTI is nil, return the number for the URL; otherwise (MULTI is
-non-nil), accept ranges of URL numbers, as per
-`mu4e-split-ranges-to-numbers', and return the corresponding
-string.
-
-While prompting show the URL indicators."
-  (let ((count (hash-table-count mu4e--view-link-map))
-        (hidden (and (listp buffer-invisibility-spec)
-                     (memq 'mu4e-url-indicator buffer-invisibility-spec))))
-    (when (zerop count) (mu4e-error "No links for this message"))
-    (unwind-protect
-        (progn
-          (mu4e--view-url-indicator-display t)
-          (if (not multi)
-              (if (= count 1)
-                  (read-number (mu4e-format "%s: " prompt) 1)
-                (read-number (mu4e-format "%s (1-%d): " prompt count)))
-            (let ((def (if (= count 1) "1" (format "1-%d" count))))
-              (read-string (mu4e-format "%s (default %s): " prompt def)
-                           nil nil def))))
-      (mu4e--view-url-indicator-display (not hidden)))))
-
-(defun mu4e-view-go-to-url (&optional multi)
-  "Offer to go visit one or more URLs.
-If MULTI (prefix-argument) is non-nil, offer to go to a range of URLs."
-  (interactive "P")
-  (mu4e--view-handle-urls
-   "URL to visit"
-   multi
-   (lambda (url) (mu4e--view-browse-url-from-binding url))))
-
-(defun mu4e-view-save-url (&optional multi)
-  "Offer to save URLs to the kill ring.
-If MULTI (prefix-argument) is nil, save a single one, otherwise, offer
-to save a range of URLs. E-mail addresses are saved without their
-\"mailto:\" prefix."
-  (interactive "P")
-  (mu4e--view-handle-urls
-   "URL to save" multi
-   (lambda (url)
-     (let ((url (if (string-prefix-p "mailto:" url)
-                    (substring url 7) url)))
-       (kill-new url)
-       (mu4e-message "Saved %s to the kill-ring" url)))))
-
-(defun mu4e-view-fetch-url (&optional multi)
-  "Offer to fetch (download) URLs.
-If MULTI (prefix-argument) is nil,
-download a single one, otherwise, offer to fetch a range of
-URLs. The urls are fetched to `mu4e-attachment-dir'."
-  (interactive "P")
-  (mu4e--view-handle-urls
-   "URL to fetch" multi
-   (lambda (url)
-     (let ((target (concat (mu4e-determine-attachment-dir url) "/"
-                           (file-name-nondirectory url))))
-       (url-copy-file url target)
-       (mu4e-message "Fetched %s -> %s" url target)))))
-
-(defun mu4e--view-handle-urls (prompt multi urlfunc)
-  "Handle URLs.
-If MULTI is nil, apply URLFUNC to a single uri, otherwise, apply
-it to a range of uris. PROMPT is the query to present to the user."
-  (if multi
-      (mu4e--view-handle-multi-urls prompt urlfunc)
-    (mu4e--view-handle-single-url prompt urlfunc)))
-
-(defun mu4e--view-handle-single-url (prompt urlfunc &optional num)
-  "Apply URLFUNC to some URL with NUM in the current message.
-Prompting the user with PROMPT for the number."
-  (let* ((num (or num (mu4e--view-get-urls-num prompt)))
-         (url (gethash num mu4e--view-link-map)))
-    (unless url (mu4e-warn "Invalid number for URL"))
-    (funcall urlfunc url)))
-
-(defun mu4e--view-handle-multi-urls (prompt urlfunc)
-  "Apply URLFUNC to a a range of URLs in the current message.
-
-Prompting the user with PROMPT for the numbers.
-
-Default is to apply it to all URLs, [1..n], where n is the number
-of urls. You can type multiple values separated by space, e.g., 1
-3-6 8 will visit urls 1,3,4,5,6 and 8.
-
-Furthermore, there is a shortcut \"a\" which means all urls, but as
-this is the default, you may not need it."
-  (let* ((linkstr (mu4e--view-get-urls-num
-                   "URL number range (or 'a' for 'all')" t))
-         (count (hash-table-count mu4e--view-link-map))
-         (linknums (mu4e-split-ranges-to-numbers linkstr count)))
-    (dolist (num linknums)
-      (mu4e--view-handle-single-url prompt urlfunc num))))
-
-(defun mu4e-view-for-each-uri (func)
-  "Evaluate FUNC(uri) for each uri in the current message."
-  (maphash (lambda (_num uri) (funcall func uri)) mu4e--view-link-map))
 
 (defun mu4e-view-message-with-message-id (msgid)
   "View message with message-id MSGID.
@@ -679,9 +480,8 @@ activates URLs (in plain-text mode only)."
           (mu4e--view-add-mime-icons)
           ;; Only activate URLs in plain-text mode; in HTML mode
           ;; the renderer already provides its own clickable links
-          ;; (#2094).
-          (unless (mu4e--view-html-displayed-p)
-            (mu4e--view-linkify-buffer-text))
+          ;; (#2094), so only collect them.
+          (mu4e--view-linkify-buffer-text (mu4e--view-html-displayed-p))
           (kill-local-variable 'bookmark-make-record-function)
           (setq mu4e--view-gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
@@ -1137,10 +937,14 @@ gnus toggles are supported in mu4e."
   "Non-nil if the view shows the shr-rendered html fallback.
 See `mu4e--view-render-html-fallback'.")
 
+(defun mu4e--view-html-p ()
+  "Is the current message view showing html?"
+  (or mu4e--view-html-fallback (mu4e--view-html-displayed-p)))
+
 (defun mu4e-view-massage()
   "Massage current message view as per `mu4e-view-massage-options'."
   (interactive)
-  (when (or mu4e--view-html-fallback (mu4e--view-html-displayed-p))
+  (when (mu4e--view-html-p)
     (mu4e-warn "Massage options not available for html display"))
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
@@ -1165,6 +969,7 @@ multipart/alternative part to toggle; toggle again (or use
     (erase-buffer)
     (insert html)
     (shr-render-region (point-min) (point-max))
+    (mu4e--view-linkify-buffer-text 'non-visual)
     (goto-char (point-min))
     (setq mu4e--view-html-fallback t)
     (set-buffer-modified-p nil)))
@@ -1195,9 +1000,10 @@ version of the message."
             ;; Call gnus-mime-inline-part directly, bypassing
             ;; gnus-article-part-wrapper (avoid gnus-summary-buffer.)
             (gnus-mime-inline-part (cdr html-part))
-            (if (mu4e--view-html-displayed-p)
-                (mu4e--view-remove-url-activations)
-              (mu4e--view-linkify-buffer-text)))
+            (let ((html (mu4e--view-html-displayed-p)))
+              (when html
+                (mu4e--view-remove-url-activations))
+              (mu4e--view-linkify-buffer-text html)))
         ;; nothing to toggle in-place; fall back to re-rendering
         (if mu4e--view-html-fallback
             (mu4e-view-refresh)
