@@ -1700,12 +1700,10 @@ Other MIME-parts in the messages include @emph{attachments}.
 @cindex attachments
 
 Many e-mail messages contain @emph{attachments}, which are MIME-parts that
-encode files which you can extract.
-
-@footnote{@code{mu} uses some heuristics to decide if a part should be treated
-as an attachment; including @t{inline} parts that specify a filename. The
-heuristic tries to balance false-positive and false-negatives, both of which are
-possible}
+encode files which you can extract@footnote{@code{mu} uses some heuristics to
+decide if a part should be treated as an attachment; including @t{inline} parts
+that specify a filename. The heuristic tries to balance false-positive and
+false-negatives, both of which are possible}.
 
 @findex mu4e-view-save-attachments
 To save attachments as files on your computer, @code{mu4e}'s message-view
@@ -1746,6 +1744,14 @@ typically this is a comma, but if there is a comma in any of the files, @t{mu4e}
 picks some other character; the prompt shows which. In the unlikely case that
 the file names contain all of those, it is recommended to use
 @code{mu4e-view-mime-part-action} instead, which does not have this limitation.
+
+@code{mu4e-view-save-attachments} saves all the attachments to the given
+directory and keeps the attachment names. For example, if the sender called an
+attachment @file{Form to Fill 1.pdf}, it will be saved on your system as
+@file{Form to Fill 1.pdf}, with spaces and mixed case.  If you want to save this
+attachment, but as a more convenient name such as @file{form_to_fill_1.pdf}, you
+can use @code{mu4e-view-save-one-attachment}, which prompts for an attachment
+and the destination file name. The associated key is @key{o} (think @emph{one}).
 
 @subsection Other MIME-parts
 @cindex mime-parts
