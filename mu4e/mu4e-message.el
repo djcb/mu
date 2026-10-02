@@ -177,7 +177,7 @@ Return non-nil if a match is found, nil otherwise."
              (and email (string-match-p ptrn email)))))
         (mu4e-message-field msg cfield))))))
 
-(defalias 'mu4e-matches-contact-p #'mu4e-message-contact-field-matches
+(defalias 'mu4e-contact-matches-p #'mu4e-message-contact-field-matches
   "Shorthand.")
 
 (defun mu4e-message-contact-field-matches-me (msg cfield)
@@ -207,7 +207,7 @@ Returns the contact cell that matched, or nil."
                       cell))
                (mu4e-message-field msg cfield)))))
 
-(defalias 'mu4e-matches-me-p #'mu4e-message-contact-field-matches-me
+(defalias 'mu4e-contact-matches-me-p #'mu4e-message-contact-field-matches-me
   "Shorthand.")
 
 (defun mu4e-message-sent-by-me (msg)

@@ -3308,9 +3308,9 @@ message. An example should clarify this:
   (lambda (msg)
     (cond
       ;; messages to the mu mailing list go to the /mu folder
-      ((mu4e-matches-contact-p msg :to "mu-discuss@@googlegroups.com") "/mu")
+      ((mu4e-contact-matches-p msg :to "mu-discuss@@googlegroups.com") "/mu")
       ;; messages sent directly to some specific address go to /private
-      ((mu4e-matches-contact-p msg :to "me@@example.com") "/private")
+      ((mu4e-contact-matches-p msg :to "me@@example.com") "/private")
       ;; messages with football or soccer in the subject go to /football
       ((string-match "football\\|soccer" (mu4e-message-field msg :subject))
         "/football")
@@ -3335,8 +3335,8 @@ describing a message}. The plist corresponds to the message at point. See
 @item In our function, we use a @t{cond} control structure; the function
 returns the first of the clauses that matches. It's important to make the last
 clause a catch-all, so we always return @emph{some} folder.
-@item We use the function @code{mu4e-matches-contact-p}
-@findex mu4e-matches-contact-p
+@item We use the function @code{mu4e-contact-matches-p}
+@findex mu4e-contact-matches-p
 @findex mu4e-message-contact-field-matches
 @footnote{This is a convenience alias for
 @code{mu4e-message-contact-field-matches}, since 1.14.4}, which evaluates to
@@ -3647,10 +3647,10 @@ Note that:
   ;; => (("Jack" . "jack@@example.com") (nil . "foo@@example.com"))
 @end lisp
 
-@findex mu4e-matches-contact-p
+@findex mu4e-contact-matches-p
 If you are only looking for a match in this list (e.g., ``Is Jack one of the
 recipients of the message?''), there is a convenience function
-@code{mu4e-matches-contact-p} to make this easy.
+@code{mu4e-contact-matches-p} to make this easy.
 @item The message body is only available in the message view, not in the
 headers view.
 @end itemize
@@ -5415,7 +5415,7 @@ folder, e.g. \"Account1\", \"Account2\"."
      ((string-match-p "Account1" maildir)
       (or (cdr-safe
            (seq-find (lambda(cell)
-                       (mu4e-matches-contact-p msg :recip (car cell)))
+                       (mu4e-contact-matches-p msg :recip (car cell)))
                      '(("mu-discuss@@googlegroups.com"     . "/Account1/mu4e")
                        ("pandoc-discuss@@googlegroups.com" . "/Account1/Pandoc")
                        ("auctex@@gnu.org"                  . "/Account1/AUCTeX"))))
@@ -5587,9 +5587,9 @@ them. @command{mu} can run in a special @t{server}-mode, where it provides servi
 @node mu server
 @section @command{mu server}
 
-@code{mu4e} is based on the @command{mu} e-mail searching/indexer. The latter
-is a C++-program; there are different ways to communicate with a
-client that is emacs-based.
+@code{mu4e} is based on the @command{mu} e-mail searching/indexer. The latter is
+a C++-program; there are different ways to communicate with a client that is
+emacs-based.
 
 One way to implement this, would be to call the @command{mu} command-line
 tool with some parameters and then parse the output. In fact, that was
