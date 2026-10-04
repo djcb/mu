@@ -30,6 +30,8 @@
 (require 'mm-decode)
 (require 'gnus-art)
 (require 'browse-url)
+(require 'dom)
+(require 'subr-x)
 (require 'mu4e-helpers)
 (require 'mu4e-message)
 (require 'mu4e-folders)
@@ -63,10 +65,12 @@ numbers in the message."
 (defconst mu4e--view-html-meta
   (concat "<meta charset=\"utf-8\">"
           "<meta http-equiv=\"Content-Security-Policy\" content=\""
-          ;; note: no "default-src 'none'"; webkit does not like it
-          "script-src 'none'; object-src 'none'; frame-src 'none'; "
-          "connect-src 'none'; media-src 'none'; form-action 'none'; "
-          "style-src 'unsafe-inline'; img-src data:\">")
+          ;; block everything, except for inline styles and data: images
+          ;; and fonts. Note: form-action and base-uri do not fall back
+          ;; to default-src.
+          "default-src 'none'; style-src 'unsafe-inline'; "
+          "img-src data:; font-src data:; "
+          "form-action 'none'; base-uri 'none'\">")
   "HTML meta tags for the head of the document. Block scripts /
 remote stuff.")
 
@@ -118,7 +122,7 @@ The %s, %s for key, value.")
 (defconst mu4e--view-url-regexp
   (rx "http" (? "s") "://"
       (* (any "-a-zA-Z0-9._~%#?&=/+:;@!$*(),'"))
-      (any "-a-zA-Z0-9_~%#&=/+@$'"))
+      (any "-a-zA-Z0-9_~%#&=/+@$"))
   "Regexp matching URLs.")
 
 (defconst mu4e--view-email-regexp
@@ -451,6 +455,80 @@ headers) keep their face."
                              'face 'mu4e-url-number-face
                              'invisible 'mu4e-url-indicator))))
 
+(defun mu4e--view-reset-links ()
+  "Clear the link maps for current buffer."
+  (setq mu4e--view-link-map (make-hash-table :size 32)
+        mu4e--view-link-labels (make-hash-table :size 32 :test #'equal)))
+
+(defun mu4e--view-register-link (url label)
+  "Add URL with LABEL to the link maps and return its number.
+If LABEL is nil, use a generic one."
+  (let ((num (1+ (hash-table-count mu4e--view-link-map))))
+    (puthash num url mu4e--view-link-map)
+    (puthash url (or label
+                     (pcase url
+                       ((rx bos "mailto:") "Mail")
+                       ((rx bos "http") "Visit")
+                       (_ "")))
+             mu4e--view-link-labels)
+    num))
+
+(defun mu4e--view-dom-link-label (link url)
+  "Return label for LINK, an <a>-element in a DOM, pointing to URL.
+That is its text or alt. Return nil if the label is empty or the
+same as URL."
+  (let* (;; not `dom-texts' (obsolete since Emacs 31)
+         ;; `dom-inner-text' (not available before Emacs 31).
+         (text (apply #'concat (dom-strings link)))
+         (text (if (string-blank-p text)
+                   (or (dom-attr (car (dom-by-tag link 'img)) 'alt) "")
+                 text))
+         (label (string-join (split-string text) " ")))
+    (unless (member label (list "" url))
+      label)))
+
+(defun mu4e--view-dom-links (dom)
+  "Return the links in DOM as a list of (URL LABEL), in document order.
+These are the href of <a> elements, plus the URLs and e-mail
+addresses in the text outside of those. LABEL is as per
+`mu4e--view-dom-link-label', or nil."
+  (cond
+   ((stringp dom)
+    (let ((start 0) (links))
+      (while (string-match mu4e--view-linkable-regexp dom start)
+        (push (list (mu4e--view-linkable-url (match-string 0 dom)) nil)
+              links)
+        (setq start (match-end 0)))
+      (nreverse links)))
+   ((memq (dom-tag dom) '(comment style script head template)) nil)
+   ((and (eq (dom-tag dom) 'a) (dom-attr dom 'href))
+    (let ((url (string-trim (dom-attr dom 'href))))
+      (unless (string-match-p (rx bos (or "#" "javascript:")) url)
+        (list (list url (mu4e--view-dom-link-label dom url))))))
+   (t (seq-mapcat #'mu4e--view-dom-links (dom-children dom)))))
+
+(defun mu4e--view-html-links (html)
+  "Return the links in HTML as a list of (URL LABEL).
+
+See `mu4e--view-dom-links'. Without libxml support, fall back to
+matching the raw HTML, which may include links for e.g. fonts and
+images."
+  (with-temp-buffer
+    (insert html)
+    (if (libxml-available-p)
+        (mu4e--view-dom-links
+         (libxml-parse-html-region (point-min) (point-max)))
+      (mapcar (lambda (link) (list (nth 2 link) nil))
+              (mu4e--view-linkable-links)))))
+
+(defun mu4e--view-register-html-links (html)
+  "Register the links in HTML in the current buffer's link maps.
+For use with `mu4e-view-go-to-url' and friends."
+  (mu4e--view-reset-links)
+  (seq-do (lambda (link) (apply #'mu4e--view-register-link link))
+          (seq-uniq (mu4e--view-html-links html)
+                    (lambda (l1 l2) (equal (car l1) (car l2))))))
+
 (defun mu4e--view-linkify-buffer-text (&optional non-visual)
   "Collect the URLs and e-mail addresses in the buffer.
 
@@ -459,13 +537,11 @@ friends.
 
 If NON-VISUAL is nil, turn them into visual clickables. Otherwise
 leave the buffer as-is, but still collect the links."
-  (let ((num 0)
-        (body-start (save-excursion
+  (let ((body-start (save-excursion
                       (goto-char (point-min))
                       (or (search-forward "\n\n" nil t) (point-min))))
         (links (mu4e--view-linkable-links)))
-    (setq mu4e--view-link-map (make-hash-table :size 32)
-          mu4e--view-link-labels (make-hash-table :size 32 :test #'equal))
+    (mu4e--view-reset-links)
     (when non-visual
       (setq links (seq-uniq
                    (sort (append links (mu4e--view-shr-links))
@@ -473,15 +549,9 @@ leave the buffer as-is, but still collect the links."
                    (lambda (l1 l2) (equal (nth 2 l1) (nth 2 l2))))))
     (dolist (link links)
       (seq-let (beg end url label) link
-        (puthash (cl-incf num) url mu4e--view-link-map)
-        (unless label
-          (setq label (pcase url
-                        ((rx bos "mailto:") "Mail")
-                        ((rx bos "http") "Visit")
-                        (_ ""))))
-        (puthash url label mu4e--view-link-labels)
-        (unless non-visual
-          (mu4e--visualize-link beg end url num body-start))))
+        (let ((num (mu4e--view-register-link url label)))
+          (unless non-visual
+            (mu4e--visualize-link beg end url num body-start)))))
     (unless non-visual
       (mu4e--view-url-indicator-display
        mu4e-view-always-show-url-indicators))))
@@ -500,8 +570,7 @@ Otherwise, hide them."
   (dolist (ov (overlays-in (point-min) (point-max)))
     (when (overlay-get ov 'mu4e-overlay)
       (delete-overlay ov)))
-  (setq mu4e--view-link-map (make-hash-table :size 32)
-        mu4e--view-link-labels (make-hash-table :size 32 :test #'equal)))
+  (mu4e--view-reset-links))
 
 (defun mu4e--view-get-urls-num (prompt &optional multi)
   "Ask the user with PROMPT for an URL number for current message.
