@@ -4,6 +4,8 @@
 @c %**start of header
 @setfilename mu4e.info
 @settitle Mu4e @value{VERSION} user manual
+@c don't mark overfull lines with black boxes in printed output
+@finalout
 
 @c Use proper quote and backtick for code sections in PDF output
 @c Cf. Texinfo manual 14.2
@@ -106,6 +108,7 @@ Appendices
 * Tips and Tricks:: Useful tips
 * How it works:: Some notes about the implementation of @code{mu4e}
 * Debugging:: How to debug problems in @code{mu4e}
+* Manual pages:: The @command{mu} manual pages
 * GNU Free Documentation License::  The license of this manual
 
 Indices
@@ -5750,6 +5753,13 @@ the time.
 your @t{systemd} journal, @t{syslog} or in @t{<MUHOME>/mu.log}, on Unix
 typically @t{~/.cache/mu/mu.log}. To run the server in debug-mode, set
 @code{mu4e-mu-debug} to @t{t} (before starting the server).
+
+@node Manual pages
+@appendix Manual pages
+
+For reference, the manuals for @command{mu} and its sub-commands.
+
+@include man/mu-man-pages.texi
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

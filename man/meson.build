@@ -111,3 +111,24 @@ foreach src : man_orgs
                           org,
                           '--eval', expr])
 endforeach
+
+#
+# texinfo version of the man-pages, included as an appendix in the
+# mu4e manual.
+#
+man_texi_el = meson.current_source_dir() / 'mu-man-texi.el'
+man_orgs_configured = [] # i.e., the configured org-files (see above)
+foreach src : man_orgs
+  man_orgs_configured += meson.current_build_dir() / src
+endforeach
+man_texi = custom_target('mu-man-pages-texi',
+                         input: man_orgs,
+                         output: 'mu-man-pages.texi',
+                         depend_files: incs + [man_texi_el],
+                         depends: inc_targets,
+                         command: [emacs,
+                                   '--no-init-file',
+                                   '--batch',
+                                   '--load', man_texi_el,
+                                   '--funcall', 'mu-man-texi-batch',
+                                   '@OUTPUT@'] + man_orgs_configured)

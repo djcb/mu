@@ -155,7 +155,7 @@ if makeinfo.found()
                 output: 'mu4e.info',
                 install_dir: infodir,
                 install: true,
-                depends: fdl_texi,
+                depends: [fdl_texi, man_texi],
                 command: [makeinfo,
                           '-o', meson.current_build_dir() / 'mu4e.info',
                           meson.current_source_dir() / 'mu4e.texi',
