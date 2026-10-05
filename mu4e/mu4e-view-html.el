@@ -52,11 +52,9 @@ If nil, only show when `mu4e-view-go-to-url' or
 (defcustom mu4e-view-always-use-completion nil
   "Whether to always use completing-read for choosing URLs in messages.
 
-For html-messages, we always use completion when choosing
-URLs (`mu4e-view-go-to-url', `mu4e-view-save-url' and
-`mu4e-view-fetch-url'), but setting this to non-nil, also does so
-for plain-text messages (which by default use the URL [1] [2]
-numbers in the message."
+For html-messages, we always use completion when choosing URLs.
+However, when set to non-nil, also do this for plain-text display,
+instead of the in-buffer [1][2] etc. links."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -65,9 +63,9 @@ numbers in the message."
 (defconst mu4e--view-html-meta
   (concat "<meta charset=\"utf-8\">"
           "<meta http-equiv=\"Content-Security-Policy\" content=\""
-          ;; block everything, except for inline styles and data: images
-          ;; and fonts. Note: form-action and base-uri do not fall back
-          ;; to default-src.
+          ;; block everything, except for inline styles and data: images and
+          ;; fonts. Note: form-action and base-uri do not fall back to
+          ;; default-src.
           "default-src 'none'; style-src 'unsafe-inline'; "
           "img-src data:; font-src data:; "
           "form-action 'none'; base-uri 'none'\">")
@@ -120,25 +118,20 @@ The %s, %s for key, value.")
               text))
 
 (defconst mu4e--view-url-regexp
-  (rx "http" (? "s") "://"
-      (* (any "-a-zA-Z0-9._~%#?&=/+:;@!$*(),'"))
-      (any "-a-zA-Z0-9_~%#&=/+@$"))
+  "https?://[-a-zA-Z0-9._~%#?&=/+:;@!$*(),']*[-a-zA-Z0-9_~%#&=/+@$]"
   "Regexp matching URLs.")
 
 (defconst mu4e--view-email-regexp
-  (rx (any "a-zA-Z0-9") (* (any "-a-zA-Z0-9._%+"))
-      "@" (+ (any "-a-zA-Z0-9.")) "." (>= 2 alpha))
-  "Regexp matching e-mail addresses.")
+  "[a-zA-Z0-9][-a-zA-Z0-9._%+]*@[-a-zA-Z0-9.]+\\.[[:alpha:]]\\{2,\\}"
+  "Regexp matching an e-mail address.")
 
 (defconst mu4e--view-linkable-regexp
-  (rx (or (regexp mu4e--view-url-regexp)
-          (regexp mu4e--view-email-regexp)))
+  (concat mu4e--view-url-regexp "\\|" mu4e--view-email-regexp)
   "Regexp matching linkable things.")
 
 (defun mu4e--view-linkable-url (match)
   "Return the URL for MATCH."
-  (if (string-match-p (rx bos (regexp mu4e--view-email-regexp) eos)
-                      match)
+  (if (string-match-p (concat "\\`" mu4e--view-email-regexp "\\'") match)
       (concat "mailto:" match)
     match))
 
@@ -190,7 +183,7 @@ Return alist of (CID . HANDLE) pairs."
     (when-let* ((id (mm-handle-id handles)))
       ;; strip the angle brackets from the content-id
       (list (cons (replace-regexp-in-string
-                   (rx (or (seq bos "<") (seq ">" eos))) "" id)
+                   "\\`<\\|>\\'" "" id)
                   handles))))
    (t (seq-mapcat #'mu4e--view-cid-parts (cdr handles)))))
 
@@ -236,7 +229,10 @@ This adds html to it if `mu4e-view-prefer-plain-text' is non-nil."
    (t (seq-some #'mu4e--view-alternatives (cdr handles)))))
 
 (defun mu4e--view-raw-plain-preferred-p ()
-  "Return non-nil if we would show a plain-text version."
+  "Return non-nil if Gnus would show a version without html.
+This is the case if the raw message in the current buffer has
+alternatives, and the one Gnus picks (taking
+`mu4e-view-prefer-plain-text' into account) has no html."
   (let ((raw (current-buffer)))
     (with-temp-buffer
       (insert-buffer-substring raw)
@@ -257,9 +253,8 @@ This adds html to it if `mu4e-view-prefer-plain-text' is non-nil."
   "Insert TEXT after the first (opening) TAG in HTML.
 Return updated HTML, or nil."
   (let ((case-fold-search t)
-        (regexp (rx-to-string
-                 `(seq "<" ,tag (or ">" (seq space (* (not (any ">"))) ">")))
-                 t)))
+        (regexp (concat "<" (regexp-quote tag)
+                        "\\(?:>\\|[[:space:]][^>]*>\\)")))
     (when (string-match regexp html)
       (replace-match (concat (match-string 0 html) text) t t html))))
 
@@ -279,6 +274,30 @@ head, and applies to what follows it. So, let's put it first."
          (pos (and (string-match mu4e--view-html-doctype-regexp html)
                    (match-end 0))))
     (concat (substring html 0 pos) mu4e--view-html-meta (substring html pos))))
+
+(defconst mu4e--view-html-meta-tag-regexp
+  (concat "<meta\\(?:>"                     ;; bare <meta>
+          "\\|[ \t\n\f\r/]\\(?:"            ;; or a delimiter, then any of:
+          "\"[^\"]*\\(?:\"\\|\\'\\)"        ;;   "double-quoted"
+          "\\|'[^']*\\(?:'\\|\\'\\)"        ;;   'single-quoted'
+          "\\|[^\"'>]\\)*"                  ;;   anything else but >
+          "\\(?:>\\|\\'\\)\\)")             ;; until > or end
+  "Regexp matching a <meta> tag (use with `case-fold-search').
+Quoted attribute values may contain \">\"; an unterminated quote
+runs until the end, as it would for an HTML parser.")
+
+(defun mu4e--view-html-remove-meta (html)
+  "Remove all <meta> tags from HTML and return the result.
+These may do things we do not want, such as http-equiv=refresh,
+which makes the HTML-renderer load some remote URL. We add our
+own, see `mu4e--view-html-inject-meta'."
+  (let ((case-fold-search t))
+    ;; repeat, so removing one tag cannot create a new one, as in
+    ;; "<me<meta>ta ...>"
+    (while (string-match mu4e--view-html-meta-tag-regexp html)
+      (setq html (replace-regexp-in-string
+                  mu4e--view-html-meta-tag-regexp "" html t t)))
+    html))
 
 (defun mu4e--view-html-prepend-headers (html headers)
   "Insert the HEADERS block into HTML."
@@ -319,6 +338,7 @@ Use html-part or text-part if there is none."
   "Return a self-contained HTML document for MIME HANDLES, or nil.
 Prepend HEADERS if non-nil."
   (when-let* ((html (mu4e--view-html-body handles)))
+    (setq html (mu4e--view-html-remove-meta html))
     (when-let* ((cid-parts (mu4e--view-cid-parts handles)))
       (setq html (mu4e--view-resolve-cids html cid-parts)))
     (when headers
@@ -467,8 +487,8 @@ If LABEL is nil, use a generic one."
     (puthash num url mu4e--view-link-map)
     (puthash url (or label
                      (pcase url
-                       ((rx bos "mailto:") "Mail")
-                       ((rx bos "http") "Visit")
+                       ((pred (string-match-p "\\`mailto:")) "Mail")
+                       ((pred (string-match-p "\\`http")) "Visit")
                        (_ "")))
              mu4e--view-link-labels)
     num))
@@ -503,7 +523,7 @@ addresses in the text outside of those. LABEL is as per
    ((memq (dom-tag dom) '(comment style script head template)) nil)
    ((and (eq (dom-tag dom) 'a) (dom-attr dom 'href))
     (let ((url (string-trim (dom-attr dom 'href))))
-      (unless (string-match-p (rx bos (or "#" "javascript:")) url)
+      (unless (string-match-p "\\`\\(?:#\\|javascript:\\)" url)
         (list (list url (mu4e--view-dom-link-label dom url))))))
    (t (seq-mapcat #'mu4e--view-dom-links (dom-children dom)))))
 
