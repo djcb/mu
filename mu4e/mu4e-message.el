@@ -128,7 +128,7 @@ Case-sensitivity is controlled through the value of
   (when-let* ((subj (mu4e-message-field msg :subject)))
     (string-match-p regexp subj)))
 
-(defalias 'mu4e-matches-subject-p 'mu4e-message-subject-matches
+(defalias 'mu4e-subject-matches-p 'mu4e-message-subject-matches
   "Shorthand.")
 
 (defun mu4e-message-contact-field-matches (msg cfield regexp)
