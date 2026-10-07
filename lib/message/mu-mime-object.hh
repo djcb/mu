@@ -708,6 +708,7 @@ struct MimeCryptoContext : public Object {
 	 */
 	static Result<MimeCryptoContext>
 	make_gpg(const std::string& testpath={}) try {
+		init_gmime();
 		if (!testpath.empty()) {
 			if (auto&& res = setup_gpg_test(testpath); !res)
 				return Err(res.error());
@@ -721,6 +722,7 @@ struct MimeCryptoContext : public Object {
 
 	static Result<MimeCryptoContext>
 	make(const std::string& protocol) {
+		init_gmime();
 		auto ctx = g_mime_crypto_context_new(protocol.c_str());
 		if (!ctx)
 			return Err(Error::Code::Crypto,

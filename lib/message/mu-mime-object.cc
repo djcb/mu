@@ -23,7 +23,6 @@
 #include "utils/mu-utils.hh"
 #include "utils/mu-utils-file.hh"
 #include <algorithm>
-#include <mutex>
 #include <ranges>
 #include <regex>
 #include <unordered_set>
@@ -42,29 +41,20 @@ using namespace Mu;
 void
 Mu::init_gmime()
 {
-	// fast path.
-	static bool gmime_initialized = false;
-	if (gmime_initialized)
-		return;
+	// function-local statics are initialized exactly once, thread-safely.
+	[[maybe_unused]] static const bool gmime_initialized = [] {
+		mu_debug("initializing gmime {}.{}.{}",
+			 gmime_major_version,
+			 gmime_minor_version,
+			 gmime_micro_version);
 
-	static std::mutex gmime_lock;
-	std::lock_guard lock (gmime_lock);
-	if (gmime_initialized)
-		return; // already
-
-	mu_debug("initializing gmime {}.{}.{}",
-		gmime_major_version,
-		gmime_minor_version,
-		gmime_micro_version);
-
-	g_mime_init();
-	gmime_initialized = true;
-
-	std::atexit([] {
-		mu_debug("shutting down gmime");
-		g_mime_shutdown();
-		gmime_initialized = false;
-	});
+		g_mime_init();
+		std::atexit([] {
+			mu_debug("shutting down gmime");
+			g_mime_shutdown();
+		});
+		return true;
+	}();
 }
 
 
