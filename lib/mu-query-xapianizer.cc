@@ -462,7 +462,10 @@ test_xapian()
 {
 	allow_warnings();
 
-	auto&& testhome{unwrap(make_temp_dir())};
+	// tempdir must outlive the store; the store's dtor still writes
+	// to the database.
+	TempDir tempdir;
+	const auto& testhome{tempdir.path()};
 	auto&& dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
 	auto&& store{unwrap(Store::make_new(dbpath, join_paths(testhome, "test-maildir")))};
 
@@ -514,8 +517,6 @@ test_xapian()
 		assert_valid_result(xq);
 		assert_equal(xq->get_description(), test.second);
 	}
-
-	assert_valid_result(remove_directory(testhome));
 }
 
 int

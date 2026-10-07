@@ -37,7 +37,7 @@ jobs:
       - if: startsWith(matrix.container, 'fedora')
         name: fedora-deps
         run: |
-          dnf install -y git make gcc-c++ meson ninja-build pkgconf-pkg-config xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel guile30-devel cld2-devel emacs texinfo
+          dnf install -y git make gcc-c++ glibc-gconv-extra gnupg2 meson ninja-build pkgconf-pkg-config xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel guile30-devel cld2-devel emacs texinfo
 
       - if: startsWith(matrix.container, 'debian')
         name: debian-deps

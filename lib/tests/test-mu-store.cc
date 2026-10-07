@@ -348,12 +348,13 @@ World!
 	//	g_message(">>> %s", (*term).c_str());
 
 	// last-change is recorded as part of a commit.
+	const auto before_commit{::time({})};
 	store->xapian_db().request_commit(true/*force*/);
 
 	const auto stats{store->statistics()};
 	g_assert_cmpuint(stats.size,==,store->size());
 	g_assert_cmpuint(stats.last_index,==,0);
-	g_assert_cmpuint(stats.last_change,>=,::time({}));
+	g_assert_cmpuint(stats.last_change,>=,before_commit);
 }
 
 
@@ -557,7 +558,10 @@ test_store_circular_symlink()
 
 	mu_test_skip_valgrind_return();
 
-	auto testhome{unwrap(make_temp_dir())};
+	// tempdir must outlive the store; the store's dtor still writes
+	// to the database.
+	TempDir tempdir;
+	const auto& testhome{tempdir.path()};
 	auto dbpath{runtime_path(RuntimePath::XapianDb, testhome)};
 
 	/* create a writable copy */
@@ -580,8 +584,6 @@ test_store_circular_symlink()
 	}
 	// there will be a lot of dups....
 	g_assert_false(store.empty());
-
-	assert_valid_result(remove_directory(testhome));
 }
 
 static void

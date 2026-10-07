@@ -90,7 +90,8 @@ black_hole(void)
 void
 Mu::mu_test_init(int *argc, char ***argv)
 {
-	TempDir temp_dir;
+	// static, so it lives until exit (and gets cleaned up then)
+	static TempDir temp_dir;
 
 	g_unsetenv("XAPIAN_CJK_NGRAM");
 	g_setenv("MU_TEST", "yes", TRUE);

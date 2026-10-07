@@ -127,9 +127,19 @@ Mu::remove_directory(const std::string& path)
 	if (!check_dir(path, false, true))
 		return Err(Error::Code::File, "not a writable directory: {}", path);
 
+	// some other process may remove entries while we're at it (e.g. a
+	// gpg-agent cleaning up its sockets when its homedir disappears), so
+	// retry a few times when we hit ENOENT.
 	std::error_code err{};
-	const auto n{std::filesystem::remove_all(path, err)};
-	if (err)
+	std::uintmax_t n{};
+	for (auto attempt = 0; attempt != 5; ++attempt) {
+		err.clear();
+		n = std::filesystem::remove_all(path, err);
+		if (err != std::errc::no_such_file_or_directory)
+			break;
+	}
+	if (err && (err != std::errc::no_such_file_or_directory ||
+		    std::filesystem::exists(path)))
 		return Err(Error::Code::File, "failed to remove {}: {}",
 			   path, err.message());
 
