@@ -82,14 +82,16 @@
    - In the main-view, the message-queue options are now hidden when
      ~smtpmail-queue-dir~ is set to ~nil~. (1.14.3)
 
-   - ~mu4e-message-contact-field-matches~ and ~mu4e-message-contact-field-matches~
-     now accept a special contact-field =:any= which matches /all/ contact fields
-     and =:recip= which matches the recipient contact fields, To:/Cc:/Bcc:.
+   - ~mu4e-message-contact-field-matches~ and
+     ~mu4e-message-contact-field-matches-me~ now accept a special contact-field
+     =:any=, which matches /all/ contact fields and =:recip= which matches the
+     recipient contact fields, To:/Cc:/Bcc:.
 
-     Since the names are so long, and frequently useful in user-code (e.g., in
+     Since the names are so long and frequently useful in user-code (e.g., in
      ~mu4e-refile-folder~ functions), we also add some ~defalias~ for them:
-     ~mu4e-contact-matches-p~ => ~mu4e-message-contact-field-matches~
-     ~mu4e-contact-matches-me-p~ => ~mu4e-message-contact-field-matches-me~ (1.14.4)
+     ~mu4e-contact-matches-p~ => ~mu4e-message-contact-field-matches~,
+     ~mu4e-contact-matches-me-p~ => ~mu4e-message-contact-field-matches-me~ and
+     ~mu4e-subject-matches-p~ => ~mu4e-message-subject-matches~ (1.14.4)
 
    - ~mu4e-compose-resend~ now honors ~mu4e-sent-messages-behavior~ (1.14.4)
 
