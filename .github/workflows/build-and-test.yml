@@ -6,23 +6,46 @@ on:
 
 jobs:
   build:
+    name: build (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
+        include:
+          - name: ubuntu-24.04
+            os: ubuntu-24.04
+          - name: macos-latest
+            os: macos-latest
+          - name: fedora-latest
+            os: ubuntu-latest
+            container: fedora:latest
+          - name: debian-stable
+            os: ubuntu-latest
+            container: debian:stable
 
     steps:
       - uses: actions/checkout@v2
 
-      - if: contains(matrix.os, 'ubuntu')
+      - if: matrix.container == '' && contains(matrix.os, 'ubuntu')
         name: ubuntu-deps
         run: |
           sudo apt update
           sudo apt-get install meson ninja-build pkg-config libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev guile-3.0-dev libcld2-dev emacs texinfo
+
+      - if: startsWith(matrix.container, 'fedora')
+        name: fedora-deps
+        run: |
+          dnf install -y git make gcc-c++ meson ninja-build pkgconf-pkg-config xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel guile30-devel cld2-devel emacs texinfo
+
+      - if: startsWith(matrix.container, 'debian')
+        name: debian-deps
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y git make g++ meson ninja-build pkg-config libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev guile-3.0-dev libcld2-dev emacs-nox texinfo
 
       - if: contains(matrix.os, 'macos')
         name: macos-deps
