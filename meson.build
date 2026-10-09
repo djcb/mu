@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.14.4-pre5',
+        version: '1.14.4-pre6',
         meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
         default_options : {
@@ -30,7 +30,7 @@ fs = import('fs')
 
 # hard-code the date here (for reproducibility); we derive the dates used in
 # e.g. documentation from this.
-mu_date='2026-10-02'
+mu_date='2026-10-09'
 
 # installation paths
 prefixdir = get_option('prefix')
