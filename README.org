@@ -342,10 +342,6 @@ see the manual for a deeper dive.
   ;; this can also be function that takes a filename and mime-type
   ;; and returns a string (path)
 
-  ;; add an 'action' (press 'a', then 'V' when in the message-view, to show
-  ;; current message in an external web-browsser
-  (add-to-list 'mu4e-view-actions '("ViewBrowser" . mu4e-action-view-in-browser) t)
-
   :hook
   ;; tweak the composer
   ((mu4e-compose-mode . (lambda ()

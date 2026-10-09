@@ -8,8 +8,9 @@
 
 *** build
 
-  - The build now use meson's "wrap" packages, replacing the old ~thirdparty/~. As
-    before, system-installed versions have precedence. (1.14.4)
+  - The build now use meson's "wrap" packages, replacing most of ~thirdparty/~
+    (except for ~tl-optional~). As before, system-installed versions have
+    precedence (1.14.4)
 
 *** mu
 
@@ -100,6 +101,12 @@
    - ~mu4e-view-go-to-url~ and ~mu4e-view-save-url~ now also work when viewing
      messages in HTML-mode. See the section info:mu4e#Links in the Mu4e
      reference manual (1.14.4)
+
+   - While ~mu4e~ has had ~xwidget~ support for years, the upstream (Emacs)
+     implementation was not compatible with current Webkit-library versions for
+     a few release, until 31.1. Now, with it becoming available again, ~mu4e~ adds
+     extended support, including setting ~xwidget~ as the default HTML-renderer
+     for messages (see ~mu4e-view-html-renderer~ and the [[info:(mu4e) Rich-text][section in the manual]]) (1.14.4)
 
 *** scm
 
