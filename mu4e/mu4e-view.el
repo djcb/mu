@@ -48,6 +48,7 @@
 (require 'mu4e-search)
 (require 'mu4e-mime-parts)
 (require 'mu4e-view-html)
+(require 'mu4e-view-xwidget)
 
 ;; utility functions
 (require 'mu4e-contacts)
@@ -87,12 +88,18 @@ is the Attachments: header: see
   :group 'mu4e-view)
 
 (defcustom mu4e-view-actions
-  (delq nil `(("capture message" . mu4e-action-capture-message)
-              ("view in browser" . mu4e-action-view-in-browser)
+  (delq nil `(;; capture a message for attaching later using
+              ;;   `mu4e-compose-attach-captured-message'
+              ("capture message"       . mu4e-action-capture-message)
+              ;; view message in configure browser
+              ("view in browser"       . mu4e-action-view-in-browser)
+              ;; view mailing archive for current message
               ("browse online archive" . mu4e-action-browse-list-archive)
-              ,(when (fboundp 'xwidget-webkit-browse-url)
-                 '("xview in xwidget" . mu4e-action-view-in-xwidget))
-              ("show this thread" . mu4e-action-show-thread)))
+              ,(when (mu4e-xwidget-usable-p 'ignore-display)
+                 ;; view in xwidget, if usable
+                 '("xview in xwidget"  . mu4e-action-view-in-xwidget))
+              ;; query for the thread this message is part of
+              ("show this thread"      . mu4e-action-show-thread)))
   "List of actions to perform on messages in view mode.
 The actions are cons-cells of the form:
   (NAME . FUNC)
@@ -107,6 +114,26 @@ The first letter of NAME is used as a shortcut character."
 (defcustom mu4e-view-max-specpdl-size 4096
   "The value of `max-specpdl-size' for displaying messages with Gnus."
   :type 'integer
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-html-renderer 'shr
+  "How to render HTML messages; a symbol, one of:
+  - `shr': use the shr renderer.
+  - `xwidget': use an embedded WebKit widget (requires Emacs with
+    xwidget support). HTML messages are then shown this way when
+    opening them; `mu4e-view-toggle-html' switches to the text view
+    and back."
+  :type '(choice (const :tag "shr" shr)
+                 (const :tag "xwidget" xwidget))
+  :group 'mu4e-view)
+
+(defcustom mu4e-view-prefer-plain-text nil
+  "Whether to prefer the plain-text version of a message.
+
+If non-nil, show the plain-text part of messages that have both a
+plain-text and an HTML alternative, for all renderers (see
+`mu4e-view-html-renderer')."
+  :type 'boolean
   :group 'mu4e-view)
 
 (defconst mu4e--view-raw-buffer-name " *mu4e-raw-view*"
@@ -292,23 +319,29 @@ in the message view affects HDRSBUF, as does marking etc.
 
 As a side-effect, a message that is being viewed loses its
 `unread' marking if it still had that."
+  (cl-assert (member mu4e-view-html-renderer '(shr xwidget))) ;; sanity-check
   ;; update headers, if necessary.
   (mu4e~headers-update-handler msg nil nil)
-  ;; Create a new view buffer (if needed) as it is not
-  ;; feasible to recycle an existing buffer due to buffer-specific
-  ;; state (buttons, etc.) that can interfere with message rendering
-  ;; in gnus.
+  ;; Create a new view buffer (if needed) as it is not feasible to recycle an
+  ;; existing buffer due to buffer-specific state (buttons, etc.) that can
+  ;; interfere with message rendering in gnus.
   ;;
-  ;; Unfortunately that does create its own issues: namely ensuring
-  ;; buffer-local state that *must* survive is correctly copied
-  ;; across.
+  ;; Unfortunately that does create its own issues: namely ensuring buffer-local
+  ;; state that *must* survive is correctly copied across.
   (let ((linked-headers-buffer))
     (when-let* ((existing-buffer (mu4e-get-view-buffer nil nil)))
-      ;; required; this state must carry over from the killed buffer
-      ;; to the new one.
+      ;; required; this state must migrate from the killed buffer to the new
+      ;; one.
       (setq linked-headers-buffer mu4e-linked-headers-buffer)
-      (if (memq mu4e-split-view '(horizontal vertical))
-          (delete-windows-on existing-buffer t))
+      (when (memq mu4e-split-view '(horizontal vertical))
+        (delete-windows-on existing-buffer t)
+        ;; The window may actually be showing EXISTING-BUFFER's xwidget
+        ;; "shadow" buffer rather than EXISTING-BUFFER itself,
+        ;; attempt to delete that one as well.
+        (when-let* ((xw (buffer-local-value 'mu4e--view-xwidget-buffer
+                                            existing-buffer))
+                    ((buffer-live-p xw)))
+          (delete-windows-on xw t)))
       (kill-buffer existing-buffer))
 
     ;; HACK: we create a *Summary* buffer, since its mere existence
@@ -334,7 +367,9 @@ As a side-effect, a message that is being viewed loses its
          (mu4e-message-readable-path msg) nil nil nil t)
         (setq-local mu4e--view-message msg)
         (ignore-errors
-          (mu4e--view-render-buffer msg)))
+          (if (mu4e--view-use-xwidget-p)
+              (mu4e--view-render-buffer-xwidget msg)
+            (mu4e--view-render-buffer msg))))
       (mu4e-loading-mode 0))
     (unless (mu4e--view-detached-p gnus-article-buffer)
       (with-current-buffer mu4e-linked-headers-buffer
@@ -417,15 +452,18 @@ determine which browser function to use."
                                   (mu4e--view-html-insert-headers msg)))
        (mu4e-warn "No html or text part in this message"))))
 
-(defun mu4e-action-view-in-xwidget (msg)
-  "Show current MSG in an embedded xwidget, if available."
-  (unless (fboundp 'xwidget-webkit-browse-url)
-    (mu4e-error "No xwidget support available"))
-  (let ((browse-url-handlers nil)
-        (browse-url-browser-function
-         (lambda (url &optional _rest)
-           (xwidget-webkit-browse-url url))))
-    (mu4e-action-view-in-browser msg)))
+(defun mu4e-action-view-in-xwidget (_msg)
+  "Show the current message in an embedded xwidget, if available.
+This works regardless of `mu4e-view-html-renderer', and is the same
+as when that is `xwidget' (including that JavaScript is disabled).
+Press h in the xwidget to go back to the text view.
+
+This must be invoked from the message view, and shows its message;
+the argument is ignored."
+  (unless (mu4e-xwidget-usable-p)
+    (mu4e-warn "Cannot show message in xwidget"))
+  (unless (mu4e--view-xwidget-shown-p)
+    (mu4e--view-xwidget-toggle)))
 
 (defun mu4e--view-html-displayed-p ()
   "Is any text/html MIME part currently displayed?
@@ -455,6 +493,7 @@ activates URLs (in plain-text mode only)."
          (charset (and charset (intern charset)))
          (mu4e--view-rendering t) ;; needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime nil) ;; avoid perf problems
+         (mm-discouraged-alternatives (mu4e--view-discouraged-alternatives))
          (gnus-newsgroup-charset
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
@@ -486,7 +525,7 @@ activates URLs (in plain-text mode only)."
           (setq mu4e--view-gnus-article-mime-handles gnus-article-mime-handles
                 gnus-article-decoded-p gnus-article-decode-hook)
           (set-buffer-modified-p nil)
-          (add-hook 'kill-buffer-hook #'mu4e--view-buffer-cleanup))
+          (add-hook 'kill-buffer-hook #'mu4e--view-buffer-cleanup nil t))
       (epg-error
        (mu4e-message "EPG error: %s; fall back to raw view"
                      (error-message-string err))))))
@@ -939,7 +978,10 @@ See `mu4e--view-render-html-fallback'.")
 
 (defun mu4e--view-html-p ()
   "Is the current message view showing html?"
-  (or mu4e--view-html-fallback (mu4e--view-html-displayed-p)))
+  (or mu4e--view-html-fallback (mu4e--view-html-displayed-p)
+      ;; xwidget bypasses Gnus' own display machinery, so
+      ;; `mu4e--view-html-displayed-p' does not see it.
+      (mu4e--view-xwidget-shown-p)))
 
 (defun mu4e-view-massage()
   "Massage current message view as per `mu4e-view-massage-options'."
@@ -974,40 +1016,58 @@ multipart/alternative part to toggle; toggle again (or use
     (setq mu4e--view-html-fallback t)
     (set-buffer-modified-p nil)))
 
+(defun mu4e--view-mime-handle (media-type)
+  "Return the first MIME handle in the article with MEDIA-TYPE, or nil.
+This relies on `gnus-article-mime-handle-alist' being sorted by
+pertinence, i.e. the first match is the most important one."
+  (seq-find (lambda (handle)
+              (equal (mm-handle-media-type (cdr handle)) media-type))
+            gnus-article-mime-handle-alist))
+
+(defun mu4e--view-toggle-html-alternative ()
+  "Toggle between the HTML and plain-text alternatives, using Gnus.
+This works for `multipart/alternative' messages, by pressing the
+corresponding Gnus button in the buffer. Return non-nil if there
+were alternatives to toggle."
+  (when-let* ((html-part (mu4e--view-mime-handle "text/html"))
+              ((mu4e--view-mime-handle "text/plain")))
+    (save-excursion
+      (let ((inhibit-read-only t))
+        ;; Call gnus-mime-inline-part directly, bypassing
+        ;; gnus-article-part-wrapper (avoid gnus-summary-buffer.)
+        (gnus-mime-inline-part (cdr html-part))
+        ;; Only activate URLs in plain-text mode; in HTML mode the
+        ;; renderer already provides its own clickable links (#2094),
+        ;; so only collect them.
+        (let ((html (mu4e--view-html-displayed-p)))
+          (when html
+            (mu4e--view-remove-url-activations))
+          (mu4e--view-linkify-buffer-text html))))
+    t))
+
+(defun mu4e--view-toggle-html-shr ()
+  "Toggle the shr-rendered html version of the message.
+For messages without a text and an html alternative."
+  (if mu4e--view-html-fallback
+      (mu4e-view-refresh)
+    (mu4e--view-render-html-fallback)))
+
 (defun mu4e-view-toggle-html ()
-  "Toggle between the HTML and plain-text alternatives.
-Works for `multipart/alternative' messages by pressing the
-corresponding Gnus button in the buffer. For other messages,
-toggle between the normal rendering and an shr-rendered html
-version of the message."
+  "Toggle between the HTML and plain-text versions of the message.
+What this does depends on `mu4e-view-html-renderer':
+- `xwidget': toggle between the xwidget and the text rendering.
+  If xwidget is not available, this is the same as `shr'.
+- `shr': toggle between the HTML and plain-text alternatives (for
+  `multipart/alternative' messages); for other messages, toggle
+  between the normal rendering and an shr-rendered html version."
   (interactive)
-  ;; This function assumes `gnus-article-mime-handle-alist' is sorted by
-  ;; pertinence, i.e. the first HTML part found in it is the most important
-  ;; one.
-  (save-excursion
-    (let ((inhibit-read-only t))
-      (if-let* ((html-part
-                 (seq-find (lambda (handle)
-                             (equal (mm-handle-media-type (cdr handle))
-                                    "text/html"))
-                           gnus-article-mime-handle-alist))
-                (text-part
-                 (seq-find (lambda (handle)
-                             (equal (mm-handle-media-type (cdr handle))
-                                    "text/plain"))
-                           gnus-article-mime-handle-alist)))
-          (progn
-            ;; Call gnus-mime-inline-part directly, bypassing
-            ;; gnus-article-part-wrapper (avoid gnus-summary-buffer.)
-            (gnus-mime-inline-part (cdr html-part))
-            (let ((html (mu4e--view-html-displayed-p)))
-              (when html
-                (mu4e--view-remove-url-activations))
-              (mu4e--view-linkify-buffer-text html)))
-        ;; nothing to toggle in-place; fall back to re-rendering
-        (if mu4e--view-html-fallback
-            (mu4e-view-refresh)
-          (mu4e--view-render-html-fallback))))))
+  (cond
+   ((and (eq mu4e-view-html-renderer 'xwidget)
+         (mu4e-xwidget-usable-p))
+    (mu4e--view-xwidget-toggle))
+   ((mu4e--view-toggle-html-alternative))
+   (t (mu4e--view-toggle-html-shr))))
+
 ;;; Bug Reference mode support
 
 ;; Due to mu4e's view buffer handling (mu4e-view-mode is called long before the

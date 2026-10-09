@@ -772,5 +772,36 @@ shorter keys in some cases where there are multiple bindings."
              (seq-map #'key-description
                       (where-is-internal cmd)))))
 
+(defvar xwidget-webkit-disable-javascript)
+
+(defun mu4e-xwidget-usable-p (&optional ignore-display)
+  "Do we have usable xwidget support?
+That means that the feature is available, and supports disabling
+JavaScript.
+
+Also check that we have a graphical display, unless IGNORE-DISPLAY
+is non-nil (interactively, with prefix argument).
+
+Called interactively, show a message saying whether xwidget is
+usable, and if not, why not.
+
+Return t if xwidget is usable for mu4e, nil otherwise."
+  (interactive "P")
+  (let ((msg
+         (cond
+          ((not (featurep 'xwidget-internal))
+           "Emacs built without xwidget support")
+          ((not (progn (require 'xwidget)
+                       (boundp 'xwidget-webkit-disable-javascript)))
+           ;; i.e., too old Emacs; enabling JavaScript is not safe
+           "JavaScript cannot be disabled")
+          ((and (not ignore-display) (not (display-graphic-p)))
+           "No graphical display"))))
+    (when (called-interactively-p 'interactive)
+      (if msg
+          (mu4e-message "Xwidget not usable: %s" msg)
+        (mu4e-message "Xwidget is usable")))
+    (not msg)))
+
 (provide 'mu4e-helpers)
 ;;; mu4e-helpers.el ends here

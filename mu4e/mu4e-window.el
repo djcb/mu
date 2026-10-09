@@ -1,7 +1,7 @@
 ;;; mu4e-window.el --- Window management -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2022  Mickey Petersen
-;; Copyright (C) 2023-2025 Dirk-Jan C. Binnema
+;; Copyright (C) 2023-2026 Dirk-Jan C. Binnema
 
 ;; Author: Mickey Petersen <mickey@masteringemacs.org>
 ;; Keywords: mail
@@ -27,27 +27,20 @@
 
 (defconst mu4e--sexp-buffer-name "*mu4e-sexp-at-point*"
   "Name for the buffer which shows the sexp for the message-at-point.")
-
 (defconst mu4e--last-query-buffer-name "*mu4e-last-query*"
   "Name for the buffer which shows the last server-query.")
-
 (defvar mu4e-main-buffer-name "*mu4e-main*"
   "Name of the mu4e main buffer.")
-
 (defvar mu4e-embedded-buffer-name " *mu4e-embedded*"
   "Name for the embedded message view buffer.")
 
 ;; Buffer names for public use
-
 (defvar mu4e-headers-buffer-name "*mu4e-headers*"
   "Name of the buffer for message headers.")
-
 (defvar mu4e-view-buffer-name "*mu4e-article*"
   "Name of the view buffer.")
-
 (defvar mu4e-headers-buffer-name-func nil
   "Function used to name the headers buffers.")
-
 (defvar mu4e-view-buffer-name-func nil
   "Function used to name the view buffers.
 
@@ -56,6 +49,8 @@ linked to.")
 
 (defvar-local mu4e-linked-headers-buffer nil
   "Holds the headers buffer object that ties it to a view.")
+
+(defvar mu4e--view-message) ;; fwd decl
 
 (defcustom mu4e-split-view 'horizontal
   "How to show messages / headers.
@@ -175,7 +170,9 @@ tested."
 (defun mu4e--get-current-buffer-type ()
   "Return an internal symbol that corresponds to each mu4e major mode."
   (cond ((or (derived-mode-p 'mu4e-view-mode)
-             (derived-mode-p 'mu4e-raw-view-mode)) 'view)
+             (derived-mode-p 'mu4e-raw-view-mode)
+             mu4e--view-message) ;; e.g., xwidget
+         'view)
         ((derived-mode-p 'mu4e-headers-mode) 'headers)
         ((derived-mode-p 'mu4e-compose-mode) 'compose)
         ((derived-mode-p 'mu4e-main-mode) 'main)
@@ -189,7 +186,6 @@ Where TYPE is `view', `headers', `compose', `main' or `unknown'.
 Checks are performed using `derived-mode-p' and the current
 buffer's major mode."
   (eq (mu4e--get-current-buffer-type) type))
-
 
 (defun mu4e-get-view-buffer (&optional headers-buffer create)
   "Return a view buffer belonging optionally to HEADERS-BUFFER.

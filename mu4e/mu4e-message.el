@@ -102,12 +102,14 @@ Thus, function will return nil for empty lists, or non-existing body."
 
 (defun mu4e-message-at-point (&optional noerror)
   "Get the message s-expression for the message at point.
-Either the headers buffer or the view buffer, or nil if there is
-no such message. If optional NOERROR is non-nil, do not raise an
-error when there is no message at point."
-  (or (cond
-       ((eq major-mode 'mu4e-headers-mode) (get-text-property (point) 'msg))
-       ((eq major-mode 'mu4e-view-mode) mu4e--view-message))
+Either the headers buffer, or any buffer with a buffer-local
+`mu4e--view-message' -- the view buffer, or one associated with it,
+e.g. an embedded xwidget (see mu4e-view-xwidget.el) -- or nil if
+there is no such message. If optional NOERROR is non-nil, do not
+raise an error when there is no message at point."
+  (or (if (eq major-mode 'mu4e-headers-mode)
+          (get-text-property (point) 'msg)
+        mu4e--view-message)
       (unless noerror (mu4e-warn "No message at point"))))
 
 (defun mu4e-message-p ()
