@@ -358,6 +358,7 @@ configuration before trying again:
 ;; the exact path may differ --- check it
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e")
 @end lisp
+@vindex load-path
 
 @subsection mu4e and emacs customization
 
@@ -425,7 +426,7 @@ messages. If you want to change them, you need to @t{init} once again.
 The addresses may also be basic PCRE regular expressions, wrapped in slashes,
 for example:
 @example
-  $ mu init --maildir=~/Maildir '--personal-address=/foo-.*@@example\.com/'
+$ mu init --maildir=~/Maildir '--personal-address=/foo-.*@@example\.com/'
 @end example
 
 If you want to see the values for your message-store, you can use
@@ -460,7 +461,7 @@ easier to verify that everything works correctly.
 Assuming that your maildir is at @file{~/Maildir}, we issue the
 following command:
 @example
-  $ mu index
+$ mu index
 @end example
 
 This should scan your messages and fill the database, and give
@@ -474,7 +475,7 @@ in full detail in the @t{mu-index} man-page.
 After the indexing process has finished, you can quickly test if
 everything worked, by trying some command-line searches, for example
 @example
-  $ mu find hello
+$ mu find hello
 @end example
 
 which lists all messages that match @t{hello}. For more examples of
@@ -521,8 +522,12 @@ situation. See @ref{Dynamic folders} for details.}:
   mu4e-sent-folder   "/sent"       ;; folder for sent messages
   mu4e-drafts-folder "/drafts"     ;; unfinished messages
   mu4e-trash-folder  "/trash"      ;; trashed messages
-  mu4e-refile-folder "/archive")   ;; saved messages
+  mu4e-refile-folder "/archive")   ;; archived messages
 @end lisp
+@vindex mu4e-sent-folder
+@vindex mu4e-drafts-folder
+@vindex mu4e-trash-folder
+@vindex mu4e-refile-folder
 
 The folder (maildir) names are all relative to the root-maildir (see the
 output of @command{mu info}). If you use @t{mu4e-context}, see
@@ -574,7 +579,6 @@ is set to @code{nil}), but then try to index your maildirs anyway
 @vindex mu4e-index-update-error-warning
 @vindex mu4e-index-update-error-continue
 
-
 Reason for these defaults is that some of the mail-retrieval programs may return
 non-zero, even when the updating process succeeded; however, it is hard to tell
 such pseudo-errors from real ones like @t{login failed}.
@@ -593,6 +597,7 @@ although not all of them have their exit codes documented.
 The value of @code{mu4e-get-mail-command} can also be a @emph{function} that
 returns a shell command. This allows for more sophistication. For
 instance, you may want to attempt to retrieve mail only when online.
+@vindex mu4e-get-mail-command
 
 Let us look at an example.
 
@@ -3899,8 +3904,8 @@ query from @code{mu4e-bookmarks}. By default, the @emph{first} one in chosen,
 but you may want to change that by using the @code{:favorite} property for a
 particular query, e.g., as part of your @var{mu4e-bookmarks}:
 @example
- ;; Monitor the inbox folder in the modeline
- (:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t)
+;; Monitor the inbox folder in the modeline
+(:query "maildir:/inbox" :name "Inbox" :key ?i :favorite t)
 @end example
 
 The results of this query (the last time it was updated) is shown as some
