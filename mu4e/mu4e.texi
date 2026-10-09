@@ -1450,9 +1450,10 @@ from @code{gnus-article-mode}.
 @menu
 * Overview: MSGV Overview. What is the Message View.
 * Keybindings: MSGV Keybindings. Do things with your keyboard.
-* Rich-text and images: MSGV Rich-text and images. Reading rich-text messages.
-* Links: MSGV Links. Handling hyperlinks in messages.
-* Attachments and MIME-parts: MSGV Attachments and MIME-parts. Working with attachments and other MIME parts.
+* Rich text: Rich-text. Reading rich-text messages.
+* Images: Images. Showing images in messages.
+* Links: Links. Handling hyperlinks in messages.
+* Attachments and MIME-parts: Attachments and MIME-parts. Working with attachments and other MIME parts.
 * Custom headers: MSGV Custom headers. Your very own headers.
 * Actions: MSGV Actions. Defining and using actions.
 * Detaching & reattaching: MSGV Detaching and reattaching. Multiple message views.
@@ -1606,66 +1607,113 @@ Some keybindings are available through minor modes:
 
 For the marking commands, please refer to @ref{Marking messages}.
 
-@node MSGV Rich-text and images
-@section Reading rich-text messages
+@node Rich-text
+@section Rich text
 @cindex rich-text
+@cindex html
+@cindex plain-text
 
-These days, many e-mail messages contain rich-text (typically, HTML); either as
-an alternative to a text-only version, or even as the only option.
+In the old days, e-mail messages were just plain text; nowadays, many messages
+contain rich text (HTML), either as an alternative to a plain-text version or
+even as the only option. Of course, @t{mu4e} allows you to read such messages,
+and you can configure how it does that.
 
-@vindex mm-discouraged-alternatives
-By default, mu4e tries to display the 'richest' option, which is the
-last MIME-part of the alternatives. You can customize this to prefer
-the text version, if available, with something like the following in
-your configuration (and see the docstring for
-@code{mm-discouraged-alternatives} for details):
-
-@lisp
-(with-eval-after-load "mm-decode"
-  (add-to-list 'mm-discouraged-alternatives "text/html")
-  (add-to-list 'mm-discouraged-alternatives "text/richtext"))
-@end lisp
-
-These influence both display of message and what is used when citing them in a
-reply.
+@enumerate
+@item
+The first thing to decide is whether you prefer the plain-text or the rich-text
+(HTML) version of messages, when both are available. By default, @t{mu4e} uses
+the 'richest' format it can find. You can change this by setting setting the
+variable @code{mu4e-view-prefer-plain-text} to non-nil.
+@vindex mu4e-view-prefer-plain-text
 
 You can toggle between the plain-text and HTML versions of a message using
-@kbd{M-x mu4e-view-toggle-html}. For plain-text messages without an HTML-part,
-an HTML part is generated.
+@kbd{M-x mu4e-view-toggle-html} or @key{h}. For plain-text messages without an
+HTML-part, an HTML part is generated.
 
-When displaying rich-text messages inline, @code{mu4e} (through @code{gnus})
-uses the @code{shr} built-in HTML-renderer. If you're using a dark color
-theme, and the messages are hard to read, it can help to change the
-luminosity, e.g.:
+@item
+The second decision is how to show (render) these rich-text messages. This is
+controlled through the variable @code{mu4e-view-html-renderer}, which expects a
+symbol. You have two alternatives: @t{shr}, which is a renderer tightly
+integrated with Emacs and the message view, or @t{xwidget}, which is the richer,
+graphical option, based on the @t{webkit} web browser code (and only works in a
+graphical Emacs session).
+@vindex mu4e-view-html-renderer
+@end enumerate
+
+Let's discuss @code{shr} and @code{xwidget} in a bit more detail.
+
+@node shr
+@subsection shr
+@cindex shr
+
+@t{shr} is an Emacs-native, text-based HTML-renderer, which is tightly
+integrated with the message viewer.
+
+It has been the default option in @t{mu4e} for quite some time. Overall, it is a
+good option for viewing HTML if it is able to do so, and well-integrated with
+Emacs. It has its limitations though, and some HTML e-mail messages may not be
+supported very well.
+
+If you use a dark theme in Emacs, you may need to tweak @t{shr} to make the
+messages better readable:
+
 @lisp
 (setq shr-color-visible-luminance-min 80)
 @end lisp
+@vindex @code{shr-color-visible-luminance-min}
 
-Note that you can switch between the HTML and text versions by
-clicking on the relevant part in the messages headers; you can make it
-even clearer by indicating them in the message itself, using:
+@node xwidget
+@subsection xwidget
+@cindex xwidget
+@cindex webkit
 
-@lisp
-(setq gnus-unbuttonized-mime-types nil)
-@end lisp
+The @t{xwidget}-support allows Emacs to show messages in a rich, graphical
+widget based on @t{xwidget}. The @t{xwidget} renderer generally gives you a
+``richer'' experience and the output is probably closer to how it looked for the
+sender.
 
-@findex mu4e-view-jump-to-mime-part
-Note that you can jump to the relevant MIME-parts using
-@code{mu4e-view-jump-to-mime-part}, which ask for the number or uses the
-prefix-argument.
+To inspect if your Emacs supports @t{xwidget}, you can try the command @kbd{M-x
+mu4e-xwidget-usable-p}. This tests for the presence of a new-enough @t{xwidget};
+moreover, it requires a graphical Emacs.
+@cindex mu4e-xwidget-usable-p
 
-@subsection Inline images
-When you run Emacs in graphical mode, by default images attached to
-messages are shown inline in the message view buffer.
+However, while @code{mu4e} does its best to integrate the @t{xwidget}-display as
+seamless as possible, it is a bit slower and decidedly less ``Emacsy'' than
+either plain-text or the @code{shr}-based html view. For that reason, there is
+no shame in still preferring @code{shr}, especially it
+@code{mu4e-view-prefer-plain-text} is @code{nil} (its default value).
+
+Moreover, if you use @t{shr} as your HTML-renderer, you can still use
+@t{xwidget} as a plan-B for messages that are hard to read otherwise, since
+@code{mu4e} offers a @emph{view action} (see @ref{Actions}); press @kbd{a x} to
+see the message in its full Webkit glory; it is one of the default actions if
+your Emacs has @t{xwidget}-support.
+
+@node Images
+@section Images
+@cindex images
+
+@code{mu4e} lets you view images attached to messages inline. Here we discuss
+how; this applies to only to plain-text and @t{shr} rendering, @emph{not}
+@t{xwidget} rendering. For @t{xwidget}, you cannot currently configure how to
+deal with inline images when using @code{xwidget}; it never loads remote images,
+but does show embedded ones.
 
 @vindex gnus-inhibit-images
-To disable this, set @code{gnus-inhibit-images} to @code{t}.  By default,
-external images in HTML are not retrieved from external URLs because
-they can be used to track you.
+To disable this, set @code{gnus-inhibit-images} to @code{t}. By default,
+external images in HTML are not retrieved from external URLs because they can be
+used to track you.
 
-Apart from that, you can also control whether to load remote images;
-since loading remote images is often used for privacy violations, by
-default this is not allowed.
+When you run Emacs in graphical mode, by default images attached to messages are
+shown inline in the message view buffer.
+
+To disable this, set @code{gnus-inhibit-images} to @code{t}. By default,
+external images in HTML are not retrieved from external URLs because they can be
+used to track you.
+
+Apart from that, you can also control whether to load remote images; since
+loading remote images is often used for privacy violations, by default this is
+not allowed.
 
 @vindex gnus-blocked-images
 You can specify what URLs to block by setting
@@ -1690,11 +1738,11 @@ if you have Gnus-specific settings for @code{gnus-blocked-images}, you
 should verify that they have the desired effect in @code{mu4e} as
 well.
 
-Finally, for some message with big images it can be useful to enable buttons and
-full display, e.g. for saving inline images. For this you can try @kbd{M-x
+Finally, for some messages with big images, it can be useful to enable buttons
+and full display, e.g. for saving inline images. For this you can try @kbd{M-x
 mu4e-view-show-mime-parts}. This can be a little slow.
 
-@node MSGV Links
+@node Links
 @section Links
 @cindex links
 @cindex hyperlinks
@@ -1708,19 +1756,24 @@ mu4e-view-save-url}. The user-interface for these commands depends on whether
 you are viewing the message in ``plain-text'' or HTML-mode:
 @itemize
 @item
+@emph{HTML}: choose links through Emacs' completion interface
+(as per @code{completing-read} / @code{completing-read-multiple})
+@item
 @vindex mu4e-view-always-show-url-indicators
 @vindex mu4e-view-always-use-completion
-@emph{Plain text}: the view shows indicators like @t{[1]}, @t{[2]} next to the link
-when you invoke @kbd{mu4e-view-go-to-url} or @kbd{mu4e-view-save-url}, and you
-choose one in the mini-buffer@footnote{If you @emph{always} want to see these
-indicators, set @code{mu4e-view-always-show-url-indicators} to non-@t{nil}; if
-you prefer to use the completion-interface (as used for HTML-messages) instead,
-set @code{mu4e-view-always-use-completion} to non-@t{nil}}.
+@emph{Plain text}: the view shows indicators like @t{[1]}, @t{[2]} next to the
+link when you invoke @kbd{M-x mu4e-view-go-to-url} or @kbd{M-x
+mu4e-view-save-url}, and you choose one in the mini-buffer
 @item
-@emph{HTML}: choose links through Emacs' completion interface
-(as per @code{completing-read})
+@itemize
+@item
+If you @emph{always} want to see these indicators (the pre-1.14.3 behavior), set
+@code{mu4e-view-always-show-url-indicators} to non-@t{nil}.
+@item
+If you prefer to use the completion-interface as used for the HTML-view also for
+the plain-text view, set @code{mu4e-view-always-use-completion} to non-@t{nil}.
 @end itemize
-
+@end itemize
 @findex browse-url-mail
 E-mail-addresses are handled through @code{browse-url-mail}, which (when using
 @code{mu4e}) means that you are presented with a window to compose a message to
@@ -1736,7 +1789,7 @@ once. You can do so by selecting multiple, separated by some character.
 Typically, the separator is a comma, but if there is a comma in one of the URLs,
 @t{mu4e} picks some other character; the prompt shows which.
 
-@node MSGV Attachments and MIME-parts
+@node Attachments and MIME-parts
 @section Attachments and MIME-parts
 
 Nowadays, typical e-mail messages can be thought of as a series of
@@ -1744,6 +1797,10 @@ Nowadays, typical e-mail messages can be thought of as a series of
 parts is the 'body', which is the main text of the message your are reading.
 
 Other MIME-parts in the messages include @emph{attachments}.
+
+Note that you can jump to the relevant MIME-parts using @kbd{M-x
+mu4e-view-jump-to-mime-part}, which ask for the number or uses the
+prefix-argument.
 
 @subsection Attachments
 @cindex attachments
@@ -1874,8 +1931,8 @@ Detached messages are often useful for workflows involving lots of
 simultaneous messages.
 
 You can @emph{tear off} the window a message is in and place it in a
-new frame by typing @key{C-x w ^ f}. You can also detach a window and
-put it in its own tab with @key{C-x w ^ t}.
+new frame by typing @kbd{C-x w ^ f}. You can also detach a window and
+put it in its own tab with @kbd{C-x w ^ t}.
 
 @node MSGV Mailing lists
 @section Mailing lists
@@ -5091,6 +5148,10 @@ configuration:
 Now, when viewing such a difficult message, type @kbd{aV}, and the
 message opens inside a web browser. You can influence the browser to
 use with @code{browse-url-generic-program}.
+
+If your emacs has @t{xwidget}-support you can also for ``rich'' html inside
+emacs; @pxref{xwidget}.
+
 @subsection How can I read encrypted messages that I sent?
 Since you do not own the recipient's key you typically cannot read
 those mails --- so the trick is to encrypt outgoing mails with your
