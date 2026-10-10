@@ -692,16 +692,24 @@ URLs. The urls are fetched to `mu4e-attachment-dir'."
 (defconst mu4e--view-link-label-width 32
   "Maximum width of link labels in URL completions.")
 
+(defun mu4e--view-check-sec-url (url)
+  "Decorate URL if it looks suspicious, using `mu4e--check-sec'.
+For \"mailto:\" URLs, check the e-mail address."
+  (if (string-prefix-p "mailto:" url)
+      (concat "mailto:" (mu4e--check-sec (substring url 7) 'email-address))
+    (mu4e--check-sec url 'url)))
+
 (defun mu4e--view-url-affixation (labels width completions)
   "Calculate the affixation for URL COMPLETIONS.
 I.e., `:affixation-function' (see `completion-extra-properties').
 
 Returns a list of (CANDIDATE PREFIX SUFFIX) triples, where the
 prefix is the link label (if any) from LABELS, a hash-table of
-url->label, padded or truncated to WIDTH."
+url->label, padded or truncated to WIDTH. Suspicious-looking
+candidates are decorated, see `mu4e--check-sec'."
   (mapcar
    (lambda (url)
-     (list url
+     (list (mu4e--view-check-sec-url url)
            (if (zerop width) ""
              (concat (propertize
                       (truncate-string-to-width

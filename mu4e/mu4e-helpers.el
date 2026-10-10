@@ -142,6 +142,23 @@ Does a local-exit and does not return."
   (mu4e-log 'error (apply 'mu4e-format frm args))
   (user-error "%s" (apply 'mu4e-format frm args)))
 
+
+(defun mu4e--check-sec (str type)
+  "Decorate suspicious strings.
+
+If available, use `textsec-suspicious-p' to decorate suspicious
+strings. STR is some string, and TYPE its type, as
+`textsec-suspicious-p'.
+
+If STR looks suspicious, return it with face
+`textsec-suspicious', with the specific warning as a tooltip.
+
+Otherwise, return STR unchanged."
+  (if-let* ((_ (fboundp 'textsec-suspicious-p))
+           (wrn (textsec-suspicious-p str type)))
+      (propertize str 'face 'textsec-suspicious 'tooltip wrn)
+    str))
+
 ;;; Reading user input
 
 (defcustom mu4e-completing-read-function #'ido-completing-read
