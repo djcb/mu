@@ -1,4 +1,4 @@
-#+TITLE:  MU-SERVER
+#+TITLE: MU SERVER
 #+MAN_CLASS_OPTIONS: :section-id "@SECTION_ID@" :date "@MAN_DATE@"
 #+include: macros.inc
 
@@ -28,7 +28,7 @@ For example, to view a certain message, the command would be:
 #+end_example
 
 Parameters can be sent in any order; they must be of the correct type though.
-See *lib/utils/mu-sexp-parser.hh* and *lib/utils/mu-sexp-parser.cc* in source-tree
+See *lib/utils/mu-sexp.hh* and *lib/utils/mu-sexp.cc* in the source-tree
 for the details.
 
 * OUTPUT FORMAT
@@ -40,7 +40,7 @@ for the details.
 #+end_example
 
 \\376 (one byte 0xfe), followed by the length of the s-expression expressed as
-an hexadecimal number, followed by another \\377 (one byte 0xff), followed by
+a hexadecimal number, followed by \\377 (one byte 0xff), followed by
 the actual s-expression.
 
 By prefixing the expression with its length, it can be processed more
@@ -58,7 +58,7 @@ Evaluate a mu4e server s-expression.
 ** --allow-temp-file
 If set, allow for the output of some commands to use temp-files rather than
 directly through the emacs process input/output. This is noticeably faster for
-commands with a lot of output, esp. when the temp-file uses a in-memory
+commands with a lot of output, esp. when the temp-file uses an in-memory
 file-system.
 
 ** --listen

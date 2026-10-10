@@ -13,7 +13,7 @@ mu-mkdir - create a new Maildir
 * DESCRIPTION
 
 *mu mkdir* is the command for creating Maildirs as per
-{{{man-link(maildir,5)}}}. A maildir is a a directory with subdirectories _new_,
+{{{man-link(maildir,5)}}}. A maildir is a directory with subdirectories _new_,
 _cur_ and _tmp_.
 
 The command does not use the *mu* database.

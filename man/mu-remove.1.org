@@ -13,13 +13,15 @@ mu-remove - remove messages from the database.
 * DESCRIPTION
 
 *mu remove* removes specific messages from the database, each of them specified by
-their filename. The files do not have to exist in the file system.
+their filename. The files do not have to exist in the file system, and are not removed from it.
 
 * REMOVE OPTIONS
 
 #+include: "muhome.inc" :minlevel 2
 
 #+include: "common-options.inc" :minlevel 1
+
+#+include: "exit-code.inc" :minlevel 1
 
 #+include: "prefooter.inc" :minlevel 1
 

@@ -23,7 +23,7 @@ For attachments, the file name used when saving it is the name of the attachment
 in the message. If there is no such name, or when saving non-attachment
 MIME-parts, a name is derived from the message-id of the message.
 
-If you specify a regular express pattern as the second argument, all attachments
+If you specify a regular expression pattern as the second argument, all attachments
 with filenames matching that pattern will be extracted. The regular expressions
 are basic PCRE, and are case-sensitive by default; see {{{man-link(pcre,3)}}} for more details.
 
@@ -55,7 +55,7 @@ Save the parts in _dir_ rather than the current working directory.
 Overwrite existing files with the same name; by default overwriting is not
 allowed.
 
-** -u,--uncooked
+** -u, --uncooked
 By default, *mu* transforms the attachment filenames a bit (such as by replacing
 spaces by dashes); with this option, leave that to the minimum for creating
 a legal filename in the target directory.
@@ -93,7 +93,7 @@ the same name:
 $ mu extract --parts=3,4 --overwrite msgfile
 #+end_example
 
-To extract all files ending in `.jpg' (case-insensitive):
+To extract all files ending in `.jpg':
 #+begin_example
 $ mu extract msgfile '.*\.jpg'
 #+end_example
@@ -103,7 +103,7 @@ To extract an mp3-file, and play it in the default mp3-playing application:
 $ mu extract --play msgfile 'whoopsididitagain.mp3'
 #+end_example
 
-when reading from standard-input, you need *--matches*, so:
+When reading from standard-input, you need *--matches*, so:
 #+begin_example
 $ cat msgfile | mu extract --play --matches 'whoopsididitagain.mp3'
 #+end_example

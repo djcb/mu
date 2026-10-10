@@ -20,7 +20,7 @@ has completed, you can run *mu index*.
 ** -m, --maildir _maildir_
 Use _maildir_ as the root-maildir.
 
-By default, *mu* uses the *MAILDIR* environment to find the root-maildir. If it is
+By default, *mu* uses the *MAILDIR* environment variable to find the root-maildir. If it is
 not set, it uses _~/Maildir_ if it is an existing directory. If neither of those
 can be used, the *--maildir* option is required; it must be an absolute path (but
 ~~/~ expansion is performed).
@@ -56,7 +56,7 @@ Specifies that some e-mail address is to be ignored from the contacts-cache (the
 option can be used multiple times). Such addresses then cannot be found with
 {{{man-link(mu-cfind,1)}}} or in the Mu4e contacts cache.
 
-_my-email-address_ can be either a plain e-mail address or a regexp, just like
+_email-address-or-regex_ can be either a plain e-mail address or a regexp, just like
 for the *--personal-address* option.
 
 ** --max-message-size _size_
@@ -80,7 +80,7 @@ Reinitialize the database from an earlier version; that is, create a new empty
 database with the existing settings. This cannot be combined with the other *init*
 options.
 
-When you have _labels_ defined for messages in your database, *mu* automatically exports those to file for importing later. See *RESTORING LABELS* below.
+When you have _labels_ defined for messages in your database, *mu* automatically exports those to a file for importing later. See *RESTORING LABELS* below.
 
 #+include: "muhome.inc" :minlevel 2
 
@@ -92,7 +92,7 @@ Japanese and Korean. It is fairly intrusive, and influences both indexing and
 query-parsing; it is not enabled by default, and is recommended only if you need
 to search for messages written in such languages.
 
-When enabled, *mu* automatically uses ngrams automatically. Xapian environment
+When enabled, *mu* uses ngrams automatically. Xapian environment
 variables such as *XAPIAN_CJK_NGRAM* are ignored.
 
 #+include: "exit-code.inc" :minlevel 1
@@ -116,7 +116,7 @@ Please see {{{man-link(mu-labels,1)}}} for further details.
 
 * EXAMPLE
 #+begin_example
-$ mu init --maildir=~/Maildir --my-address=alice@example.com --my-address=bob@example.com --ignored-address='/.*reply.*/'
+$ mu init --maildir=~/Maildir --personal-address=alice@example.com --personal-address=bob@example.com --ignored-address='/.*reply.*/'
 #+end_example
 
 #+include: "prefooter.inc" :minlevel 1

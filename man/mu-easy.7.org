@@ -10,7 +10,7 @@ mu-easy - a quick introduction to *mu*
 
 *mu* is a set of tools for dealing with e-mail messages in Maildirs. There are
 many options, which are all described in the man pages for the various
-sub-commands. This man pages jumps over all of the details and gives examples of
+sub-commands. This man page skips over all of the details and gives examples of
 some common use cases. If the use cases described here do not precisely do what
 you want, please check the more extensive information in the man page about the
 sub-command you are using -- for example, the {{{man-link(mu-index,1)}}} or
@@ -68,7 +68,7 @@ integration with e-mail clients; see the {{{man-link(mu-find,1)}}} man page for
 details, the syntax of the search parameters and so on. Here, we just give some
 examples for common cases.
 
-You can use the *mu fields* command to get information about all possible fields
+You can use the *mu info fields* command to get information about all possible fields
 and flags.
 
 First, let's search for all messages sent to Julius (Caesar) regarding fruit:
@@ -85,12 +85,12 @@ This should return something like:
 
 This means there is a message to `julius' with `fruit' somewhere in the message.
 In this case, it's a message from John Milton. Note that the date format depends
-on your the language/locale you are using.
+on the language/locale you are using.
 
 How do we know that the message was sent to Julius Caesar? Well, it's not
 visible from the results above, because the default fields that are shown are
 date/sender/subject. However, we can change this using the *--fields* parameter
-(try *mu fields* to see all the details):
+(try *mu info fields* to see all the details):
 
 #+begin_example
 $ mu find --fields="t s" t:julius fruit
@@ -144,65 +144,62 @@ messages in a maildir called _'/archive'_.
 
 * MORE QUERIES
 
-Let's list a few more queries that may be interesting; please note that
-searches for message flags, priority and date ranges are only available in *mu*
-version 0.9 or later.
+Let's list a few more queries that may be interesting.
 
 Get all important messages which are signed:
 #+begin_example
-  *$ mu find flag:signed prio:high *
+  $ mu find flag:signed prio:high
 #+end_example
 
 Get all messages from Jim without an attachment:
 #+begin_example
-  *$ mu find from:jim AND NOT flag:attach*
+  $ mu find from:jim AND NOT flag:attach
 #+end_example
 
 Get all messages where Jack is in one of the contact fields:
 #+begin_example
-  *$ mu find contact:jack*
+  $ mu find contact:jack
 #+end_example
-This uses the special contact: pseudo-field which matches (*from*,
-*to*, *cc* and *bcc*).
+This uses the special *contact:* combination field which matches *from*,
+*to*, *cc* and *bcc*.
 
 Get all messages in the Sent Items folder about yoghurt:
 #+begin_example
- *$mu find maildir:'/Sent Items' yoghurt*
+  $ mu find 'maildir:"/Sent Items"' yoghurt
 #+end_example
 Note how we need to quote search terms that include spaces.
 
 
 Get all unread messages where the subject mentions Ångström:
 #+begin_example
-  *$ mu find subject:Ångström flag:unread*
+  $ mu find subject:Ångström flag:unread
 #+end_example
 which is equivalent to:
 #+begin_example
-  *$ mu find subject:angstrom flag:unread*
+  $ mu find subject:angstrom flag:unread
 #+end_example
-because does *mu* is case-insensitive and accent-insensitive.
+because *mu* is case-insensitive and accent-insensitive.
 
 Get all unread messages between March 2002 and August 2003 about some bird (or
 a Swedish rock band):
 #+begin_example
-  *$ mu find date:20020301..20030831 nightingale flag:unread*
+  $ mu find date:20020301..20030831 nightingale flag:unread
 #+end_example
 
 Get all messages received today:
 #+begin_example
-  *$ mu find date:today..now*
+  $ mu find date:today..now
 #+end_example
 
 Get all messages we got in the last two weeks about emacs:
 #+begin_example
-  *$ mu find date:2w..now emacs*
+  $ mu find date:2w..now emacs
 #+end_example
 
-Another powerful feature (since 0.9.6) are wildcard searches, where you can
-search for the last =n= characters in a word. For example, you can search
-for:
+Another powerful feature are wildcard searches, where you can search for words
+starting with some prefix. For example, you can search for:
 #+begin_example
-  *$ mu find 'subject:soc*'*
+  $ mu find 'subject:soc*'
 #+end_example
 and get mails about soccer, Socrates, society, and so on. Note, it's important
 to quote the search query, otherwise the shell will interpret
@@ -212,7 +209,7 @@ You can also search for messages with a certain attachment using their
 filename, for example:
 
 #+begin_example
-  *$ mu find 'file:pic*'*
+  $ mu find 'file:pic*'
 #+end_example
 will get you all messages with an attachment starting with `pic'.
 
@@ -221,14 +218,14 @@ following:
 
 Get all messages with PDF attachments:
 #+begin_example
-  *$ mu find mime:application/pdf*
+  $ mu find mime:application/pdf
 #+end_example
 
 or even:
 
 Get all messages with image attachments:
 #+begin_example
-  *$ mu find 'mime:image/*'*
+  $ mu find 'mime:image/*'
 #+end_example
 
 
@@ -305,28 +302,28 @@ fields, since labels are not intrinsic parts of messages, so removing your
 message database, and then re-indexing won't bring back your labels.
 
 For that reason, you can export labels to a file and later import them again
-(see {{{man-link(mu-labels,1)}}})
+(see {{{man-link(mu-labels,1)}}}).
 
 Some examples:
 
 #+begin_example
-# label optimization-related messages with a label optimization
-$ mu label update --labels=+performance "subject:performance or subject:optimization or subject:profiling"
+# label optimization-related messages with the label 'performance'
+$ mu labels update --labels=+performance "subject:performance or subject:optimization or subject:profiling"
 #+end_example
 
 Now, we can search for such messages:
 #+begin_example
-mu find label:performance
-#+end_example>
+$ mu find label:performance
+#+end_example
 
 You can also remove labels, for instance:
 #+begin_example
 # remove the performance label from Bill's messages
-$ mu label update --labels=-performance "from:bill"
-#+end_example>
+$ mu labels update --labels=-performance "from:bill"
+#+end_example
 
-There's also *mu label clear* to remove all labels from matching messages; and the
-the mutating *label* subcommands (*update*, *clear*, *import*) accept a *--dry-run* option
+There's also *mu labels clear* to remove all labels from matching messages; and the
+mutating *labels* subcommands (*update*, *clear*, *import*) accept a *--dry-run* option
 for just printing what they /would/ change, without actually changing anything.
 
 {{{man-link(mu-labels,1)}}} has all the details.
@@ -339,8 +336,7 @@ for just printing what they /would/ change, without actually changing anything.
 {{{man-link(mu-init,1)}}},
 {{{man-link(mu-index,1)}}},
 {{{man-link(mu-find,1)}}},
-{{{man-link(mu-mfind,1)}}},
 {{{man-link(mu-mkdir,1)}}},
 {{{man-link(mu-view,1)}}},
-{{{man-link(mu-extract,1)}}}
+{{{man-link(mu-extract,1)}}},
 {{{man-link(mu-labels,1)}}}

@@ -12,8 +12,8 @@ mu-find - find e-mail messages in the *mu* database.
 
 * DESCRIPTION
 
-*mu find* is the *mu* command for searching e-mail message that were stored earlier
-using {{{man-link(mu index,1)}}}.
+*mu find* is the *mu* command for searching e-mail messages that were stored earlier
+using {{{man-link(mu-index,1)}}}.
 
 * SEARCHING MAIL
 
@@ -33,9 +33,9 @@ would find all messages in 2009 with `snow' in the subject field, e.g:
 2009-03-05 18:38:24 EET Marius <marius@foobar.com> Re: running in the snow
 #+end_example
 
-This uses the default, *plain* output (implicitly, *--format=plain)*. For other
+This uses the default, *plain* output (implicitly, *--format=plain*). For other
 output formats (such as symlinks, XML, s-expressions or JSON), see the
-discussion of *--format* in the *OPTIONS*-section below.
+discussion of *--format* in the *FIND OPTIONS*-section below.
 
 The search pattern is taken as a command-line parameter. If the search
 parameter consists of multiple parts (as in the example) they are
@@ -55,7 +55,7 @@ results. If you don't specify anything, the defaults are *--fields="d f s"* and
 ** -f, --fields _fields_
 Specifies a string that determines which fields are shown in the output. This
 string consists of a number of characters (such as 's' for subject or 'f' for
-from), which will replace with the actual field in the output. Fields that are
+from), which will be replaced with the actual field in the output. Fields that are
 not known will be output as-is, allowing for some simple formatting.
 
 For example:
@@ -64,31 +64,31 @@ For example:
 $ mu find subject:snow --fields "d f s"
 #+end_example
 
-lists the date, subject and sender of all messages with `snow' in the their
+lists the date, sender and subject of all messages with `snow' in their
 subject.
 
-The table of replacement characters is super-set of the list mentioned for
+The table of replacement characters is a superset of the list mentioned for
 search parameters, such as:
 #+begin_example
-	t       *t*o: recipient
-	d       Sent *d*ate of the message
-	f       Message sender (*f*rom:)
-	g       Message flags (fla*g*s)
-	l       Full path to the message (*l*ocation)
-	s       Message *s*ubject
-	i       Message-*i*d
-	m       *m*aildir
+	t       to: recipient
+	d       Sent date of the message
+	f       Message sender (from:)
+	g       Message flags (flags)
+	l       Full path to the message (location)
+	s       Message subject
+	i       Message-id
+	m       maildir
 #+end_example
 
 For the complete list, try the command: *mu info fields*.
 
 The message flags are described in {{{man-link(mu-query,7)}}}. As an example, a
-message which is `seen', has an attachment and is signed has *asz* as its
-corresponding output string, while an encrypted new message has *nx*.
+message which is `seen', has an attachment and is signed has *Sza* as its
+corresponding output string, while an encrypted new message has *Nx*.
 
-** -s, --sortfield _field_ and -z,--reverse
+** -s, --sortfield _field_ and -z, --reverse
 Specify the field to sort the search results by and the direction (i.e.,
-`reverse' means that the sort should be reverted - Z-A). Examples include:
+`reverse' means that the sort should be reversed - Z-A). Examples include:
 
 #+begin_example
 	cc,c            Cc (carbon-copy) recipient(s)
@@ -122,7 +122,7 @@ matching entries are displayed.
 
 If _number_ > 0, use that number of lines of the message to provide a summary.
 
-** --format plain|links|xml|sexp|json|json2
+** -o, --format plain|links|xml|sexp|json|json2
 
 Output results in the specified format.
 
@@ -165,7 +165,7 @@ _timestamp_. _timestamp_ is a UNIX *time_t* value, the number of seconds since
 1970-01-01 (in UTC).
 
 From the command line, you can use the *date* command to get this value. For
-example, only consider messages changed (or created) in the last 5 minutes, you
+example, to only consider messages changed (or created) in the last 5 minutes, you
 could specify
 #+begin_example
   --after=`date +%s --date='5 min ago'`
@@ -195,7 +195,7 @@ the first one. This is useful if you have copies of the same message, which is a
 common occurrence when using e.g. Gmail together with *offlineimap*.
 
 ** -r, --include-related
-Include messages being referred to by the matched messages -- i.e.. include
+Include messages being referred to by the matched messages -- i.e., include
 messages that are part of the same message thread as some matched messages. This
 is useful if you want Gmail-style `conversations'.
 
@@ -206,7 +206,7 @@ this, sorting is chronological (by date), based on the newest message in a
 thread.
 
 Messages in the threaded list are indented based on the depth in the discussion,
-and are prefix with a kind of arrow with thread-related information about the
+and are prefixed with a kind of arrow with thread-related information about the
 message, as in the following table:
 #+begin_example
 |             | normal | orphan | duplicate |
@@ -217,17 +217,17 @@ message, as in the following table:
 
 Here, an `orphan' is a message without a parent message (in the list of
 matches), and a duplicate is a message whose message-id was already seen before;
-not this may not really be the same message, if the message-id was copied.
+note, this may not really be the same message, if the message-id was copied.
 
-The algorithm used for determining the threads is based on Jamie Zawinksi's
+The algorithm used for determining the threads is based on Jamie Zawinski's
 description: http://www.jwz.org/doc/threading.html
 
-** -a,--analyze
-Instead of executing the query, analyze it by show the parse-tree s-expression
+** -a, --analyze
+Instead of executing the query, analyze it by showing the parse-tree s-expression
 and a stringified version of the Xapian query. This can help users to determine
 how *mu* interprets some query.
 
-The output of this command are differ between versions, but should be helpful
+The output of this command differs between versions, but should be helpful
 nevertheless.
 
 #+include: "muhome.inc" :minlevel 2
@@ -236,7 +236,7 @@ nevertheless.
 
 * INTEGRATION
 
-It is possible to integrate *mu find* with some mail clients
+It is possible to integrate *mu find* with some mail clients.
 
 ** *mutt*
 
@@ -270,7 +270,7 @@ your Wanderlust configuration file:
 #+end_example
 
 Now, you can search using the *g* key binding; you can also create permanent
-virtual folders when the messages matching some expression by adding something
+virtual folders for the messages matching some expression by adding something
 like the following to your _folders_ file.
 
 #+begin_example
@@ -285,8 +285,8 @@ After restarting Wanderlust, the virtual folders should appear.
 
 * ENCODING
 
-*mu find* output is encoded according to the locale wwhen using *--format=plain*
-(the default format), and UTF-8 for all other formats (=sexp=, =xml=).
+*mu find* output is encoded according to the locale when using *--format=plain*
+(the default format), and UTF-8 for all other formats (=sexp=, =xml=, =json=, ...).
 
 * PERFORMANCE
 

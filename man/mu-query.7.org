@@ -18,7 +18,7 @@ provide examples. As a companion to this, we recommend the *mu info fields*
 command to get an up-to-date list of the available fields and flags.
 
 Furthermore, *mu find* provides the *--analyze* option, which shows how *mu*
-interprets your query; similarly, mu4e has a command. mu4e-analyze-last-query.
+interprets your query; similarly, *mu4e* has a command *mu4e-analyze-last-query*.
 See the *ANALYZING QUERIES* section for further details.
 
 *NOTE:* if you use queries on the command-line (say, for *mu find*), you need to
@@ -48,7 +48,7 @@ to:vacation or subject:vacation or body:vacation or ...
 #+end_example
 
 The language is case-insensitive for terms and attempts to "flatten" diacritics,
-so =angtrom= matches =Ångström=.
+so =angstrom= matches =Ångström=.
 
 If terms contain whitespace, they need to be quoted.
 
@@ -122,7 +122,7 @@ For readability, we recommend the second version.
 
 Note that a =pure not= - e.g. searching for *not apples* is quite a "heavy" query.
 
-*  WILDCARDS
+* WILDCARDS
 
 Wildcards are a Xapian built-in mechanism for matching.
 
@@ -273,7 +273,7 @@ contact:fnorb@example.com
 is equivalent to
 #+begin_example
 (from:fnorb@example.com or to:fnorb@example.com or
-      cc:from:fnorb@example.com or bcc:fnorb@example.com)
+      cc:fnorb@example.com or bcc:fnorb@example.com)
 #+end_example
 
 * DATE RANGES
@@ -307,7 +307,7 @@ date:today..
 
 Finally, you can use relative "ago" times which express some time before now and
 consist of a number followed by a unit, with units *s* for seconds, *M* for minutes,
-*h* for hours, *d* for days, *w* for week, *m* for months and *y* for years. Some
+*h* for hours, *d* for days, *w* for weeks, *m* for months and *y* for years. Some
 examples:
 
 #+begin_example
@@ -318,8 +318,9 @@ date:2017.01.01..5w
 * SIZE RANGES
 
 The *size* or *z* field allows you to match =size ranges= -- that is, match messages
-that have a byte-size within a certain range. Units (b (for bytes), K (for 1000
-bytes) and M (for 1000 * 1000 bytes) are supported). Some examples:
+that have a byte-size within a certain range. Units *b* (for bytes), *k* (for 1024 bytes), *m* (for 1024 * 1024 bytes)
+and *g* (for 1024 * 1024 * 1024 bytes) are supported; they are case-insensitive.
+Some examples:
 
 #+begin_example
 size:10k..2m
@@ -411,7 +412,7 @@ mu find 'maildir:"/Sent Items"'
 #+end_example
 
 Also note that you should *not* end the maildir with a ~/~, or it can be
-misinterpreted as a regular expression term; see aforementioned.
+misinterpreted as a regular expression term; see *REGULAR EXPRESSIONS*.
 
 * MORE EXAMPLES
 
@@ -454,10 +455,10 @@ Find all messages with attached images:
 #+begin_example
 mime:image/*
 #+end_example
-(and beware that on the command-line, you need to put this in quotes or it would
-expand the ~*~.
+(and beware that on the command-line, you need to put this in quotes or the shell
+would expand the ~*~).
 
-Find a messages with the given message-id:
+Find a message with the given message-id:
 #+begin_example
 msgid:CAE56pjGU2oNxN-wWku69@mail.gmail.com
 #+end_example
@@ -468,9 +469,9 @@ hallo and (lang:nl or lang:de)
 #+end_example
 
 This is only available if your *mu* has support for this; see *mu info* and check
-for "cld2-support*.
+for *cld2-support*.
 
-* ANALZYING QUERIES
+* ANALYZING QUERIES
 
 Despite all the excellent documentation, in some cases it can be non-obvious to
 understand how *mu* interprets your query, especially when shell interpretation is

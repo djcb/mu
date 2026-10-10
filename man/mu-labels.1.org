@@ -22,7 +22,7 @@ mu-labels - attach labels to messages. Export labels to file, and import them.
 
 * DESCRIPTION
 
-*mu labels* is the sub-command for adding and removing and listing message labels.
+*mu labels* is the sub-command for adding, removing and listing message labels.
 
 A label is a string associated with a message.
 
@@ -37,7 +37,7 @@ A label is a string associated with a message.
 
 *Important*: unlike other message metadata stored by *mu*, labels _cannot_ be restored
 by merely re-indexing messages, since the information is not part of the message
-files. Hence, to avoid loosing label information, you must *export* it before
+files. Hence, to avoid losing label information, you must *export* it before
 re-indexing, and *import* afterwards.
 
 * UPDATE OPTIONS
@@ -70,12 +70,12 @@ when using a shell.
 
   only print what /would/ change, but do not change anything
 
-  #+include: "muhome.inc" :minlevel 2
+#+include: "muhome.inc" :minlevel 2
 
 * LIST OPTIONS
 
 The *list* command lists all the labels that are currently in use in the store.
-This is the information is used for auto-completion in *mu4e*.
+This information is used for auto-completion in *mu4e*.
 
 With the (global, directly after *mu*) *--verbose* option, this also includes the
 counts.
@@ -154,13 +154,13 @@ labels:foo,bar,cuux
 
 The ~message-id:~ line is only used if the message cannot be found using ~path:~.
 
-This helps for the case where the precise file-system are not precisely the same
+This helps for the case where the file-system paths are not precisely the same
 as those used when exporting. This happens, for instance, when changes were made
 to the message flags since the export. Or when trying to import on a different
 machine with different paths.
 
-In any case, when using the message-id for importing, any _duplicate_ messages
-(messages with the same message-id), all get the same labels.
+In any case, when using the message-id for importing, all _duplicate_ messages
+(messages with the same message-id) get the same labels.
 
 #+include: "exit-code.inc" :minlevel 1
 
@@ -173,7 +173,7 @@ Remove the label "planet" and add the label "dwarf-planet" to all messages that
 have "pluto" in their subject:
 
 #+begin_example
-$ mu labels update "subject:pluto" --labels -planet,+dwarf-planet
+$ mu labels update "subject:pluto" --labels=-planet,+dwarf-planet
 #+end_example
 
 Clear all labels from messages with the label "boring":

@@ -33,14 +33,14 @@ as Emacs with the "Geiser" package. For details, refer to the *mu-scm* Info
 manual.
 
 It blocks after printing the name of the socket (which is a randomized name),
-prefixed by *UNIX_CONNECT:* and ending with a newline. For instance:
+prefixed by *UNIX-CONNECT:* and ending with a newline. For instance:
 #+begin_example
 UNIX-CONNECT:/run/user/1000/mu-scm-socket-4eb5db40
 #+end_example
 
 ** --eval
 
-With the ~--eval~ option you can evaluate an expression in mu/scm environment. For
+With the ~--eval~ option you can evaluate an expression in the mu/scm environment. For
 example:
 #+begin_example
 $ mu scm --eval '(format #t "found ~d match(es)\n" (length (mfind "hello")))'

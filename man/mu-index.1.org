@@ -22,7 +22,7 @@ Before you can run *mu index*, you must initialize *mu* and its database with
 *mu index* understands Maildirs as defined by Daniel Bernstein for
 {{{man-link(qmail,7)}}}. In addition, it understands recursive Maildirs
 (Maildirs within Maildirs), Maildir++. It also supports VFAT-based Maildirs
-which use "*!"* or "*;"* as the separators, instead of the standard "*:"*.
+which use *!* or *;* as the separators, instead of the standard *:*.
 
 E-mail messages are only considered for indexing if they reside in a directory
 named either ~cur~ or ~new~. The special (as per the Maildir-specification)
@@ -40,19 +40,19 @@ with spam-messages.
 
 If there is a file called ~.noupdate~ in a directory, the contents of that
 directory and all of its subdirectories will be ignored. This can be useful to
-speed up things you have some maildirs that never change.
+speed things up if you have some maildirs that never change.
 
 ~.noupdate~ does not affect already-indexed messages: you can still search for
 them. ~.noupdate~ is ignored when you start indexing with an empty database (such
 as directly after *mu init*).
 
-There also the option *--lazy-check* which can greatly speed up indexing; see
+There is also the option *--lazy-check* which can greatly speed up indexing; see
 below for details.
 
 A first run of *mu index* may take a few minutes if you have a lot of mail (tens
 or hundreds of thousands of messages). Fortunately, such a full scan needs to be
 done only rarely; after that, it suffices to index just the changes, which goes
-much faster. See *PERFORMANCE (i,ii,iii)* below for more information.
+much faster. See *PERFORMANCE* below for more information.
 
 The optional cleanup-phase of the indexing-process is the removal of messages
 from the database for which there is no longer a corresponding file in the
@@ -74,7 +74,7 @@ previous time this directory was checked.
 This is much faster than the non-lazy check, but won't update messages that have
 changed (rather than having been added or removed), since merely editing a
 message does not update the directory time-stamp. Of course, you can run
-*mu-index* occasionally without *--lazy-check*, to pick up such messages.
+*mu index* occasionally without *--lazy-check*, to pick up such messages.
 
 Furthermore, in lazy-check mode, files which have a *ctime* smaller than the time
 the previous indexing operation was completed, are ignored. This helps for the
@@ -206,7 +206,6 @@ Indexing the same 93000-message mail corpus with the last few releases:
 |           1.8 | 97s        |                                          |
 |          1.10 | 120s       | adds html indexing, sexp-caching         |
 | 1.11 (master) | 96s        | adds language-guessing, batch-size=50000 |
-|               |            |                                          |
 
 Quite some variation!
 
@@ -215,7 +214,7 @@ least for now, the latest code is both the fastest and the most feature-rich.
 
 #+include: "exit-code.inc" :minlevel 1
 
-#+include: "prefooter.inc"
+#+include: "prefooter.inc" :minlevel 1
 
 * SEE ALSO
 

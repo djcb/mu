@@ -4,11 +4,11 @@
 
 * NAME
 
-mu-info  - show information
+mu-info - show information about mu and its database
 
 * SYNOPSIS
 
-*mu* [​_COMMON OPTIONS_​] *info* [​_TOPIC_​]
+*mu* [​_COMMON-OPTIONS_​] *info* [​_TOPIC_​]
 
 * DESCRIPTION
 
@@ -19,7 +19,7 @@ mu-info  - show information
 - *fields*: table with all the query fields and flags
 - *maildirs*: list all maildirs under the store's root-maildir
 
-Note that while running (e.g. ~mu4e~), some of the *store* information can be
+Note that while *mu* is running (e.g. for ~mu4e~), some of the *store* information can be
 delayed due to database caching.
 
 * INFO OPTIONS

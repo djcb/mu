@@ -23,7 +23,7 @@ standard-input.
 
 ** -r, --auto-retrieve
 Attempt to find keys online (see the *auto-key-retrieve* option in the
-{{{man-link(gnupg,1)}}} documentation).
+{{{man-link(gpg,1)}}} documentation).
 
 ** --decrypt
 Attempt to decrypt the message.
@@ -32,7 +32,7 @@ Attempt to decrypt the message.
 
 * EXAMPLES
 
-To display aggregated (one-line) information about the verification status in a
+To display aggregated (one-line) information about the verification status of a
 message:
 #+begin_example
 $ mu verify msgfile

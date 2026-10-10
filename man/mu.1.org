@@ -35,7 +35,7 @@ For information about the common options, see *COMMON OPTIONS*.
 - *verify*: verify cryptographic message signatures
 - *view*: view a specific message
 
-Each of the commands have their own manpage *mu-<command>*.
+Each of the commands has its own manpage *mu-<command>*.
 
 *mu* is a set of tools for dealing with Maildirs and the e-mail messages
 in them.
@@ -64,7 +64,7 @@ have its own manpage.
 
 #+begin_example
 $ mu completions bash|fish|zsh
-#+end_example>
+#+end_example
 
 You can use it to generate command-line completion files. However, note that *mu*
 already does this for you upon installation.
@@ -73,7 +73,7 @@ already does this for you upon installation.
 
 Some *mu* commands support colorized output, and do so by default when writing to
 a TTY (roughly, to a screen). When not writing to a TTY, for instance when
-redirection the output to a file or using a pipe, the default is to *not* show
+redirecting the output to a file or using a pipe, the default is to *not* show
 colors.
 
 If you do not want colors, you can use *--nocolor*.
@@ -109,8 +109,7 @@ database, while the other ones work on individual mail files. Hence, running
 system's setup; the first that appears to be working is used.
 
 When using a log file, it can safely be deleted when *mu* is not running. When
-running with *--debug* option, the log file can grow rather quickly. See the note
-on logging below.
+running with the *--debug* option, the log file can grow rather quickly.
 
 
 #+include: "common-options.inc" :minlevel 1

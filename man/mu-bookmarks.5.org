@@ -9,12 +9,12 @@ mu-bookmarks - file with bookmarks (shortcuts) for *mu* search expressions
 * DESCRIPTION
 
 Bookmarks are named shortcuts for search queries. They allow using a convenient
-name for often-used queries. The bookmarks are also visible as shortcuts in the
-*mu* experimental user interfaces, =mug= and =mug2=.
+name for often-used queries.
 
 The bookmarks file is read from _<muhome>/bookmarks_. On Unix this would typically
 be _~/.config/mu/bookmarks_, but this can be influenced using the *--muhome*
-parameter for {{{man-link(mu-find,1)}}}.
+parameter for {{{man-link(mu-find,1)}}}. Bookmarks can be used with the
+*--bookmark* option for *mu find*.
 
 The bookmarks file is a typical key=value *.ini*-file, which is best shown by
 means of an example:
