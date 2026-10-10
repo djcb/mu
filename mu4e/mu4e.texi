@@ -1679,9 +1679,12 @@ moreover, it requires a graphical Emacs.
 
 However, while @code{mu4e} does its best to integrate the @t{xwidget}-display as
 seamless as possible, it is a bit slower and decidedly less ``Emacsy'' than
-either plain-text or the @code{shr}-based html view. For that reason, there is
-no shame in still preferring @code{shr}, especially it
-@code{mu4e-view-prefer-plain-text} is @code{nil} (its default value).
+either plain-text or the @code{shr}-based html view, and the mouse-clicking
+links is disabled.
+
+Because of these limitations, there is no shame in still preferring @code{shr},
+especially it @code{mu4e-view-prefer-plain-text} is @code{nil} (its default
+value).
 
 Moreover, if you use @t{shr} as your HTML-renderer, you can still use
 @t{xwidget} as a plan-B for messages that are hard to read otherwise, since

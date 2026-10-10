@@ -23,7 +23,15 @@
 ;;; Commentary:
 
 ;; Xwidget-based mu4e message view. We try to make it behave like a "normal"
-;; message view buffer (or shr), though do not completely succeed.
+;; message view buffer (or shr), though do not completely succeed :-(
+;; Quite a lot of code to work around limitations, what would help is
+
+;; a) some way to categorically disallow loading any external resources
+;; b) lisp-level control over link-clicking (currently, disabled)
+;;
+;; So we do quite a bit of massaging here to make it usable. Probably needs some
+;; upstream work to make it easier to re-use the xwidget an embedded HTML
+;; widgdet (rather than a web-browser), as we do here...
 
 ;;; Code:
 
@@ -59,6 +67,16 @@
 (defvar-local mu4e--view-xwidget-view-buffer nil
   "Mu4e view buffer associated with xwidget view.")
 (defvar mu4e--view-gnus-article-mime-handles)
+
+(defconst mu4e--view-xwidget-no-click-style
+  "<style>a,area{pointer-events:none!important}</style>"
+  "Style to make links unclickable.
+Mouse clicks go straight to WebKit, this is a stop-gap to make
+those not do anything.")
+;; Seems there is no clean way to control whether/how a link may be followed
+;; from lisp, so for now we neuter all, since it would otherwise open / replace
+;; the current webview.
+
 (declare-function mu4e-message "mu4e-helpers" (frm &rest args))
 (declare-function mu4e-warn "mu4e-helpers" (frm &rest args))
 (declare-function mu4e-xwidget-usable-p "mu4e-helpers" (&optional ignore-display))
@@ -289,7 +307,8 @@ The buffer must contain the raw message."
         ;; friends
         (mu4e--view-register-html-links html)
         (setq-local mu4e--view-xwidget-tmp-file
-                    (mu4e--view-html-temp-file html))
+                    (mu4e--view-html-temp-file
+                     (concat html mu4e--view-xwidget-no-click-style)))
         (add-hook 'kill-buffer-hook #'mu4e--view-xwidget-cleanup nil t)
         ;; display once the view buffer is in its window.
         (add-hook 'mu4e-view-rendered-hook #'mu4e--view-xwidget-show 90 t)
