@@ -73,6 +73,9 @@
      ~mu4e-view-always-show-url-indicators~ to non-~nil~ to restore the old behavior
      (1.14.3)
 
+   - New option ~mu4e-view-ignore-links~ to exclude links (by default,
+     no-reply-links) from ~mu4e-view-go-to-url~ and friends (1.14.4)
+
    - In the message-view, ~mu4e~ now also generates an HTML version for text-only
      messages, thus making ~mu4e-view-toggle-html~ (~h~) work for all, and allowing
      for displaying them in external browser (1.14.3)

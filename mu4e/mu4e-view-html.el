@@ -58,6 +58,19 @@ instead of the in-buffer [1][2] etc. links."
   :type 'boolean
   :group 'mu4e-view)
 
+(defcustom mu4e-view-ignore-links '("no-?reply")
+  "Links to ignore in `mu4e-view-go-to-url' and friends.
+
+This can be a regexp matching the link, a list of regexps or a
+predicate function taking the link as its argument, or nil to
+keeps all the links."
+  :type '(choice
+          (const nil)
+          function
+          string
+          (repeat string))
+  :group 'mu4e-view)
+
 ;;; HTML fragments
 
 (defconst mu4e--view-html-meta
@@ -459,8 +472,8 @@ text, or nil if it is the same as the URL."
 
 (defun mu4e--visualize-link (beg end url num body-start)
   "Make the link from BEG to END for URL clickable.
-Add an indicator for the link's NUM. Links before BODY-START (the
-headers) keep their face."
+Add an indicator for the link's NUM, if non-nil. Links before
+BODY-START (the headers) keep their face."
   (let ((ov (make-overlay beg end)))
     (add-text-properties
      beg end
@@ -470,28 +483,40 @@ headers) keep their face."
        mu4e-url ,url
        keymap ,mu4e-view-active-urls-keymap))
     (overlay-put ov 'mu4e-overlay t)
-    (overlay-put ov 'after-string
-                 (propertize (format "\u200B[%d]" num)
-                             'face 'mu4e-url-number-face
-                             'invisible 'mu4e-url-indicator))))
+    (when num
+      (overlay-put ov 'after-string
+                   (propertize (format "\u200B[%d]" num)
+                               'face 'mu4e-url-number-face
+                               'invisible 'mu4e-url-indicator)))))
 
 (defun mu4e--view-reset-links ()
   "Clear the link maps for current buffer."
   (setq mu4e--view-link-map (make-hash-table :size 32)
         mu4e--view-link-labels (make-hash-table :size 32 :test #'equal)))
 
+(defun mu4e--view-ignore-link-p (url)
+  "Return non-nil if URL should be ignored.
+See `mu4e-view-ignore-links'."
+  (pcase mu4e-view-ignore-links
+    ('nil nil)
+    ((pred functionp) (funcall mu4e-view-ignore-links url))
+    ((pred stringp) (string-match-p mu4e-view-ignore-links url))
+    (rxs (seq-some (lambda (rx) (string-match-p rx url)) rxs))))
+
 (defun mu4e--view-register-link (url label)
   "Add URL with LABEL to the link maps and return its number.
-If LABEL is nil, use a generic one."
-  (let ((num (1+ (hash-table-count mu4e--view-link-map))))
-    (puthash num url mu4e--view-link-map)
-    (puthash url (or label
-                     (pcase url
-                       ((pred (string-match-p "\\`mailto:")) "Mail")
-                       ((pred (string-match-p "\\`http")) "Visit")
-                       (_ "")))
-             mu4e--view-link-labels)
-    num))
+If LABEL is nil, use a generic one. If URL is to be ignored, skip
+and return nil."
+  (unless (mu4e--view-ignore-link-p url)
+    (let ((num (1+ (hash-table-count mu4e--view-link-map))))
+      (puthash num url mu4e--view-link-map)
+      (puthash url (or label
+                       (pcase url
+                         ((pred (string-match-p "\\`mailto:")) "Mail")
+                         ((pred (string-match-p "\\`http")) "Visit")
+                         (_ "")))
+               mu4e--view-link-labels)
+      num)))
 
 (defun mu4e--view-dom-link-label (link url)
   "Return label for LINK, an <a>-element in a DOM, pointing to URL.

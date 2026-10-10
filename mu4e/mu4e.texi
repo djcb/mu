@@ -1774,6 +1774,10 @@ If you prefer to use the completion-interface as used for the HTML-view also for
 the plain-text view, set @code{mu4e-view-always-use-completion} to non-@t{nil}.
 @end itemize
 @end itemize
+@vindex mu4e-view-ignore-links
+You can exclude links using @code{mu4e-view-ignore-links}, see its doctring.
+By default ``no-reply'' links are ignored.
+
 @findex browse-url-mail
 E-mail-addresses are handled through @code{browse-url-mail}, which (when using
 @code{mu4e}) means that you are presented with a window to compose a message to
