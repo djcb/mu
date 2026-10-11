@@ -81,7 +81,7 @@ if makeinfo.found()
                 install: true,
                 install_dir: infodir,
                 depends: fdl_texi,
-                command: [makeinfo,
+                command: [makeinfo, '--no-split',
                           '-o', meson.current_build_dir() / 'mu-guile.info',
                           meson.current_source_dir() / 'mu-guile.texi',
                           '-I', meson.current_build_dir() / '..'])
