@@ -107,9 +107,12 @@
 
    - While ~mu4e~ has had ~xwidget~ support for years, the upstream (Emacs)
      implementation was not compatible with current Webkit-library versions for
-     a few release, until 31.1. Now, with it becoming available again, ~mu4e~ adds
-     extended support, including setting ~xwidget~ as the default HTML-renderer
-     for messages (see ~mu4e-view-html-renderer~ and the [[info:(mu4e) Rich-text][section in the manual]]) (1.14.4)
+     a few release, until 31.1.
+
+     Now, with ~xwidget~ becoming available again, ~mu4e~ experimentally adds much
+     deeper integration, including setting ~xwidget~ as the default HTML-renderer
+     for messages (see ~mu4e-view-html-renderer~ and the [[info:(mu4e) Rich-text][section in the manual]])
+     (1.14.4)
 
 *** scm
 
@@ -140,7 +143,6 @@
    - rename procedure ~list?~ into ~mailing-list?~, since the former is core binding
      we should not override. This is a breaking change, unfortunately, but
      hopefully should not affect too many users. (1.14.4)
-
 
 * 1.12 (released on February 24, 2024)
 
