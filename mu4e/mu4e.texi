@@ -1667,20 +1667,18 @@ messages better readable:
 @cindex xwidget
 @cindex webkit
 
-The @t{xwidget}-support allows Emacs to show messages in a rich, graphical
-widget based on @t{xwidget}. The @t{xwidget} renderer generally gives you a
-``richer'' experience and the output is probably closer to how it looked for the
-sender.
+If available, @t{xwidget} allows @t{mu4e} to show messages in a rich, graphical
+widget which is probably closer to how it looked for the sender.
 
-To inspect if your Emacs supports @t{xwidget}, you can try the command @kbd{M-x
-mu4e-xwidget-usable-p}. This tests for the presence of a new-enough @t{xwidget};
-moreover, it requires a graphical Emacs.
+To inspect if your Emacs supports @t{xwidget}, you can invoke the command
+@kbd{M-x mu4e-xwidget-usable-p}. This tests for the presence of a new-enough
+@t{xwidget}; moreover, it requires a graphical Emacs.
 @cindex mu4e-xwidget-usable-p
 
-However, while @code{mu4e} does its best to integrate the @t{xwidget}-display as
-seamless as possible, it is a bit slower and decidedly less ``Emacsy'' than
-either plain-text or the @code{shr}-based html view, and the mouse-clicking
-links is disabled.
+While @code{mu4e} does its best to integrate the @t{xwidget}-display as seamless
+as possible, it is a bit slower and decidedly less ``Emacsy'' than either
+plain-text or the @code{shr}-based html view, and the mouse-clicking links is
+disabled.
 
 Because of these limitations, there is no shame in still preferring @code{shr},
 especially it @code{mu4e-view-prefer-plain-text} is @code{nil} (its default
@@ -1762,8 +1760,6 @@ you are viewing the message in ``plain-text'' or HTML-mode:
 @emph{HTML}: choose links through Emacs' completion interface
 (as per @code{completing-read} / @code{completing-read-multiple})
 @item
-@vindex mu4e-view-always-show-url-indicators
-@vindex mu4e-view-always-use-completion
 @emph{Plain text}: the view shows indicators like @t{[1]}, @t{[2]} next to the
 link when you invoke @kbd{M-x mu4e-view-go-to-url} or @kbd{M-x
 mu4e-view-save-url}, and you choose one in the mini-buffer
@@ -1772,9 +1768,11 @@ mu4e-view-save-url}, and you choose one in the mini-buffer
 @item
 If you @emph{always} want to see these indicators (the pre-1.14.3 behavior), set
 @code{mu4e-view-always-show-url-indicators} to non-@t{nil}.
+@vindex mu4e-view-always-show-url-indicators
 @item
 If you prefer to use the completion-interface as used for the HTML-view also for
 the plain-text view, set @code{mu4e-view-always-use-completion} to non-@t{nil}.
+@vindex mu4e-view-always-use-completion
 @end itemize
 @end itemize
 @vindex mu4e-view-ignore-links
@@ -1795,6 +1793,8 @@ prefix-argument (@kbd{C-u}), and allow for handling @emph{multiple} links at
 once. You can do so by selecting multiple, separated by some character.
 Typically, the separator is a comma, but if there is a comma in one of the URLs,
 @t{mu4e} picks some other character; the prompt shows which.
+@findex mu4e-view-go-to-url
+@findex m4ue-view-save-url
 
 @node Attachments and MIME-parts
 @section Attachments and MIME-parts
