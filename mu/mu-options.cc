@@ -837,7 +837,7 @@ static constexpr auto SubCommandInfos =
 		},
 		{ SubCommand::Remove,
 		  {Category::NeedsWritableStore,
-		  "remove", "Remove message from file-system and database", sub_remove }
+		  "remove", "Remove messages from the database", sub_remove }
 		},
 		{ SubCommand::Scm,
 		  {Category::NeedsReadOnlyStore,
