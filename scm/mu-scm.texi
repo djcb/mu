@@ -136,10 +136,10 @@ or on Debian/Ubuntu and derivatives:
 $ sudo apt install guile-3.0-dev
 @end example
 
-With those packages in place, a (re)build @t{mu} and @t{mu-scm} should
-automatically build the SCM-support, unless you explicitly disabled it.
+With those packages in place, (re)building @t{mu} should automatically build
+the SCM-support as well, unless you explicitly disabled it.
 
-By default,@t{mu-scm} expects @t{mu} being @emph{installed}, not just
+By default, @t{mu-scm} expects @t{mu} being @emph{installed}, not just
 @emph{built}; however, you can still use it un-installed as well by setting the
 environment variable @t{MU_SCM_DIR} to the path to the source-directory, e.g.
 @t{/home/user/sources/mu/scm}.
@@ -175,7 +175,7 @@ Enter `,help' for help.
 scheme@@(guile-user)>
 @end example
 
-Refer to the @xref{Shell} chapter to learn about the wonderful things you can do
+Refer to the @ref{Shell} chapter to learn about the wonderful things you can do
 in this shell.
 
 @node Listening on a Unix Domain Socket
@@ -206,8 +206,8 @@ Enter `,help' for help.
 scheme@@(guile-user)>
 @end example
 
-That is not much of improvement over the normal Guile shell, but you can of
-course use more advanced tools; @xref{Connecting through GNU/Emacs and Geiser}.
+That is not much of an improvement over the normal Guile shell, but you can of
+course use more advanced tools; @pxref{Connecting through GNU/Emacs and Geiser}.
 
 @node Connecting through GNU/Emacs and Geiser
 @section Connecting through GNU/Emacs and Geiser
@@ -216,13 +216,13 @@ course use more advanced tools; @xref{Connecting through GNU/Emacs and Geiser}.
 
 Many people like interacting with Guile through Emacs and the ``Geiser''
 package, and that is possible with @command{mu scm} as well, using the Unix
-domain socket, as discussed in @xref{Listening on a Unix Domain Socket}.
+domain socket, as discussed in @ref{Listening on a Unix Domain Socket}.
 
-If you also happen to use @code{mu4e}, see @xref{Connecting through Mu4e};
+If you also happen to use @code{mu4e}, @pxref{Connecting through Mu4e};
 otherwise, read on.
 
-Assuming you have installed the @code{guile-geiser} package (available through
-the ELPA package archive), the following snippet makes that easy:
+Assuming you have installed the @code{geiser-guile} package (available through
+the NonGNU ELPA package archive), the following snippet makes that easy:
 @lisp
 (require 'geiser-guile)
 
@@ -237,7 +237,7 @@ Connect to mu's scm (guile) interface through Geiser."
    :name "*mu-scm-repl*"
    :command `("sh" "-c"  ,mu-scm-listen-command)
    :filter (lambda (_proc chunk)
-             (when (string-match "^\\(mu-scm.*\\.sock\\)$" chunk)
+             (when (string-match "^\\(/.*\\.sock\\)$" chunk)
                (geiser-connect-local 'guile (match-string 1 chunk))))))
 @end lisp
 
@@ -251,13 +251,13 @@ the REPL, with all the Geiser bells & whistles.
 If you use @code{mu4e}, connecting to the SCM REPL is even easier than with
 ``plain'' Emacs.
 
-First tell @code{mu4e} to starts it server with with @t{--listen} parameter:
+First tell @code{mu4e} to start its server with the @t{--listen} parameter:
 @lisp
 (setq mu4e-mu-scm-server t)
 @end lisp
 After that, (re)start @code{mu4e}.
 
-Now should be able to connect to the REPL using @kbd{M-x mu4e-mu-scm-repl}. Like
+Now you should be able to connect to the REPL using @kbd{M-x mu4e-mu-scm-repl}. Like
 @ref{Connecting through GNU/Emacs and Geiser}, this depends on the
 @code{geiser-guile} package.
 
@@ -268,7 +268,7 @@ The SCM instance uses the same database/store instance that @code{mu4e} uses.
 
 This chapter discusses the @t{mu-scm}-powered shell.
 
-After installation (@xref{Getting started}), you can start the @t{mu-scm} shell
+After installation (@pxref{Getting started}), you can start the @t{mu-scm} shell
 by issuing:
 @example
 $ mu scm
@@ -318,8 +318,8 @@ $2 = "Important message about African animals"
 @node Scripts
 @chapter Scripts
 
-In the @ref{Shell} chapter, we saw how you can use @t{mu-scm} interactively. In
-this also possible to run @emph{scripts}. Generally, you can invoke a script by
+In the @ref{Shell} chapter, we saw how you can use @t{mu-scm} interactively. It
+is also possible to run @emph{scripts}. Generally, you can invoke a script by
 passing its name to @command{mu scm}, for example:
 @example
 mu scm path/to/script/myscript.scm
@@ -350,7 +350,7 @@ Thus, an example script might look like:
 You can run it like this:
 @example
 $ mu scm ~/myscript.scm some args 123
-running script /home/user/myscript.scm and arguments  ("some" "args" "123")
+running script /home/user/myscript.scm and arguments ("some" "args" "123")
 2015-01-02T12:41:13 Happy 2015! It's Day 2 - How Are Those Resolutions Coming?
 2015-01-06T12:29:21 Brunch Sunday 11.1.
 2015-01-06T18:05:27 Moderator's spam report for mu-discuss@@googlegroups.com
@@ -364,11 +364,11 @@ Quite likely, your output will differ from the above.
 @chapter API Reference with examples
 
 This chapter goes through the @t{mu-scm} API. For this, we need to understand a
-few key concepts, represented in some GOOP objects and other data-structures:
+few key concepts, represented in some GOOPS objects and other data-structures:
 
 @itemize
 @item the @t{<store>} represents the mu database with information about messages
-@item from the store, you can find @t{<message>} objects, each of which represent a specific message
+@item from the store, you can find @t{<message>} objects, each of which represents a specific message
 (similar to what you get from @code{mu find})
 @item the store also exposes addresses (such as To:, From:) in the store as alists (``association lists'')
 (similar to what you get from @code{mu cfind})
@@ -393,7 +393,7 @@ started @command{mu scm}.
 
 For completeness and possible future use, store-related methods do take a
 @t{store} parameter or a @t{#:store} keyword parameter, but it can be left out
-for for now.
+for now.
 
 Hence, for brevity, in the API descriptions below, the @t{store} parameter is
 implicit.
@@ -406,16 +406,16 @@ The store currently only exposes a few methods, described below.
 @end deffn
 
 Perform a query for messages in the store, and return a list of message objects
-(@xref{Message}) for the matches.
+(@pxref{Message}) for the matches.
 
 @itemize
 @item @var{query} is a Mu query; see the @t{mu-query} man-page for details
 @item @var{#:related?} whether @emph{related} messages should be included.
 This is similar to the @t{--include-related} parameter for @command{mu find}
-@item @var{#:skip-dups?} whether to exclude duplicate messages
+@item @var{#:skip-dups?} whether to exclude duplicate messages.
 This is similar to the @t{--skip-dups} parameter for @command{mu find}
 @item @var{#:sort-field} a symbol, the message field to sort by
-You can sort by the fields (see @command{mu info fields} that have a @t{value=yes})
+You can sort by the fields (see @command{mu info fields}) that have @t{value} @t{yes}
 @item @var{#:reverse?} whether to reverse the sort-direction (make it descending)
 @item @var{#:max-results} the maximum number of results
 By default @emph{all} matches are returned
@@ -442,13 +442,13 @@ other fields may be added.
 @item @var{pattern} is a basic case-insensitive PCRE-compatible regular expression
 see the @t{pcre(3)} man-page for details
 @item @var{#:personal?} if true, only match @emph{personal} contacts
-A personal contact is a contact seen in message where ``you'' were an explicit
+A personal contact is a contact seen in a message where ``you'' were an explicit
 sender or recipient, thus excluding mailing-list messages. Personal addresses
 are those that were specified at store creation time - see the @t{mu-init}
 man-page, in particular the @t{--personal-address} parameter
 @item @var{#:after} only include contacts last-seen after some time-point
 Specified as the number of seconds since epoch. Helper-function
-@code{iso-date->time-t} can be useful here.
+@code{string->time} can be useful here.
 @item @var{#:max-results} (optional) the maximum number of results
 By default, @emph{all} matches are returned
 @end itemize
@@ -479,9 +479,12 @@ Retrieve an association list (``alist'') with information about the store.
 Example:
 @lisp
 (store->alist)
-=> ((batch-size . 50000) (created . 1741180008) (max-message-size . 100000000)
-     (personal-addresses "djcb@@example.com" "msx@@example.com")
-     (root-maildir . "/home/user/Maildir") (schema-version . 500))
+=> ((batch-size . 50000) (created . 1741180008) (ignored-addresses)
+    (last-change . 1760261021) (last-index . 1760261019)
+    (max-message-size . 100000000)
+    (personal-addresses "djcb@@example.com" "msx@@example.com")
+    (root-maildir . "/home/user/Maildir") (schema-version . 500)
+    (ngrams-enabled? . #f))
 @end lisp
 
 Some of the fields are constant for the lifetime of the store, while others such
@@ -505,29 +508,36 @@ This is equivalent to @code{(assoc-ref (store->alist) 'root-maildir)}.
 Get the list of personal-addresses as defined in the @code{mu} database, which
 may be empty.
 
-This is equivalent to @code{(or (assoc-ref (store->alist) 'personal-addresses) '())},
+This is equivalent to @code{(or (assoc-ref (store->alist) 'personal-addresses) '())}.
 
 Any element in this list is either a plain e-mail address, or a PCRE-compatible
 regular expression when the first and last characters are @t{/} (forward-slash);
 see @t{pcre(3)} for further details.
 
-@deffn {Scheme Procedure} labels
+@deffn {Scheme Procedure} personal? address
 @end deffn
-Get the list of all labels present in the store, which may be empty. Not to be
-confused with @code{labels} procedure for a @code{message} object.
+Does the e-mail @var{address} (a string) match any of the personal addresses?
+Returns @t{#t} or @t{#f}. Not to be confused with the @code{personal?}
+procedure for a @code{message} object.
+
+For example:
+@lisp
+(personal? "djcb@@example.com")
+=> #t
+@end lisp
 
 @deffn {Scheme Procedure} labels
 @end deffn
-Get the list of all labels present in the store, which may empty.
-Not to be confused with @code{labels} procedure for a @code{message} object.
+Get the list of all labels present in the store, which may be empty. Not to be
+confused with the @code{labels} procedure for a @code{message} object.
 
 @node Message
 @section Message
 
 A @code{message} object represents the information about an e-mail message.
 @t{mu} gets this information either from its database (the @t{mu} store), e.g.,
-with @code{mfind} (see @xref{Store}) or by reading an email message from the
-file-systems with @code{make-message}.
+with @code{mfind} (@pxref{Store}) or by reading an email message from the
+file-system with @code{make-message}.
 
 In many of the examples below we assume there is some @code{message} object,
 e.g. as retrieved through:
@@ -552,7 +562,8 @@ need the full message. The same is true for @code{mime-parts}.
 
 For these methods, @code{mu} needs to open the message file from the
 file-system. This is handled transparently inside @t{mu-scm}, except that
-full-method-procedures are a bit slower relatively to the database-only ones.
+procedures that need the full message are a bit slower than the database-only
+ones.
 
 @subsection Basics
 
@@ -575,7 +586,7 @@ For example:
 
 @deffn {Scheme Procedure} maildir message
 @end deffn
-Get the message subject, or @t{#f} if there is none.
+Get the message's maildir, or @t{#f} if there is none.
 
 For example:
 @lisp
@@ -606,17 +617,16 @@ For example:
 @deffn {Scheme Procedure} date message
 @end deffn
 Get the message's @t{Date} field (the sent-date), or @t{#f} if there is none.
-@t{date} expressed the data as the number of seconds since epoch, @t{time_t}.
+@t{date} expresses the date as the number of seconds since epoch, @t{time_t}.
 
-As a convenience, @t{iso-date} expresses the date as an ISO-8601-compatible
-string or an empty string of the same length.
+You can use @code{time->string} to convert it into a human-readable string.
 
 For example:
 @lisp
 (date msg)
 => 1750064431
-(iso-date msg)
-=> 2025-06-16T09:00:31
+(time->string (date msg) #:format "%FT%T")
+=> "2025-06-16T09:00:31"
 @end lisp
 
 @deffn {Scheme Procedure} date-object message
@@ -645,16 +655,6 @@ If @var{#:html?} is non-@t{#f}, get the HTML-body instead.
 
 This requires the @ref{full-message,,full message}.
 
-@deffn {Scheme Procedure} message-id message
-@end deffn
-Get the message's @t{Message-ID} field, or @t{#f} if there is none.
-
-For example:
-@lisp
-(message-id msg)
-=> "87a15477-dd66-43e5-a722-81c545d6af19@@gmail.com"
-@end lisp
-
 @subsection MIME-parts
 
 Messages consist of one or more MIME-parts, which include the body, attachments
@@ -665,7 +665,7 @@ and other parts. To get the MIME-parts for a message, you can use the
 @end deffn
 Get the MIME-parts for this message, as a list of @code{<mime-part>} objects.
 
-A MIME-parts is an object with a few methods.
+A MIME-part is an object with a few methods.
 
 @deffn {Scheme Procedure} mime-part->alist mime-part
 @end deffn
@@ -677,14 +677,14 @@ For example:
 (mime-part->alist
  (cadr (mime-parts
        (car (mfind "flag:attach" #:max-results 1)))))
-=> ((filename . "emacs.png") (size . 18188) (content-type . "image/png") (index . 1))
+=> ((index . 1) (content-type . "image/png") (size . 18188) (filename . "emacs.png"))
 @end lisp
 
 Depending on the MIME-part, different fields can be present:
 @itemize
 @item @t{index}
 the index (number) of the part, 0-based
-@item @t{mime-type}
+@item @t{content-type}
 the MIME-type of the part
 @item @t{size}
 the size of the part in bytes. For encoded parts, this is the @emph{encoded} size
@@ -697,7 +697,7 @@ is this part (cryptographically) signed?
 is this part encrypted?
 @end itemize
 
-@deffn {Scheme Procedure} make-port mime-part [#:content-only? #f]
+@deffn {Scheme Procedure} make-port mime-part [#:content-only? #t]
                                               [#:decode? #t]
 @end deffn
 Get a read-port for the given MIME-part. Ports are the standard mechanism for
@@ -708,12 +708,12 @@ If @code{content-only?} is true, only include the contents, not headers. If
 case, @code{content-only?} is implied to be #t.
 
 
-@deffn {Scheme Procedure} write-to-file [#:filename #f] [#:overwrite? #f]
+@deffn {Scheme Procedure} write-to-file mime-part [#:path #f] [#:overwrite? #f]
 @end deffn
 Write MIME-part to file.
 
-Use @code{filename} is the file/path to use for writing; if this is @code{#f},
-the name using the @code{filename} procedure.
+@code{path} is the file/path to use for writing; if this is @code{#f}, use the
+name determined by the @code{filename} procedure.
 
 If @code{overwrite?} is true, overwrite existing files of the same name;
 otherwise, raise an error if the file already exists.
@@ -723,12 +723,12 @@ otherwise, raise an error if the file already exists.
 Determine a filename for the given MIME-part.
 
 This is either taken from the @t{filename} property of the MIME-part alist, or,
-If that does not exist, a generic name.
+if that does not exist, a generic name @t{mime-part-<index>}.
 
 @subsection Contacts
 
 Message fields @t{To:}, @t{From:}, @t{Cc:} and @t{Bcc:} contain lists of
-@emph{contacts}, which are are association-lists with a @code{email} field and
+@emph{contacts}, which are association-lists with an @code{email} field and
 optionally a @code{name} field. For instance:
 @lisp
 (to msg)
@@ -768,36 +768,36 @@ To make it easy to match messages by their addresses, there is
 Check whether @code{contacts} contains any contact for which either email or
 name matches some regular expression @code{regexp}.
 
-@code{addresses} can be either a single address or a list.
+@code{contacts} can be either a single contact or a list.
 
 @code{regexp} can be either a string or a regexp object as per @code{(ice-9
-regex)} (@xref{(guile) Regular Expressions}).
+regex)} (@pxref{Regular Expressions,,,guile,GNU Guile Reference Manual}).
 
 Return @code{#t} if there is a match, @code{#f} otherwise.
 
 Example:
 @lisp
-(match-address? (recipients msg) "murdock")
+(match-contact? (recipients msg) "murdock")
 => #t
 @end lisp
 
-@deffn {Scheme Procedure} imatch-address? addresses regexp
+@deffn {Scheme Procedure} imatch-contact? contacts regexp
 @end deffn
 
-Like @code{match-address?}, but match case-insensitively. @code{regexp} must be
+Like @code{match-contact?}, but match case-insensitively. @code{regexp} must
 be a string.
 
 Example:
 @lisp
-(match-address? (recipients msg) "hannibal")
+(match-contact? (recipients msg) "hannibal")
 => #f
-(imatch-address? (recipients msg) "hannibal")
+(imatch-contact? (recipients msg) "hannibal")
 => #t
 @end lisp
 
 @subsection Flags
 
-Message can have a number of properties or @emph{flags}.
+Messages can have a number of properties or @emph{flags}.
 
 @deffn {Scheme Procedure} flags message
 @end deffn
@@ -818,9 +818,9 @@ Does the message have the given flag? @t{#t} or @t{#f}.
 
 For example:
 @lisp
-(flags? msg 'personal)
+(flag? msg 'personal)
 => #t
-(flags? msg 'calendar)
+(flag? msg 'calendar)
 => #f
 @end lisp
 
@@ -889,7 +889,7 @@ Does this message include a calendar invitation? Returns @t{#t} or @code{#f}.
 @deffn {Scheme Procedure} changed-object message
 @end deffn
 Get the time of the message's last change (through @t{mu}), or @code{#f} if there
-is none. The time is expressed the data as the number of seconds since epoch,
+is none. The time is expressed as the number of seconds since epoch,
 @t{time_t}.
 
 For example:
@@ -940,14 +940,14 @@ Check whether @code{message} has any label matching some regular expression
 @code{regexp}.
 
 @code{regexp} can be either a regular expression string or a regexp object as
-per @code{(ice-9 regex)} (@xref{(guile) Regular Expressions}).
+per @code{(ice-9 regex)} (@pxref{Regular Expressions,,,guile,GNU Guile Reference Manual}).
 
 Return @code{#t} if the message's labels match the regular expression, @code{#f}
 otherwise.
 
 For example:
 @lisp
-(match-label? msg "koyaanisqatsy"))
+(match-label? msg "koyaanisqatsy")
 => #t
 @end lisp
 
@@ -967,7 +967,7 @@ For example:
 @deffn {Scheme Procedure} language? message langs
 @end deffn
 Check whether the message has the ISO-639-1 language code in @code{langs} (which
-can be either single language code or a list). Return non-@t{#f} if language
+can be either a single language code or a list). Return non-@t{#f} if language
 matches, @t{#f} otherwise.
 
 For example:
@@ -976,11 +976,11 @@ For example:
 => #t
 @end lisp
 
-@deffn {Scheme Procedure} header message
+@deffn {Scheme Procedure} header message field
 @end deffn
 Get some arbitrary, raw header from the message.
 
-The @var{header} parameter is a case-insensitive string @emph{without} the colon
+The @var{field} parameter is a case-insensitive string @emph{without} the colon
 (@t{:}).
 
 This requires the @ref{full-message,,full message}.
@@ -999,33 +999,26 @@ For example:
 @end deffn
 Get the list of references (message-ids of related messages) for this message.
 This combines the @t{References} and @t{In-Reply-To} fields, from oldest to the
-immediate parent. Returns @code{#f} if there are no references.
+immediate parent. Returns the empty list if there are no references.
 
 For example:
 @lisp
 (references msg)
 => ("439C1136.90504@@euler.org" "4399DD94.5070309@@euler.org"
     "20051209233303.GA13812@@gauss.org" "439B41ED.2080402@@euler.org"
-    439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
+    "439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
 @end lisp
 
 @deffn {Scheme Procedure} thread-id message
 @end deffn
-Get the oldest reference for the message or its message-id if there is none.
+Get the oldest reference for the message or its message-id if there is none;
+or @code{#f} if neither is available.
 This is useful to identify the thread some message lives in.
 
 For example:
 @lisp
 (thread-id msg)
 => "439C1136.90504@@euler.org"
-@end lisp
-
-For example:
-@lisp
-(references msg)
-=> ("439C1136.90504@@euler.org" "4399DD94.5070309@@euler.org"
-    "20051209233303.GA13812@@gauss.org" "439B41ED.2080402@@euler.org"
-    439A1E03.3090604@@euler.org" "20051211184308.GB13513@@gauss.org")
 @end lisp
 
 @deffn {Scheme Procedure} mailing-list message
@@ -1041,7 +1034,7 @@ For example:
 
 @deffn {Scheme Procedure} tags message
 @end deffn
-Get the list of tags for this message.
+Get the list of tags for this message, or the empty list if there are none.
 
 @c @deffn {Scheme Procedure} sexp message
 @c @end deffn
@@ -1109,13 +1102,15 @@ similar to what you get with the @command{mu info fields} command. This looks so
 ((field . tags) (name . "tags") (shortcut . #\x) (value? . #t) (search-type . boolean))
 ((field . thread) (name . "thread") (shortcut . #\w) (value? . #t) (search-type . boolean))
 ((field . to) (name . "to") (shortcut . #\t) (value? . #t) (search-type . phrase))
-((field . labels) (name . "labels") (shortcut . #\q) (value? . #t) (search-type . boolean)))
+((field . labels) (name . "labels") (shortcut . #\q) (value? . #t) (search-type . boolean))
+((field . utc-offset) (name . "utc-offset") (shortcut . #\u) (value? . #t) (search-type . #f)))
 @end lisp
 
-@deffn {Scheme Procedure} field
+@deffn {Scheme Procedure} field field-id
 @end deffn
 
-Gets information about one specific fields (from @code{fields}). E.g.
+Get information about one specific field (from @code{fields}), or @code{#f} if
+it does not exist. E.g.
 
 @lisp
 (field 'subject)
@@ -1159,29 +1154,29 @@ or critical). @code{frm} and @code{args} are expected to be a format string and
 its arguments, respectively, according to Guile's @code{format} function.
 
 Note: where the log output exactly appears (i.e., log-file, journal, console,
-nowhere) dependis on the particulars of the system and how mu was started; see
-the @t{mu (1)} man-page for details on the latter.
+nowhere) depends on the particulars of the system and how mu was started; see
+the @t{mu(1)} man-page for details on the latter.
 
-@deffn {Scheme Procedure} string->time timestr [#:utc? (assoc-ref %preferences 'utc?)]
+@deffn {Scheme Procedure} string->time timestr [#:utc? #f]
 @end deffn
 Convert some ISO-8601-style time-string to a seconds-since-epoch @t{time_t}
-value. @var{timestr} is expected to be in the @t{strftime}-format @t{%F%T}, or a
+value. @var{timestr} is expected to be in the @t{strftime}-format @t{%FT%T}, or a
 prefix thereof. Non-numerical characters are ignored.
 
 You can influence whether UTC is assumed using the optional @code{#:utc?}
 parameter. The input time/date format is fixed.
 @c which uses @code{%preferences} for its default.
 
-@deffn {Scheme Procedure} time->string
-                       [#:format (assoc-ref %preferences 'short-date)]
-                       [#:utc? (assoc-ref %preferences 'utc?)]
+@deffn {Scheme Procedure} time->string time-t
+                       [#:format "%F %T"]
+                       [#:utc? #f]
 @end deffn
 Convert a @t{time_t} value (``seconds-since-epoch'') to a string. The optional
 @code{#:format} parameter (an @code{strftime}-compatible string) determines the
 output format, while the @code{#:utc?} determines whether to use UTC.
 @c Defaults are determined by the @code{%preferences} variable.
 
-If @var{time_t} is @code{#f}, return @code{#f}.
+If @var{time-t} is @code{#f}, return @code{#f}.
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License
@@ -1200,7 +1195,7 @@ This is an alphabetical list of all the public procedures and macros in @t{mu-sc
 @node Variable Index
 @unnumbered Variables Index
 
-This is an alphabetical list of all the public variables @t{mu-scm}.
+This is an alphabetical list of all the public variables in @t{mu-scm}.
 
 @printindex vr
 
