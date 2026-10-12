@@ -511,7 +511,7 @@ When prefix-argument DONT-REFRESH is non-nil, do not refresh the
 last search with the new setting."
   (interactive "P")
   (let* ((toggles '(("fFull-search"      . mu4e-search-full)
-                    ("rInclude-related"  . mu4e-headers-include-related)
+                    ("rInclude-related"  . mu4e-search-include-related)
                     ("tShow threads"     . mu4e-search-threads)
                     ("uSkip duplicates"  . mu4e-search-skip-duplicates)
                     ("pHide-predicate"   . mu4e-search-hide-enabled)))
