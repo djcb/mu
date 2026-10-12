@@ -48,6 +48,7 @@
 	    changed
             changed-object
 
+	    maildir
 	    message-id
 	    path
 	    priority
@@ -562,7 +563,7 @@ This is method is useful to determine the thread a message is in."
   "Get the list of (intended) blind carbon-copy recipient for MESSAGE (the Bcc:
 field)."
   (or (assoc-ref (message->alist message) 'bcc) '()))
-3
+
 (define-method (recipients (message <message>))
   "Get the list of To/Cc/Bcc for message."
   (append (to message) (cc message) (bcc message)))

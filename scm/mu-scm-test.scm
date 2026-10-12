@@ -34,6 +34,9 @@
     (test-equal "abcd$efgh@example.com" (message-id msg))
     ;; subject
     (test-equal "Greetings from Lothlórien" (subject msg))
+
+    (test-equal "/" (maildir msg))
+
     ;; from
     (test-equal 1 (length (from msg)))
     (let ((sender (car (from msg))))
@@ -66,6 +69,7 @@
     (test-equal "test with multi to and cc" (subject msg))
     (test-equal "2016-05-15 16:57:25"
       (time->string (date msg) #:format "%F %T" #:utc? #t))
+    (test-equal "/" (maildir msg))
     (test-equal -7200 (utc-offset msg))
     (test-equal 2016 (date-year dateobj))
     (test-equal 5 (date-month dateobj))
