@@ -1496,7 +1496,16 @@ If set to non-nil, open message after `mu4e-headers-next' and
 `mu4e-headers-prev' if pointing at a message after the move and
 there is a live message view.
 
-This variable is for let-binding when scripting.")
+This variable is for let-binding.")
+
+(defun mu4e~headers-view-win-p ()
+  "Is `mu4e~headers-view-win' live and showing a message view?
+This is either a view buffer or its xwidget buffer; both have
+`mu4e--view-message' set."
+  (and (window-live-p mu4e~headers-view-win)
+       (buffer-local-value 'mu4e--view-message
+                           (window-buffer mu4e~headers-view-win))
+       t))
 
 (defun mu4e~headers-move (lines)
     "Move point LINES lines.
@@ -1524,10 +1533,9 @@ view-window, open the message unless
              (move-to-column 2)
              ;; If the assigned (and buffer-local) `mu4e~headers-view-win'
              ;; is not live then that is indicates the user does not want
-             ;; to pop up the view when they navigate in the headers
-             ;; buffer.
+             ;; to pop up the view.
              (when (and mu4e-headers-open-after-move
-                        (window-live-p mu4e~headers-view-win))
+                        (mu4e~headers-view-win-p))
                (mu4e-headers-view-message))
              ;; attempt to highlight the new line, display the message
              (mu4e~headers-highlight docid)
