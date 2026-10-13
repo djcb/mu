@@ -142,6 +142,10 @@ The %s, %s for key, value.")
   (concat mu4e--view-url-regexp "\\|" mu4e--view-email-regexp)
   "Regexp matching linkable things.")
 
+(defconst mu4e--view-max-links 100
+  "Maximum number of links to gather for a message.
+This avoids excessive resource use for messages with many links.")
+
 (defun mu4e--view-linkable-url (match)
   "Return the URL for MATCH."
   (if (string-match-p (concat "\\`" mu4e--view-email-regexp "\\'") match)
@@ -443,20 +447,24 @@ These are the URLs and e-mail addresses matching
 where LABEL is always nil."
   (save-excursion
     (goto-char (point-min))
-    (let ((links))
-      (while (re-search-forward mu4e--view-linkable-regexp nil t)
+    (let ((links) (count 0))
+      (while (and (< count mu4e--view-max-links)
+                  (re-search-forward mu4e--view-linkable-regexp nil t))
         (push (list (match-beginning 0) (match-end 0)
                     (mu4e--view-linkable-url (match-string-no-properties 0))
                     nil)
-              links))
+              links)
+        (setq count (1+ count)))
       (nreverse links))))
 
 (defun mu4e--view-shr-links ()
   "Return the links in shr-rendered html in the buffer.
 Return a list of (BEG END URL LABEL), where LABEL is the link
 text, or nil if it is the same as the URL."
-  (let ((pos (point-min)) (links))
-    (while (setq pos (text-property-not-all pos (point-max) 'shr-url nil))
+  (let ((pos (point-min)) (links) (count 0))
+    (while (and (< count mu4e--view-max-links)
+                (setq pos (text-property-not-all
+                           pos (point-max) 'shr-url nil)))
       (let* ((end (next-single-property-change pos 'shr-url nil (point-max)))
              (url (get-text-property pos 'shr-url))
              (label (mapconcat #'identity
@@ -466,7 +474,8 @@ text, or nil if it is the same as the URL."
         (when (and (stringp url) (not (string-prefix-p "#" url)))
           (push (list pos end url
                       (unless (member label (list "" url)) label))
-                links))
+                links)
+          (setq count (1+ count)))
         (setq pos end)))
     (nreverse links)))
 
@@ -561,8 +570,9 @@ images."
   (with-temp-buffer
     (insert html)
     (if (libxml-available-p)
-        (mu4e--view-dom-links
-         (libxml-parse-html-region (point-min) (point-max)))
+        (seq-take (mu4e--view-dom-links
+                   (libxml-parse-html-region (point-min) (point-max)))
+                  mu4e--view-max-links)
       (mapcar (lambda (link) (list (nth 2 link) nil))
               (mu4e--view-linkable-links)))))
 
