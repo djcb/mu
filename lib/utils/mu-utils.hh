@@ -389,6 +389,21 @@ std::vector<std::string> split(const std::string& str, char sepa);
 }
 
 /**
+ * Convert some container into a byte vector.
+ *
+ * E.g., std::string
+ *
+ * @tparam Type type of data
+ * @param data the data to convert
+ *
+ * @return vector with the data
+ */
+template<typename Type>
+[[nodiscard]] std::vector<uint8_t> to_bytes(const Type& data) {
+	return std::vector<uint8_t>(data.cbegin(), data.cend());
+}
+
+/**
  * write a string (assumed to be in utf8-format) to a stream,
  * converted to the current locale
  *

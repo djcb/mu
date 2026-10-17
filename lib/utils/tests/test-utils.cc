@@ -475,6 +475,25 @@ test_tabula()
 }
 
 
+static void
+test_to_bytes()
+{
+	{
+		const std::string s{"hello!"};
+		const auto bytes{to_bytes(s)};
+		g_assert_cmpuint(bytes.size(), ==, 6);
+		g_assert_cmpuint(bytes.at(5), ==, '!');
+	}
+
+	{
+		const auto a = std::to_array<uint8_t>({'f', 'n', 'o', 'r', 'b'});
+		const auto bytes{to_bytes(a)};
+		g_assert_cmpuint(bytes.size(), ==, 5);
+		g_assert_cmpuint(bytes.at(0), ==, 'f');
+		g_assert_cmpuint(bytes.at(4), ==, 'b');
+	}
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -497,6 +516,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/locale-workaround", test_locale_workaround);
 	g_test_add_func("/utils/ascii-ctype", test_ascii_ctype);
 	g_test_add_func("/utils/tabula", test_tabula);
+	g_test_add_func("/utils/to-bytes", test_to_bytes);
 
 	return g_test_run();
 }
