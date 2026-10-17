@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2019-2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2019-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -148,6 +148,23 @@ unwrap(Result<T>&& res)
 			   __FILE__, __LINE__,			\
 			   (res__).error().what());		\
 		g_assert_true(!!res__);				\
+	}							\
+} while(0)
+
+/// alias for assert_valid_result
+#define assert_ok assert_valid_result
+
+/**
+ * Assert that some result is an error
+ *
+ * @param R some result
+ */
+#define assert_err(R) do {				        \
+	auto&& res__ = R;					\
+	if(res__) {						\
+		mu_printerrln("{}:{}: expected error-result",	\
+			   __FILE__, __LINE__);	         	\
+		g_assert_false(!!res__);			\
 	}							\
 } while(0)
 
