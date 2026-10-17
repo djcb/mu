@@ -161,18 +161,11 @@ MimeObject::to_string_opt() const noexcept
 		return Nothing;
 	}
 
-	std::string buffer;
-	buffer.resize(written);
-	stream.reset();
+	/* the byte-array is owned by the stream */
+	const GByteArray *bytes{g_mime_stream_mem_get_byte_array(
+			GMIME_STREAM_MEM(stream.object()))};
 
-	auto bytes{g_mime_stream_read(GMIME_STREAM(stream.object()),
-				      buffer.data(), written)};
-	if (bytes < 0)
-		return Nothing;
-
-	buffer.resize(bytes);
-
-	return buffer;
+	return std::string(bytes->data, bytes->data + bytes->len);
 }
 
 /*
@@ -559,6 +552,47 @@ MimePart::size() const noexcept
 
 	return static_cast<size_t>(g_mime_stream_length(stream));
 }
+
+/*
+ * Get the (decoded) content of a part as some container of bytes, e.g.
+ * std::string or std::vector<uint8_t>.
+ */
+template<typename Container>
+static Option<Container>
+part_content(GMimePart* part)
+{
+	GMimeDataWrapper *wrapper{g_mime_part_get_content(part)};
+	if (!wrapper) { /* this happens with invalid mails */
+		mu_warning("failed to create data wrapper");
+		return Nothing;
+	}
+
+	GMimeStream *stream{g_mime_stream_mem_new()};
+	if (!stream) {
+		mu_warning("failed to create mem stream");
+		return Nothing;
+	}
+
+	if (const auto buflen{g_mime_data_wrapper_write_to_stream(wrapper, stream)};
+	    buflen <= 0) { /* empty buffer, not an error */
+		g_object_unref(stream);
+		return Nothing;
+	}
+
+	/* the byte-array is owned by the stream */
+	const GByteArray *arr{g_mime_stream_mem_get_byte_array(GMIME_STREAM_MEM(stream))};
+	Container data(arr->data, arr->data + arr->len);
+	g_object_unref(stream);
+
+	return data;
+}
+
+Option<std::vector<uint8_t>>
+MimePart::to_bytes() const noexcept
+{
+	return part_content<std::vector<uint8_t>>(self());
+}
+
 Option<std::string>
 MimePart::to_string() const noexcept
 {
@@ -573,38 +607,9 @@ MimePart::to_string() const noexcept
 	}
 
 	/*
-	 * harder case: read from stream manually
+	 * fallback: the raw (decoded) content
 	 */
-	GMimeDataWrapper *wrapper{g_mime_part_get_content(self())};
-	if (!wrapper) { /* this happens with invalid mails */
-		mu_warning("failed to create data wrapper");
-		return Nothing;
-	}
-
-	GMimeStream *stream{g_mime_stream_mem_new()};
-	if (!stream) {
-		mu_warning("failed to create mem stream");
-		return Nothing;
-	}
-
-	ssize_t buflen{g_mime_data_wrapper_write_to_stream(wrapper, stream)};
-	if (buflen <= 0) { /* empty buffer, not an error */
-		g_object_unref(stream);
-		return Nothing;
-	}
-
-	std::string buffer;
-	buffer.resize(buflen);
-	g_mime_stream_reset(stream);
-
-	auto bytes{g_mime_stream_read(stream, buffer.data(), buflen)};
-	g_object_unref(stream);
-	if (bytes < 0)
-		return Nothing;
-
-	buffer.resize(bytes);
-
-	return buffer;
+	return part_content<std::string>(self());
 }
 
 Result<size_t>

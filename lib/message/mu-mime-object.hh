@@ -1202,6 +1202,14 @@ public:
 	size_t size() const noexcept;
 
 	/**
+	 * Get the MIME-part as a vector of bytes
+	 *
+	 * @return a byte vector or nothing
+	 */
+	Option<std::vector<uint8_t>> to_bytes() const noexcept;
+
+
+	/**
 	 * Get as UTF-8 string
 	 *
 	 * @return a string, or NULL.
