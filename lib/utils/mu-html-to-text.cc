@@ -725,21 +725,21 @@ main(int argc, char* argv[])
 
 #include "mu-utils-file.hh"
 
-// simple tool that reads html on stdin and outputs text on stdout
-// e.g. curl --silent https://www.example.com | build/lib/utils/mu-html2text
-
+// simple test tool that reads html from a path or stdin and print text on output.
+// e.g.:
+//   build/lib/utils/mu-html2text /tmp/bla.html
+// or
+//   curl --silent https://www.example.com | build/lib/utils/mu-html2text
 int
 main (int argc, char *argv[])
 {
-	auto res = read_from_stdin();
-	if (!res) {
-		mu_printerrln("error reading from stdin: {}", res.error().what());
+	if (const auto res = argc <= 1 ? read_from_stdin() : read_from_file(argv[1]); !res) {
+		mu_printerrln("error: {}", res.error().what());
 		return 1;
+	} else {
+		mu_println("{}", html_to_text(*res));
+		return 0;
 	}
-
-	mu_println("{}", html_to_text(*res));
-
-	return 0;
 }
 
 #endif /*BUILD_HTML_TO_TEXT*/
