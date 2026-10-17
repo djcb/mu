@@ -30,6 +30,9 @@
 #include <gio/gunixinputstream.h>
 
 #include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #ifdef HAVE_WORDEXP_H
 #include <wordexp.h>
@@ -203,6 +206,35 @@ Mu::read_from_stdin()
 			g_memory_output_stream_get_data_size(G_MEMORY_OUTPUT_STREAM(outmem))});
 }
 /* LCOV_EXCL_STOP*/
+
+Result<std::string>
+Mu::read_from_file(const std::string& path)
+{
+	if (std::ifstream file(path, std::ios::binary); !file)
+		return Err(Error::Code::File, "error reading {}", path);
+	else {
+		std::stringstream buf;
+		buf << file.rdbuf();
+		return Ok(buf.str());
+	}
+}
+
+Result<void>
+Mu::write_to_file(const std::string& path, const std::string& str, bool append)
+{
+	const auto mode = std::ios::binary | std::ios::out |
+		(append ? std::ios::app : std::ios::trunc);
+
+	std::ofstream file{path, mode};
+	if (!file)
+		return Err(Error::Code::File, "error opening file '{}'", path);
+
+	file.write(str.data(), static_cast<std::streamsize>(str.size()));
+	if (!file)
+		return Err(Error::Code::File, "error writing file '{}'", path);
+
+	return Ok();
+}
 
 
 /*
@@ -477,17 +509,58 @@ static void
 test_make_remove_directory()
 {
 	const auto res {make_temp_dir()};
-	assert_valid_result(res);
+	assert_ok(res);
 
 	g_assert_true(check_dir(*res));
 	g_assert_cmpint(::access(res->c_str(), R_OK), ==, 0);
 
 	const auto res2{remove_directory(*res)};
-	assert_valid_result(res2);
+	assert_ok(res2);
 
 	g_assert_false(check_dir(*res));
 	g_assert_cmpint(::access(res->c_str(), R_OK), !=, 0);
 }
+
+
+static void
+test_read_write_from_to_file()
+{
+	TempDir tdir;
+
+	const auto path = join_paths(tdir.path(), "testfile");
+
+	{
+		const auto writeres = write_to_file(path, "hello");
+		assert_ok(writeres);
+
+		const auto readres = read_from_file(path);
+		assert_ok(readres);
+		assert_equal(*readres, "hello");
+
+	}
+
+	{
+		const auto writeres = write_to_file(path, ", world!", true /*app*/);
+		assert_ok(writeres);
+
+		const auto readres = read_from_file(path);
+		assert_ok(readres);
+		assert_equal(*readres, "hello, world!");
+	}
+
+	{
+		const auto readfail = read_from_file(join_paths(tdir.path(), "nonexistent"));
+		assert_err(readfail);
+	}
+
+	{
+		const auto writefail = write_to_file(join_paths(tdir.path(), "nonexistent", "boo"), "boo");
+		assert_err(writefail);
+	}
+}
+
+
+
 
 int
 main(int argc, char* argv[])
@@ -506,6 +579,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/file/runtime-paths", test_runtime_paths);
 	g_test_add_func("/utils/file/expand-path", test_expand_path);
 	g_test_add_func("/utils/file/make-remove-directory", test_make_remove_directory);
+	g_test_add_func("/utils/file/read-write-from-to-file", test_read_write_from_to_file);
 
 	return g_test_run();
 }

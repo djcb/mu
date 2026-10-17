@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -187,11 +187,31 @@ std::string join_paths(S&& s, Args...args) {
 }
 
 /**
- * Read for standard input
+ * Read from standard input
  *
  * @return data from standard input or an error.
  */
 Result<std::string> read_from_stdin();
+
+/**
+ * Read file into a string
+ *
+ * @param path file path
+ *
+ * @return string or an error.
+ */
+Result<std::string> read_from_file(const std::string& path);
+
+/**
+ * Write string to a file
+ *
+ * @param path file path
+ * @param str some string
+ * @param append whether to append or overwrite
+ *
+ * @return Ok or an error.
+ */
+Result<void> write_to_file(const std::string& path, const std::string& str, bool append=false);
 
 /**
  * Create a randomly-named temporary directory
