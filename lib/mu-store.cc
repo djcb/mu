@@ -388,6 +388,15 @@ Store::add_message(Message& msg, bool is_new)
 		msg.set_flags(msg.flags() | Flags::Personal);
 
 	std::lock_guard guard{priv_->lock_};
+
+	if (!is_new) { /* carry over old labels, if any */
+		if (const auto id_doc{priv_->find_document_unlocked(msg.path())}; id_doc) {
+			const Document doc{id_doc->second};
+			if (auto&& labels{doc.string_vec_value(Field::Id::Labels)}; !labels.empty())
+				msg.set_labels(labels);
+		}
+	}
+
 	auto&& res = is_new ?
 		xapian_db().add_document(msg.document().xapian_document()) :
 		xapian_db().replace_document(msg.xapian_term(), msg.document().xapian_document());

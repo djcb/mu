@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -199,9 +199,23 @@ test_store_labels()
 	g_assert_cmpuint(store->label_map()["foo"], ==, 1);
 	g_assert_cmpuint(store->label_map()["bar"], ==, 1);
 
-	// removing a message should affect its labels in the cache.
-	g_assert_true(store->remove_message(msgpath));
-	g_assert_true(store->label_map().empty());
+	{ // re-adding (e.g. re-indexing) should retain labels
+
+		g_test_bug("2965");
+
+		const auto id2 = store->add_message(msgpath);
+		assert_valid_result(id2);
+		g_assert_cmpuint(*id2, ==, *id1);
+		auto msg2 = store->find_message(*id2);
+		g_assert_true(!!msg2);
+		g_assert_true(msg2->labels() == LabelVec({"bar", "foo"}));
+		g_assert_cmpuint(store->label_map().size(), ==, 2);
+		g_assert_cmpuint(store->label_map()["foo"], ==, 1);
+
+		// removing a message should affect its labels in the cache.
+		g_assert_true(store->remove_message(msgpath));
+		g_assert_true(store->label_map().empty());
+	}
 }
 
 
@@ -434,6 +448,14 @@ Yes, that would be excellent.
 		 g_assert_true(msg->docid() != 0);
 		 g_debug("%s", msg->sexp().to_string().c_str());
 
+		 // Label it
+		 {
+			 auto lmsg{store->find_message(msg->docid())};
+			 g_assert_true(!!lmsg);
+			 assert_valid_result(store->update_labels(
+				 *lmsg, {{Labels::Delta::Add, "test"}}));
+		 }
+
 		 // Move the message from new->cur
 		 const auto oldchanged{msg->changed()};
 		 std::this_thread::sleep_for(1s); /* ctime should change */
@@ -454,6 +476,22 @@ Yes, that would be excellent.
 		 const auto changeddiff(msg3changed - oldchanged);
 		 g_assert_true(changeddiff > 0 && changeddiff <= 2);
 		 g_assert_cmpuint(store->size(), ==, 1);
+
+		 // re-index; the moved message (with its updated ctime) gets
+		 // re-read from disk, but should keep its labels.
+		 // (https://github.com/djcb/mu/issues/2965)
+		 store->indexer().start({});
+		 n = 0;
+		 while (store->indexer().is_running()) {
+			 std::this_thread::sleep_for(100ms);
+			 g_assert_cmpuint(n++,<=,25);
+		 }
+		 g_assert_cmpuint(store->indexer().progress().updated,==,1);
+		 g_assert_cmpuint(store->size(), ==, 1);
+		 auto&& msg5{store->find_message(msg3id)};
+		 g_assert_true(!!msg5);
+		 g_assert_true(msg5->labels() == Labels::LabelVec{"test"});
+		 g_assert_cmpuint(store->label_map()["test"], ==, 1);
 	 }
 
 	 // ensure the values are properly stored.
