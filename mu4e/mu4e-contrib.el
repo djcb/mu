@@ -148,7 +148,7 @@ the file."
           (flatten-list (reverse args)))))
     ;; warn if user tries to attach without any files marked
     (if (null files-to-attach)
-        (error "No files to attach")
+        (mu4e-error "No files to attach")
       (setq files-str
             (mapconcat
              (lambda (f) (file-name-nondirectory f))
@@ -156,7 +156,7 @@ the file."
       (setq bufs (mu4e--active-composition-buffers))
       ;; set up destination mail composition buffer
       (if (and bufs
-               (y-or-n-p "Attach files to existing mail composition buffer? "))
+               (mu4e-y-or-n-p "Attach files to existing mail composition buffer? "))
           (setq destination
                 (if (length= bufs 1)
                     (get-buffer (car bufs))
@@ -165,7 +165,7 @@ the file."
                      (funcall mu4e-completing-read-function prompt
                               bufs)))))
         ;; setup a new mail composition buffer
-        (if (y-or-n-p "Compose new mail and attach this file? ")
+        (if (mu4e-y-or-n-p "Compose new mail and attach this file? ")
             (progn (mu4e-compose-new)
                    (setq destination (current-buffer)))))
       ;; if buffer was found, set buffer to destination buffer, and attach files

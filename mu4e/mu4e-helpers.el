@@ -353,6 +353,14 @@ Function returns the value (cdr) of the matching cell."
     (or response
         (mu4e-warn "invalid input"))))
 
+(defun mu4e-yes-or-no-p (prompt &rest args)
+  "`yes-or-no-p' with a mu4e PROMPT with format ARGS."
+  (yes-or-no-p (mu4e-format "%s" (apply #'format prompt args))))
+
+(defun mu4e-y-or-n-p (prompt &rest args)
+  "`y-or-n-p' with a mu4e PROMPT with format ARGS."
+  (y-or-n-p (mu4e-format "%s" (apply #'format prompt args))))
+
 (defun mu4e-filter-single-key (lst)
   "Return a list consisting of LST items with a `characterp' :key prop."
   ;; This works for bookmarks and maildirs.

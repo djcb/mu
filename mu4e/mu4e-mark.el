@@ -427,7 +427,7 @@ If NO-CONFIRMATION is non-nil, don't ask user for confirmation."
      (if (zerop marknum)
          (mu4e-warn "Nothing is marked")
        (mu4e-mark-resolve-deferred-marks)
-       (when (or no-confirmation (y-or-n-p prompt))
+       (when (or no-confirmation (mu4e-y-or-n-p prompt))
          (maphash
           (lambda (docid val)
             (let* ((mark (car val)) (target (cdr val))
@@ -458,7 +458,7 @@ If NO-CONFIRMATION is non-nil, do not ask for confirmation."
    (let* ((marknum (hash-table-count mu4e--mark-map))
           (prompt (format "Are you sure you want to unmark %d message%s?"
                           marknum (if (> marknum 1) "s" ""))))
-     (when (or no-confirmation (y-or-n-p prompt))
+     (when (or no-confirmation (mu4e-y-or-n-p prompt))
        (maphash
         (lambda (docid _val)
           (save-excursion

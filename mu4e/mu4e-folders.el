@@ -250,7 +250,7 @@ Return t if it already exists or (after asking) an attempt has been
 to create it; otherwise return nil."
   (let ((seems-to-exist (file-directory-p dir)))
     (when (or seems-to-exist
-              (yes-or-no-p (mu4e-format "%s does not exist yet. Create now?" dir)))
+              (mu4e-yes-or-no-p (format "%s does not exist yet. Create now?" dir)))
       ;; even when the maildir already seems to exist, call mkdir for a deepe
       ;; check. However only get an update when the maildir is totally new.
       (mu4e--server-mkdir dir (not seems-to-exist))
@@ -310,8 +310,8 @@ Offer to create it if it does not exist yet."
   (let* ((mdir (mu4e-ask-maildir prompt))
          (fullpath (mu4e-join-paths (mu4e-root-maildir) mdir)))
     (unless (file-directory-p fullpath)
-      (and (yes-or-no-p
-            (mu4e-format "%s does not exist. Create now?" fullpath))
+      (and (mu4e-yes-or-no-p
+            (format "%s does not exist. Create now?" fullpath))
            (mu4e--server-mkdir fullpath)))
     mdir))
 

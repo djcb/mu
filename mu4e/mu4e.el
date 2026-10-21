@@ -104,7 +104,7 @@ Otherwise, completely quit mu4e, including automatic updating."
   (if bury
       (bury-buffer)
     (if mu4e-confirm-quit
-        (when (y-or-n-p (mu4e-format "Are you sure you want to quit?"))
+        (when (mu4e-y-or-n-p "Are you sure you want to quit?")
           (mu4e--stop))
       (mu4e--stop))))
 ;;; Internals
