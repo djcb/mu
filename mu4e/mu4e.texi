@@ -1585,6 +1585,7 @@ e            extract (save) one or more attachments (asks for numbers)
 a            execute some custom action on the message
 A            execute some custom action on the message's MIME-parts
 J            jump to MIME part by its number
+I            load remote images in the current (html) message
 
 misc
 ----
@@ -1689,15 +1690,41 @@ Moreover, if you use @t{shr} as your HTML-renderer, you can still use
 see the message in its full Webkit glory; it is one of the default actions if
 your Emacs has @t{xwidget}-support.
 
+@vindex mu4e-view-remote-image-policy
+@findex mu4e-view-show-remote-images
+By default, the HTML views (@t{xwidget} and @t{shr}) only show @emph{embedded}
+images and do not load remote images, as they may pose a privacy risk. If you
+find that too restrictive, you can change this using
+@code{mu4e-view-remote-image-policy}. It can be a symbol, one of
+@code{block-all} (the default), @code{allow-all} or @code{ask}; the latter asks
+you before showing a message with remote images.
+
+It can also be a function that takes a message and returns one of those symbols.
+
+For instance, to load remote images in GitHub notifications, but ask for other
+messages:
+
+@lisp
+(setq mu4e-view-remote-image-policy
+   (lambda (msg)
+     (if (mu4e-message-contact-field-matches
+          msg :from "notifications@@github.com")
+         'allow-all 'ask)))
+@end lisp
+
+Regardless of the value of @code{mu4e-view-remote-image-policy}, you can call
+@kbd{M-x mu4e-view-show-remote-images} or @kbd{I} in the HTML message view
+(@t{shr} or @t{xwidget}) to load the remote images for the current message.
+
 @node Images
 @section Images
 @cindex images
 
 @code{mu4e} lets you view images attached to messages inline. Here we discuss
 how; this applies only to plain-text and @t{shr} rendering, @emph{not}
-@t{xwidget} rendering. For @t{xwidget}, you cannot currently configure how to
-deal with inline images when using @code{xwidget}; it never loads remote images,
-but does show embedded ones.
+@t{xwidget} rendering. For @t{xwidget}, embedded images are always shown. For
+both, remote images depend on @code{mu4e-view-remote-image-policy};
+@pxref{xwidget}.
 
 When you run Emacs in graphical mode, by default images attached to messages are
 shown inline in the message view buffer.
@@ -1711,28 +1738,18 @@ Apart from that, you can also control whether to load remote images; since
 loading remote images is often used for privacy violations, by default this is
 not allowed.
 
+@vindex mu4e-view-remote-image-policy
 @vindex gnus-blocked-images
-You can specify what URLs to block by setting
-@code{gnus-blocked-images} to a regular expression or to a function
-that will receive a single parameter which is not meaningful for
-@code{mu4e}.
+@findex mu4e-view-show-remote-images
+You can change this with @code{mu4e-view-remote-image-policy}, which applies to
+@t{shr} as well as @t{xwidget}; see @ref{xwidget} for the details and an example.
+Press @kbd{I} (@code{mu4e-view-show-remote-images}) to load the remote images for
+the current message.
 
-For example, to enable images in Github notifications, you could use
-the following:
-
-@lisp
-(setq gnus-blocked-images
-   (lambda(&optional _ignore)
-     (if (mu4e-message-contact-field-matches
-         (mu4e-message-at-point) :from "notifications@@github.com")
-        nil ".")))
-@end lisp
-
-@code{mu4e} inherits the default @code{gnus-blocked-images} from Gnus and
-ensures that it works with @code{mu4e} too. However, mu4e is not Gnus, so
-if you have Gnus-specific settings for @code{gnus-blocked-images}, you
-should verify that they have the desired effect in @code{mu4e} as
-well.
+Note that since in @code{mu4e} since version 1.14.5,
+@code{mu4e-view-remote-image-policy} takes the place of
+@code{gnus-blocked-images}; i.e., your Gnus settings for the latter have no
+effect in @code{mu4e}.
 
 Finally, for some messages with big images, it can be useful to enable buttons
 and full display, e.g. for saving inline images. For this you can try @kbd{M-x

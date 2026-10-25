@@ -89,6 +89,7 @@ those not do anything.")
 (declare-function mu4e--view-raw-plain-preferred-p "mu4e-view-html" ())
 (declare-function mu4e--view-html-insert-headers "mu4e-view" (msg))
 (declare-function mu4e--view-buffer-cleanup "mu4e-mime-parts" ())
+(declare-function mu4e-view-show-remote-images "mu4e-view" ())
 
 (defun mu4e--view-raw-html-p ()
   "Return non-nil if the raw message in the current buffer has html."
@@ -210,6 +211,7 @@ See `mu4e--view-xwidget-forward-keys'."
     ;; not `mu4e-view-toggle-html'; that depends on `mu4e-view-html-renderer'.
     (define-key map "h" #'mu4e--view-xwidget-toggle)
     (define-key map "q" #'mu4e--view-xwidget-quit)
+    (define-key map "I" #'mu4e-view-show-remote-images)
     (dolist (key '("SPC" "<remap> <scroll-up-command>"))
       (define-key map (kbd key) #'mu4e--view-xwidget-page-down))
     (dolist (key '("S-SPC" "DEL" "<remap> <scroll-down-command>"))
@@ -284,7 +286,7 @@ Do nothing if VIEW-BUF is not displayed."
   "Render current buffer with MSG using an embedded xwidget.
 The buffer must contain the raw message."
   (let ((html (mu4e-view-html-text
-               msg (mu4e--view-html-insert-headers msg))))
+               msg (mu4e--view-html-insert-headers msg) 'remote-images)))
     (if (not html)
         ;; Fallback to normal rendering
         (mu4e--view-render-buffer msg)
@@ -306,6 +308,8 @@ The buffer must contain the raw message."
         ;; populate `mu4e--view-link-map', for `mu4e-view-go-to-url' and
         ;; friends
         (mu4e--view-register-html-links html)
+        (setq-local mu4e--view-remote-images
+                    (mu4e--view-remote-images-state html 'meta))
         (setq-local mu4e--view-xwidget-tmp-file
                     (mu4e--view-html-temp-file
                      (concat html mu4e--view-xwidget-no-click-style)))
@@ -361,18 +365,25 @@ layout as without xwidget."
     (set-window-buffer win view-buf)
     (select-window win)))
 
-(defun mu4e--view-xwidget-toggle ()
-  "Toggle between the xwidget and the text rendering of the message.
-This works from the view buffer as well as from its xwidget buffer."
-  (interactive)
+(defun mu4e--view-xwidget-rerender (func)
+  "Re-render the message with the renderer FUNC returns.
+FUNC is called in the view buffer, and returns `text' or `xwidget';
+see `mu4e--view-renderer-override'. This works from the view buffer
+as well as from its xwidget buffer."
   (unless (mu4e-xwidget-usable-p)
     (mu4e-warn "Cannot use xwidget; see M-x mu4e-xwidget-usable-p"))
   (with-current-buffer (or (mu4e--view-xwidget-view-buffer)
                            (mu4e-warn "No message view"))
-    (let ((mu4e--view-renderer-override
-           (if (mu4e--view-xwidget-shown-p) 'text 'xwidget)))
+    (let ((mu4e--view-renderer-override (funcall func)))
       (mu4e--view-xwidget-restore-window)
       (mu4e-view-refresh))))
+
+(defun mu4e--view-xwidget-toggle ()
+  "Toggle between the xwidget and the text rendering of the message.
+This works from the view buffer as well as from its xwidget buffer."
+  (interactive)
+  (mu4e--view-xwidget-rerender
+   (lambda () (if (mu4e--view-xwidget-shown-p) 'text 'xwidget))))
 
 (defun mu4e--view-xwidget-quit ()
   "Quit the message view, from its xwidget buffer.
