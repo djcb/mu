@@ -17,7 +17,7 @@
 ################################################################################
 # project setup
 project('mu', ['c', 'cpp'],
-        version: '1.14.4',
+        version: '1.14.5-pre1',
         meson_version: '>= 1.3.2',
         license: 'GPL-3.0-or-later',
         default_options : {
@@ -30,7 +30,7 @@ fs = import('fs')
 
 # hard-code the date here (for reproducibility); we derive the dates used in
 # e.g. documentation from this.
-mu_date='2026-10-14'
+mu_date='2026-10-30'
 
 # installation paths
 prefixdir = get_option('prefix')
@@ -419,7 +419,7 @@ dep_summary += {'tl-optional': tl_optional_dep.version() +
 summary(dep_summary, section: 'Dependencies')
 
 summary({'language detection (cld2)'    : cld2_dep.type_name() == 'internal' ? 'true (subproject)'
-                                          : cld2_dep.found().to_string(),
+                                          : cld2_dep.found() and get_option('cld2').allowed(),
          'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),
          'guile (old-style, deprecated)': guile_dep.found() and get_option('guile').allowed(),
          'readline'                     : get_option('readline').enabled(),
