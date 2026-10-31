@@ -217,6 +217,26 @@ Return the handle, or nil."
                   (mu4e--view-mime-part handle media-type))
                 (cdr handles)))))
 
+(defun mu4e--view-attachment-p (handle)
+  "Return non-nil if MIME part HANDLE is an attachment."
+  (or (mm-handle-filename handle)
+      (equal (car (mm-handle-disposition handle)) "attachment")))
+
+(defun mu4e--view-text-parts (handles)
+  "Return the non-attachment text/plain parts in HANDLES, in order.
+Of a multipart/alternative, take only the first such part, since
+the others are versions of the same text."
+  (cond
+   ((not (listp handles)) nil)
+   ((bufferp (car handles))
+    (when (and (equal (mm-handle-media-type handles) "text/plain")
+               (not (mu4e--view-attachment-p handles)))
+      (list handles)))
+   (t (let ((parts (seq-mapcat #'mu4e--view-text-parts (cdr handles))))
+        (if (equal (car handles) "multipart/alternative")
+            (seq-take parts 1)
+          parts)))))
+
 (defun mu4e--view-mime-part-string (handle)
   "Return MIME part HANDLE string."
   (let* ((charset (mail-content-type-get (mm-handle-type handle) 'charset))
@@ -473,15 +493,21 @@ images unless `mu4e-view-remote-image-policy' allows for them."
 
 (defun mu4e--view-html-body (handles)
   "Return HTML for the message body in HANDLES, or nil.
-Use html-part or text-part if there is none."
+Use the html-part if there is one. Otherwise, use all the
+non-attachment text-parts, or the first text-part if they are all
+attachments."
   (if-let* ((handle (mu4e--view-mime-part handles "text/html")))
       (mu4e--view-mime-part-string handle)
-    (when-let* ((handle (mu4e--view-mime-part handles "text/plain")))
+    (when-let* ((parts (or (mu4e--view-text-parts handles)
+                           (delq nil
+                                 (list (mu4e--view-mime-part
+                                        handles "text/plain"))))))
       (format mu4e--view-html-document-template
               mu4e--view-html-plain-text-style
               (format mu4e--view-html-plain-text-template
                       (mu4e--view-linkify-html
-                       (mu4e--view-mime-part-string handle)))))))
+                       (mapconcat #'mu4e--view-mime-part-string
+                                  parts "\n")))))))
 
 (defun mu4e--view-html-render (handles &optional headers remote-images-p)
   "Return a self-contained HTML document for MIME HANDLES, or nil.
