@@ -154,10 +154,6 @@
 
 (make-obsolete-variable 'mu4e-cited-regexp "No longer used" "1.7.0")
 
-(define-obsolete-variable-alias 'mu4e-view-blocked-images 'gnus-blocked-images
-  "1.5.12")
-(define-obsolete-variable-alias 'mu4e-view-inhibit-images 'gnus-inhibit-images
-  "1.5.12")
 
 (define-obsolete-variable-alias 'mu4e-after-view-message-hook
   'mu4e-view-rendered-hook "1.9.7")

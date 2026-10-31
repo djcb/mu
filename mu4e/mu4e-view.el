@@ -444,12 +444,15 @@ HTML version from its text-part.
 If SKIP-HEADERS is set, do not include the message headers;
 otherwise, they are as per `mu4e-view-fields'.
 
+Remote images are loaded as per `mu4e-view-remote-image-policy'.
+
 The variables `browse-url-browser-function',
 `browse-url-handlers', and `browse-url-default-handlers'
 determine which browser function to use."
   (mu4e--view-browse-html-string
    (or (mu4e-view-html-text msg (unless skip-headers
-                                  (mu4e--view-html-insert-headers msg)))
+                                  (mu4e--view-html-insert-headers msg))
+                            'remote-images)
        (mu4e-warn "No html or text part in this message"))))
 
 (defun mu4e-action-view-in-xwidget (_msg)
@@ -494,6 +497,8 @@ activates URLs (in plain-text mode only)."
          (mu4e--view-rendering t) ;; needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime nil) ;; avoid perf problems
          (mm-discouraged-alternatives (mu4e--view-discouraged-alternatives))
+         ;; handle remote images as per `mu4e-view-remote-image-policy'
+         (mm-text-html-renderer (mu4e--view-html-renderer msg))
          (gnus-newsgroup-charset
           (if (and charset (coding-system-p charset)) charset
             (detect-coding-region (point-min) (point-max) t)))
@@ -802,6 +807,7 @@ This is useful for advising some Gnus-functionality that does not work in mu4e."
     (define-key map "A" #'mu4e-view-mime-part-action)
     (define-key map "e" #'mu4e-view-save-attachments)
     (define-key map "J" #'mu4e-view-jump-to-mime-part)
+    (define-key map "I" #'mu4e-view-show-remote-images)
 
     ;; change the number of headers
     (define-key map (kbd "C-+") #'mu4e-headers-split-view-grow)
@@ -973,7 +979,7 @@ gnus toggles are supported in mu4e."
   :type '(alist :key-type string :value-type function))
 
 (defvar-local mu4e--view-html-fallback nil
-  "Non-nil if the view shows the shr-rendered html fallback.
+  "Non-nil if the view shows the html fallback.
 See `mu4e--view-render-html-fallback'.")
 
 (defun mu4e--view-html-p ()
@@ -991,14 +997,18 @@ See `mu4e--view-render-html-fallback'.")
   (funcall (mu4e-read-option "Massage: " mu4e-view-massage-options)))
 
 (defun mu4e--view-render-html-fallback ()
-  "Re-render the current message as html, using `shr'.
+  "Re-render the current message as html.
 This is used by `mu4e-view-toggle-html' for messages without a
 multipart/alternative part to toggle; toggle again (or use
 `mu4e-view-refresh') to go back to the normal rendering."
   (let* ((msg mu4e--view-message)
          (html (or (mu4e-view-html-text
-                    msg (mu4e--view-html-insert-headers msg))
+                    msg (mu4e--view-html-insert-headers msg) 'remote-images)
                    (mu4e-warn "No html or text part in this message")))
+         (remote-images (mu4e--view-remote-images-state html 'meta))
+         ;; shr ignores the Content-Security-Policy, so block explicitly.
+         (shr-blocked-images (unless (eq remote-images 'loaded) "."))
+         (shr-inhibit-images gnus-inhibit-images)
          (inhibit-read-only t)
          ;; do not render the document <title>; it would show up as a
          ;; heading before the message headers (in web-browsers, it is
@@ -1014,6 +1024,7 @@ multipart/alternative part to toggle; toggle again (or use
     (mu4e--view-linkify-buffer-text 'non-visual)
     (goto-char (point-min))
     (setq mu4e--view-html-fallback t)
+    (setq-local mu4e--view-remote-images remote-images)
     (set-buffer-modified-p nil)))
 
 (defun mu4e--view-mime-handle (media-type)
@@ -1032,7 +1043,9 @@ were alternatives to toggle."
   (when-let* ((html-part (mu4e--view-mime-handle "text/html"))
               ((mu4e--view-mime-handle "text/plain")))
     (save-excursion
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (mm-text-html-renderer
+             (mu4e--view-html-renderer mu4e--view-message)))
         ;; Call gnus-mime-inline-part directly, bypassing
         ;; gnus-article-part-wrapper (avoid gnus-summary-buffer.)
         (gnus-mime-inline-part (cdr html-part))
@@ -1067,6 +1080,30 @@ What this does depends on `mu4e-view-html-renderer':
     (mu4e--view-xwidget-toggle))
    ((mu4e--view-toggle-html-alternative))
    (t (mu4e--view-toggle-html-shr))))
+
+(defun mu4e-view-show-remote-images ()
+  "Show the current message including its remote images.
+This overrides `mu4e-view-remote-image-policy', and is
+remembered for the rest of the session."
+  (interactive)
+  (with-current-buffer (or (mu4e--view-xwidget-view-buffer)
+                           (mu4e-warn "No message view"))
+    (pcase mu4e--view-remote-images
+      ('nil (mu4e-message "No html in this message"))
+      ('none (mu4e-message "No remote images in this message"))
+      ('loaded (mu4e-message "Remote images already loaded"))
+      (_
+       (when (mu4e-yes-or-no-p "Are you sure you want to load remote images?")
+         (mu4e--view-remote-images-ask mu4e--view-message nil 'yes)
+         (cond
+          ((mu4e--view-xwidget-shown-p)
+           (mu4e--view-xwidget-rerender (lambda () 'xwidget)))
+          (mu4e--view-html-fallback
+           (mu4e-view-refresh)
+           ;; refreshing creates a new view buffer; restore the fallback.
+           (with-current-buffer gnus-article-buffer
+             (mu4e--view-render-html-fallback)))
+          (t (mu4e-view-refresh))))))))
 
 ;;; Bug Reference mode support
 

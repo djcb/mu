@@ -114,6 +114,18 @@
      for messages (see ~mu4e-view-html-renderer~ and the [[info:(mu4e) Rich-text][section in the manual]])
      (1.14.4)
 
+   - The variable ~mu4e-view-remote-image-policy~ determines whether to load
+     remote images in HTML-messages, both in the ~shr~ and ~xwidget~ views and with
+     ~mu4e-action-view-in-browser~: ~block-all~ (the default), ~allow-all~, ~ask~, or a
+     function of the message.
+
+     Note: in mu4e, this replaces ~gnus-blocked-images~, which no longer has any
+     effect; if you customized it for mu4e, please use
+     ~mu4e-view-remote-image-policy~ instead.
+
+     Press =I= in the message view (~mu4e-view-show-remote-images~) to load them for
+     the current message (1.14.5)
+
 *** scm
 
    - Added new ~--eval~ command-line option, so you can do e.g.

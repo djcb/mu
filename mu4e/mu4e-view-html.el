@@ -22,8 +22,8 @@
 
 ;;; Commentary:
 
-;; Render a message as html, and handle the links (URLs, e-mail
-;; addresses) in messages.
+;; Render a message as html, and handle the links (URLs, e-mail addresses) in
+;; messages. This applies both to "shr" and "xwidget" rendering.
 
 ;;; Code:
 
@@ -42,19 +42,22 @@
 ;;; Customization
 
 (defcustom mu4e-view-always-show-url-indicators nil
-  "Whether to always show link-indicators in plain-text messages.
+  "Always show link-indicators in plain-text messages?
 
-If nil, only show when `mu4e-view-go-to-url' or
+I.e. the [1], [2] next to the links.
+
+If nil, they only appear when `mu4e-view-go-to-url' or
 `mu4e-view-save-url' or `mu4e-view-fetch-url' are invoked."
   :type 'boolean
   :group 'mu4e-view)
 
 (defcustom mu4e-view-always-use-completion nil
-  "Whether to always use completing-read for choosing URLs in messages.
+  "Use completing-read for choosing URLs in plain-text messages?
 
-For html-messages, we always use completion when choosing URLs.
-However, when set to non-nil, also do this for plain-text display,
-instead of the in-buffer [1][2] etc. links."
+If non-nil, use `completing-read', `completing-read-multiple' for
+choosing links in plain-text message, just like we do for html
+messages. Otherwise, use the in-buffer [1][2] etc. links for
+plaint-text messages."
   :type 'boolean
   :group 'mu4e-view)
 
@@ -71,19 +74,51 @@ keeps all the links."
           (repeat string))
   :group 'mu4e-view)
 
+(defcustom mu4e-view-remote-image-policy 'block-all
+  "Whether to allow loading remote images in HTML messages.
+
+This applies to all html rendering in mu4e (shr and xwidget, see
+`mu4e-view-html-renderer').
+
+Loading remote images can be privacy risk, so by default this is
+not allowed (`block-all').
+
+The value is one of:
+- `block-all': never allow loading remote images
+- `allow-all': always allow loading remote images
+- `ask': ask, for messages that have remote images
+- a function that takes a message plist and returns one of the
+  above.
+
+Use `mu4e-view-show-remote-images' to load the remote images for
+the current message, regardless of this setting."
+  :type '(choice (const :tag "Block all" block-all)
+                 (const :tag "Allow all" allow-all)
+                 (const :tag "Ask" ask)
+                 (function :tag "Function of message"))
+  :group 'mu4e-view)
+
 ;;; HTML fragments
 
-(defconst mu4e--view-html-meta
+(defconst mu4e--view-html-meta-template
   (concat "<meta charset=\"utf-8\">"
+          ;; don't tell (allowed) remote image servers where we come from.
+          "<meta name=\"referrer\" content=\"no-referrer\">"
           "<meta http-equiv=\"Content-Security-Policy\" content=\""
           ;; block everything, except for inline styles and data: images and
           ;; fonts. Note: form-action and base-uri do not fall back to
           ;; default-src.
           "default-src 'none'; style-src 'unsafe-inline'; "
-          "img-src data:; font-src data:; "
+          "img-src %s; font-src data:; "
           "form-action 'none'; base-uri 'none'\">")
   "HTML meta tags for the head of the document. Block scripts /
-remote stuff.")
+remote stuff. The %s is replaced by the allowed image sources.")
+
+(defun mu4e--view-html-meta (remote-images)
+  "Return the HTML meta tags for the head of the document.
+If REMOTE-IMAGES is non-nil, allow for loading remote images."
+  (format mu4e--view-html-meta-template
+          (if remote-images "data: https: http:" "data:")))
 
 (defconst mu4e--view-html-head-template "<head>%s</head>"
   "Template for the head of an HTML document.
@@ -112,9 +147,7 @@ The %s are replaced by the head content and the body content.")
   "HTML fragment pre message-headers.")
 
 (defconst mu4e--view-html-headers-post
-  ;; the empty paragraph is invisible in web-browsers but a nice empty
-  ;; line in shr.
-  "</div>\n<p style=\"margin:0\"></p>\n"
+   "</div>\n<p style=\"margin:0\"></p>\n"
   "HTML fragment post header.")
 
 (defconst mu4e--view-html-header-template "<b>%s:</b> %s<br>\n"
@@ -279,35 +312,37 @@ Return updated HTML, or nil."
   (rx bos (? ?\uFEFF) ;; byte-order mark
       (? (* (any " \t\n\f\r")) "<!doctype" (* (not (any ">"))) ">"))
   "Regexp matching the start of an HTML document.
-I.e., an optional byte-order mark followed by an optional doctype.")
+I.e., an byte-order-mark followed by doctype (both optional)")
 
-(defun mu4e--view-html-inject-meta (html)
+(defun mu4e--view-html-inject-meta (html &optional remote-images)
   "Insert `mu4e--view-html-meta' at the start of HTML.
-Return the updated HTML.
+Return the updated HTML. If REMOTE-IMAGES is non-nil, allow for
+loading remote images.
 
-A Content-Security-Policy in a meta-tag lives in the document
-head, and applies to what follows it. So, let's put it first."
+A Content-Security-Policy in a meta-tag in the document head, and
+applies to what follows it. So, let's put it first."
   (let* ((case-fold-search t)
          (pos (and (string-match mu4e--view-html-doctype-regexp html)
                    (match-end 0))))
-    (concat (substring html 0 pos) mu4e--view-html-meta (substring html pos))))
+    (concat (substring html 0 pos)
+            (mu4e--view-html-meta remote-images)
+            (substring html pos))))
 
+;; woohoo regexp soup
 (defconst mu4e--view-html-meta-tag-regexp
-  (concat "<meta\\(?:>"                     ;; bare <meta>
-          "\\|[ \t\n\f\r/]\\(?:"            ;; or a delimiter, then any of:
-          "\"[^\"]*\\(?:\"\\|\\'\\)"        ;;   "double-quoted"
-          "\\|'[^']*\\(?:'\\|\\'\\)"        ;;   'single-quoted'
-          "\\|[^\"'>]\\)*"                  ;;   anything else but >
-          "\\(?:>\\|\\'\\)\\)")             ;; until > or end
+  (concat "<meta\\(?:>"              ;; bare <meta>
+          "\\|[ \t\n\f\r/]\\(?:"     ;; or a delimiter, then any of:
+          "\"[^\"]*\\(?:\"\\|\\'\\)" ;;   "double-quoted"
+          "\\|'[^']*\\(?:'\\|\\'\\)" ;;   'single-quoted'
+          "\\|[^\"'>]\\)*"           ;;   anything else but >
+          "\\(?:>\\|\\'\\)\\)")      ;; until > or end
   "Regexp matching a <meta> tag (use with `case-fold-search').
 Quoted attribute values may contain \">\"; an unterminated quote
 runs until the end, as it would for an HTML parser.")
 
 (defun mu4e--view-html-remove-meta (html)
   "Remove all <meta> tags from HTML and return the result.
-These may do things we do not want, such as http-equiv=refresh,
-which makes the HTML-renderer load some remote URL. We add our
-own, see `mu4e--view-html-inject-meta'."
+These may do things we do not want."
   (let ((case-fold-search t))
     ;; repeat, so removing one tag cannot create a new one, as in
     ;; "<me<meta>ta ...>"
@@ -337,7 +372,104 @@ HEADERS is an alist of (NAME . VALUE)."
     headers "")
    mu4e--view-html-headers-post))
 
+;;; Remote images
+
+(defvar mu4e--view-remote-images-answers (make-hash-table :test #'equal)
+  "Hash of message-id => `yes' or `no', for loading remote images.")
+
+(defconst mu4e--view-remote-image-regexp
+  (concat "\\(?:"
+          ;; attributes, e.g. src="https://...
+          "\\(?:src\\(?:set\\)?\\|background\\|poster\\)"
+          "[[:space:]]*=[[:space:]]*[\"']?"
+          ;; css, e.g. url('https://...
+          "\\|url([[:space:]]*[\"']?"
+          "\\)[[:space:]]*https?://")
+  "Regexp matching (the start of) a likely remote image in HTML.
+Use with `case-fold-search'.")
+
+(defun mu4e--view-html-has-remote-images-p (html)
+  "Return non-nil if HTML seems to refer to remote images."
+  (let ((case-fold-search t))
+    (string-match-p mu4e--view-remote-image-regexp html)))
+
+(defvar-local mu4e--view-remote-images nil
+  "State of the remote images in the current message view.
+One of `none', `loaded' or `blocked', or nil if unknown; see
+`mu4e--view-remote-images-state'.")
+
+(defun mu4e--view-remote-images-state (html loaded)
+  "Return the state of the remote images in HTML.
+LOADED is non-nil if remote images may be loaded, or `meta' to
+determine this from the meta-tag that `mu4e--view-html-inject-meta'
+added to HTML. Return `none' if
+there seem to be no remote images, `loaded' if they may be loaded,
+and `blocked' otherwise."
+  (cond
+   ((not (mu4e--view-html-has-remote-images-p html)) 'none)
+   ((if (eq loaded 'meta)
+        ;; message's own meta-tags are removed, so this must be ours.
+        (string-search (mu4e--view-html-meta t) html)
+      loaded)
+    'loaded)
+   (t 'blocked)))
+
+(defun mu4e--view-set-remote-images (state)
+  "Set the remote images STATE for the current view.
+Do not overwrite `blocked', so a message with multiple html parts
+is `blocked' if any of them is."
+  (unless (eq mu4e--view-remote-images 'blocked)
+    (setq-local mu4e--view-remote-images state)))
+
+(defun mu4e--view-remote-images-ask (msg &optional html answer)
+  "Return non-nil if the user allows the remote images in MSG.
+If ANSWER (`yes' or `no') is non-nil, remember it for MSG.
+Otherwise, use the remembered answer for MSG, if any; or, if HTML
+is non-nil and seems to have remote images, ask the user, and
+remember that answer."
+  (let* ((msgid (mu4e-message-field msg :message-id))
+         (answer
+          (or answer
+              (and msgid (gethash msgid mu4e--view-remote-images-answers))
+              (and html (mu4e--view-html-has-remote-images-p html)
+                   (if (mu4e-y-or-n-p "Load remote images? ") 'yes 'no)))))
+    (when (and msgid answer)
+      (puthash msgid answer mu4e--view-remote-images-answers))
+    (eq answer 'yes)))
+
+(defun mu4e--view-load-remote-images-p (msg html)
+  "Return non-nil if remote images in MSG with HTML may be loaded.
+See `mu4e-view-remote-image-policy'."
+  (let ((policy (if (memq mu4e-view-remote-image-policy
+                          '(block-all allow-all ask))
+                    mu4e-view-remote-image-policy
+                  (funcall mu4e-view-remote-image-policy msg))))
+    (pcase policy
+      ('allow-all t)
+      ('ask (mu4e--view-remote-images-ask msg html))
+      ;; block-all, unless the user explicitly asked for this message.
+      (_ (mu4e--view-remote-images-ask msg)))))
+
 ;;; Rendering
+
+(declare-function mm-inline-text-html "mm-view" (handle))
+
+(defun mu4e--view-html-renderer (msg)
+  "Return an `mm-text-html-renderer' for MSG.
+This wraps the current `mm-text-html-renderer', and blocks remote
+images unless `mu4e-view-remote-image-policy' allows for them."
+  (let ((renderer mm-text-html-renderer)
+        (view-p (derived-mode-p 'mu4e-view-mode)))
+    (lambda (handle)
+      (let* ((html (and view-p (mu4e--view-mime-part-string handle)))
+             (load (and view-p (mu4e--view-load-remote-images-p msg html)))
+             ;; this overrides what `gnus-blocked-images' says.
+             (mm-html-blocked-images (unless load "."))
+             (mm-text-html-renderer renderer))
+        (when view-p
+          (mu4e--view-set-remote-images
+           (mu4e--view-remote-images-state html load)))
+        (mm-inline-text-html handle)))))
 
 (defun mu4e--view-html-body (handles)
   "Return HTML for the message body in HANDLES, or nil.
@@ -351,22 +483,30 @@ Use html-part or text-part if there is none."
                       (mu4e--view-linkify-html
                        (mu4e--view-mime-part-string handle)))))))
 
-(defun mu4e--view-html-render (handles &optional headers)
+(defun mu4e--view-html-render (handles &optional headers remote-images-p)
   "Return a self-contained HTML document for MIME HANDLES, or nil.
-Prepend HEADERS if non-nil."
+Prepend HEADERS if non-nil. If REMOTE-IMAGES-P is non-nil, it is a
+function that takes the HTML and returns non-nil if remote images
+may be loaded."
   (when-let* ((html (mu4e--view-html-body handles)))
     (setq html (mu4e--view-html-remove-meta html))
     (when-let* ((cid-parts (mu4e--view-cid-parts handles)))
       (setq html (mu4e--view-resolve-cids html cid-parts)))
-    (when headers
-      (setq html (mu4e--view-html-prepend-headers html headers)))
-    ;; this must be last; see `mu4e--view-html-inject-meta'.
-    (mu4e--view-html-inject-meta html)))
+    (let ((remote-images (and remote-images-p
+                              (funcall remote-images-p html))))
+      (when headers
+        (setq html (mu4e--view-html-prepend-headers html headers)))
+      ;; this must be last; see `mu4e--view-html-inject-meta'.
+      (mu4e--view-html-inject-meta html remote-images))))
 
-(defun mu4e-view-html-text (msg &optional headers)
+(defun mu4e-view-html-text (msg &optional headers remote-images)
   "Return an HTML rendering of MSG as a string.
 Either the html part or text if there isn't. Prepend headers, if
 any.
+
+If REMOTE-IMAGES is non-nil, the document allows for loading remote
+images if `mu4e-view-remote-image-policy' says so (which may ask the
+user). Otherwise, remote images are always blocked.
 
 Return text or nil if the message has neither an html nor a
 plain-text part."
@@ -385,7 +525,9 @@ plain-text part."
                      (append headers
                              (list (cons "Attachments"
                                          (string-join attachments ", "))))))
-             (mu4e--view-html-headers headers)))
+             (mu4e--view-html-headers headers))
+           (when remote-images
+             (lambda (html) (mu4e--view-load-remote-images-p msg html))))
         (mm-destroy-parts handles)))))
 
 (defun mu4e--view-html-temp-file (html)
