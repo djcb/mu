@@ -1622,21 +1622,27 @@ and you can configure how it does that.
 @item
 The first thing to decide is whether you prefer the plain-text or the rich-text
 (HTML) version of messages, when both are available. By default, @t{mu4e} uses
-the 'richest' format it can find. You can change this by setting the
-variable @code{mu4e-view-prefer-plain-text} to non-@code{nil}.
+the 'richest' format it can find. You can change this by setting the variable
+@code{mu4e-view-prefer-plain-text} to non-@code{nil}.
 @vindex mu4e-view-prefer-plain-text
 
 You can toggle between the plain-text and HTML versions of a message using
 @kbd{M-x mu4e-view-toggle-html} or @key{h}. For plain-text messages without an
 HTML-part, an HTML part is generated.
 
+If a message is HTML-only, switching to the text-only version is not possible;
+but @t{mu4e} gets you the closest it can get, the @t{shr}-version (see next
+item)
+
 @item
 The second decision is how to show (render) these rich-text messages. This is
 controlled through the variable @code{mu4e-view-html-renderer}, which expects a
-symbol. You have two alternatives: @t{shr}, which is a renderer tightly
-integrated with Emacs and the message view, or @t{xwidget}, which is the richer,
-graphical option, based on the @t{webkit} web browser code (and only works in a
-graphical Emacs session).
+symbol.
+
+You have two alternatives: @t{shr}, which is a renderer tightly integrated with
+Emacs and the message view, or @t{xwidget}, which is the richer, graphical
+option, based on the @t{webkit} web browser code (and only works in a graphical
+Emacs session).
 @vindex mu4e-view-html-renderer
 @end enumerate
 
