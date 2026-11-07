@@ -313,6 +313,71 @@ Mu::run_command0(std::initializer_list<std::string> args, bool try_setsid)
 		return Ok(std::move(*res));
 }
 
+static Result<std::string>
+grab_subprocess_result(GSubprocess *proc, const std::string& prog,
+		       std::string_view input)
+{
+	GError *err{};
+	GBytes *in_bytes{g_bytes_new_static(input.data(), input.size())};
+	GBytes *out_bytes{}, *err_bytes{};
+
+	const auto ok{g_subprocess_communicate(proc, in_bytes, {},
+					       &out_bytes, &err_bytes, &err)};
+	g_bytes_unref(in_bytes);
+
+	const auto bytes_str=[](GBytes *bytes)->std::string {
+		if (!bytes)
+			return {};
+		gsize len{};
+
+		const auto ptr{g_bytes_get_data(bytes, &len)};
+		std::string str{static_cast<const char*>(ptr), len};
+		g_bytes_unref(bytes);
+
+		return str;
+	};
+	auto out_str{bytes_str(out_bytes)}, err_str{bytes_str(err_bytes)};
+
+	if (!ok)
+		return Err(Error::Code::Command, &err,
+			   "failed to communicate with {}", prog);
+	else if (!g_subprocess_get_if_exited(proc))
+		return Err(Error::Code::Command, "{} terminated abnormally{}{}",
+			   prog, err_str.empty() ? "" : ": ", err_str);
+	else if (const auto code{g_subprocess_get_exit_status(proc)}; code != 0)
+		return Err(Error::Code::Command, "{} returned {}{}{}",
+			   prog, code, err_str.empty() ? "" : ": ", err_str);
+	else
+		return Ok(std::move(out_str));
+}
+
+Result<std::string>
+Mu::two_way_pipe(std::initializer_list<std::string> args, std::string_view input)
+{
+	if (args.size() == 0)
+		return Err(Error::Code::InvalidArgument, "no program specified");
+
+	std::vector<const char*> argvec{};
+	for (auto&& arg: args)
+		argvec.emplace_back(arg.c_str());
+	argvec.emplace_back(nullptr);
+
+	const auto& prog{*args.begin()};
+	GError *err{};
+	GSubprocess *proc{g_subprocess_newv(
+			argvec.data(),
+			static_cast<GSubprocessFlags>(G_SUBPROCESS_FLAGS_STDIN_PIPE  |
+						      G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+						      G_SUBPROCESS_FLAGS_STDERR_PIPE),
+			&err)};
+	if (!proc)
+		return Err(Error::Code::Command, &err, "failed to start {}", prog);
+
+	auto res{grab_subprocess_result(proc, prog, input)};
+	g_object_unref(proc);
+
+	return res;
+}
 
 Mu::Option<std::string>
 Mu::program_in_path(const std::string& name)
@@ -562,6 +627,39 @@ test_read_write_from_to_file()
 
 
 
+static void
+test_two_way_pipe()
+{
+	const auto cat{program_in_path("cat")};
+	const auto sh{program_in_path("sh")};
+	if (!cat || !sh) {
+		g_test_skip("cat/sh not found");
+		return;
+	}
+
+	const std::string input{"hello\0world", 11}; // binary-safe
+	const auto res{two_way_pipe({*cat}, input)};
+	assert_ok(res);
+	assert_equal(*res, input);
+
+	const auto empty{two_way_pipe({*cat}, {})};
+	assert_ok(empty);
+	g_assert_true(empty->empty());
+
+	// non-zero exit
+	const auto fail{two_way_pipe({*sh, "-c", "echo oops >&2; exit 3"}, "")};
+	g_assert_false(!!fail);
+	g_assert_true(fail.error().code() == Error::Code::Command);
+	g_assert_true(std::string{fail.error().what()}.find("oops") != std::string::npos);
+
+	// killed by a signal
+	g_assert_false(!!two_way_pipe({*sh, "-c", "kill -9 $$"}, ""));
+
+	// non-existent program
+	g_assert_false(!!two_way_pipe({"/nonexistent/program"}, "foo"));
+	g_assert_false(!!two_way_pipe({}, "foo"));
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -580,6 +678,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/file/expand-path", test_expand_path);
 	g_test_add_func("/utils/file/make-remove-directory", test_make_remove_directory);
 	g_test_add_func("/utils/file/read-write-from-to-file", test_read_write_from_to_file);
+	g_test_add_func("/utils/file/two-way-pipe", test_two_way_pipe);
 
 	return g_test_run();
 }

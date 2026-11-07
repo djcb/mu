@@ -252,6 +252,20 @@ Result<CommandOutput> run_command0(std::initializer_list<std::string> args,
 				   bool try_setsid=false);
 
 /**
+ * Run a program, write to its standard input and read its standard
+ * output, until it terminates.
+ *
+ * args[0] must be the full path to some program
+ *
+ * @param args a list of commmand line arguments (like argv)
+ * @param input data to write to the program's standard input
+ *
+ * @return the output string (Ok) or an error
+ */
+Result<std::string> two_way_pipe(std::initializer_list<std::string> args,
+				 std::string_view input);
+
+/**
  * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the
  * the program 'open' is used for this; on other platforms 'xdg-open' to do the
  * actual opening. In addition you can set it to another program by setting thep
