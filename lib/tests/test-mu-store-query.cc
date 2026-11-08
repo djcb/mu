@@ -54,9 +54,9 @@ make_test_store(const std::string& test_path, const TestMap& test_map,
 
 		/* create the directory for the message */
 		const auto msgpath{join_paths(maildir, item.first)};
-		auto dir = to_string_gchar(g_path_get_dirname(msgpath.c_str()));
+		const auto dir = to_string_gchar(g_path_get_dirname(msgpath.c_str()));
 		if (g_test_verbose())
-			mu_message("create maildir {}", dir.c_str());
+			mu_message("create maildir {}", dir);
 
 		g_assert_cmpuint(g_mkdir_with_parents(dir.c_str(), 0700), ==, 0);
 

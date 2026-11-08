@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2023 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2023-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -28,7 +28,7 @@ Mu::mu_cmd_remove(Mu::Store& store, const Options& opts)
 	for (auto&& file: opts.remove.files) {
 		const auto res = store.remove_message(file);
 		if (!res)
-			return Err(Error::Code::File, "failed to remove {}", file.c_str());
+			return Err(Error::Code::File, "failed to remove {}", file);
 		else
 			mu_debug("removed message @ {}", file);
 	}

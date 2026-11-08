@@ -107,7 +107,7 @@ CommandHandler::invoke(const Command& cmd, bool do_validate) const
 	const auto cmit{cmap_.find(cmd.name())};
 	if (cmit == cmap_.cend())
 		return Err(Error::Code::Command,
-			   "unknown command '{}'", cmd.to_string().c_str());
+			   "unknown command '{}'", cmd.to_string());
 
 	const auto& cmd_info{cmit->second};
 	if (do_validate) {
