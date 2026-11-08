@@ -274,6 +274,17 @@ else
   config_h_data.set('HAVE_CLD2', 0)
 endif
 
+
+#
+# use libpoppler for PDF extractions if we can find it
+poppler_dep = dependency('poppler-glib', required: get_option('poppler'))
+if poppler_dep.found()
+  config_h_data.set('BUILD_PDF_TO_TEXT', 1)
+else
+  message('Poppler not found or disabled; no support for pdf-extraction')
+  config_h_data.set('BUILD_PDF_TO_TEXT', 0)
+endif
+
 #
 # guile
 #
@@ -420,6 +431,7 @@ summary(dep_summary, section: 'Dependencies')
 
 summary({'language detection (cld2)'    : cld2_dep.type_name() == 'internal' ? 'true (subproject)'
                                           : cld2_dep.found() and get_option('cld2').allowed(),
+         'pdf-extraction'               : poppler_dep.found(),
          'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),
          'guile (old-style, deprecated)': guile_dep.found() and get_option('guile').allowed(),
          'readline'                     : get_option('readline').enabled(),

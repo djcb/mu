@@ -17,6 +17,7 @@
 srcs = [
   'mu-command-handler.cc',
   'mu-html-to-text.cc',
+  'mu-pdf-to-text.cc',
   'mu-lang-detector.cc',
   'mu-logger.cc',
   'mu-option.cc',
@@ -40,6 +41,7 @@ lib_mu_utils=static_library('mu-utils',
   config_h_dep,
   readline_dep,
   cld2_dep,
+  poppler_dep,
   fmt_dep,
   tl_expected_dep,
   tl_optional_dep

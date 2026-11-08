@@ -1,4 +1,4 @@
-## Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+## Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 ##
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -14,11 +14,7 @@
 ## along with this program; if not, write to the Free Software Foundation,
 ## Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-
 ################################################################################
-# tests
-
-
 #
 # tests
 #
@@ -77,6 +73,14 @@ test('test-html-to-text',
                 build_by_default: false,
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_utils_dep]))
+
+test('test-pdf-to-text',
+     executable('test-pdf-to-text', '../mu-pdf-to-text.cc',
+                install: false,
+                build_by_default: false,
+                cpp_args: ['-DBUILD_TESTS'],
+                dependencies: [config_h_dep, glib_dep, lib_mu_utils_dep, poppler_dep]))
+
 
 test('test-error',
      executable('test-error', '../mu-error.cc',
