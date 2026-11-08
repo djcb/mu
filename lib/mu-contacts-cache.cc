@@ -208,15 +208,12 @@ ContactsCache::add(Contact&& contact)
 
 	if (it == priv_->contacts_.end()) { // completely new contact
 
-		contact.name		 = contact.name;
 		if (!contact.personal)
 			contact.personal = is_personal(contact.email);
 		contact.tstamp		 = g_get_monotonic_time();
 
 		auto email{contact.email};
-		// return priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)))
-		//     .first->second;
-		mu_debug("adding contact {} <{}>", contact.name.c_str(), contact.email.c_str());
+		mu_debug("adding contact {} <{}>", contact.name, contact.email);
 		priv_->contacts_.emplace(ContactUMap::value_type(email, std::move(contact)));
 
 	} else {	// existing contact.
@@ -231,7 +228,7 @@ ContactsCache::add(Contact&& contact)
 			existing.message_date = contact.message_date;
 		}
 		mu_debug("updating contact {} <{}> ({})",
-			 contact.name, contact.email, existing.frequency);
+			 existing.name, existing.email, existing.frequency);
 	}
 }
 
