@@ -44,6 +44,8 @@
 
 ;; Keep byte-compiler happy
 (declare-function xwidget-webkit-new-session "xwidget" (url))
+(declare-function xwidget-webkit-load-html "xwidget.c"
+  (xwidget text &optional base-uri))
 (declare-function set-xwidget-query-on-exit-flag "xwidget"
   (xwidget flag))
 (declare-function xwidget-at "xwidget" (pos))
@@ -62,7 +64,8 @@
 (defvar mu4e--view-message)
 (defvar mu4e--view-renderer-override nil
   "Override the renderer chosen by `mu4e-view-html-renderer'.")
-(defvar-local mu4e--view-xwidget-tmp-file nil "Temp HTML file.")
+(defvar-local mu4e--view-xwidget-html nil
+  "HTML document to show in the xwidget.")
 (defvar-local mu4e--view-xwidget-buffer nil "Xwidget webkit buffer")
 (defvar-local mu4e--view-xwidget-view-buffer nil
   "Mu4e view buffer associated with xwidget view.")
@@ -247,8 +250,8 @@ See `mu4e--view-xwidget-forward-keys'."
 
 ;;; Displaying
 
-(defun mu4e--view-xwidget-display (url view-buf)
-  "Display URL in an xwidget session in the window of VIEW-BUF.
+(defun mu4e--view-xwidget-display (html view-buf)
+  "Display the HTML string in an xwidget session in the window of VIEW-BUF.
 Do nothing if VIEW-BUF is not displayed."
   (when-let* ((win (get-buffer-window view-buf)))
     (let ((xwidget-webkit-disable-javascript t)
@@ -259,7 +262,7 @@ Do nothing if VIEW-BUF is not displayed."
       ;; this shows the new session in the selected window, and sizes
       ;; the xwidget accordingly.
       (with-selected-window win
-        (xwidget-webkit-new-session url)
+        (xwidget-webkit-new-session "about:blank")
         (setq xw-buf (current-buffer)))
       (with-current-buffer view-buf
         (setq mu4e--view-xwidget-buffer xw-buf))
@@ -270,15 +273,15 @@ Do nothing if VIEW-BUF is not displayed."
                                                       view-buf))
         (mu4e--view-xwidget-setup-keys)
         (when-let* ((xw (xwidget-at (point-min))))
-          (set-xwidget-query-on-exit-flag xw nil))))))
+          (set-xwidget-query-on-exit-flag xw nil)
+          (xwidget-webkit-load-html xw html))))))
 
 (defun mu4e--view-xwidget-show ()
   "Show the current view buffer's message in an xwidget."
   (remove-hook 'mu4e-view-rendered-hook #'mu4e--view-xwidget-show t)
-  (when mu4e--view-xwidget-tmp-file
+  (when mu4e--view-xwidget-html
     (with-demoted-errors "mu4e xwidget: %S"
-      (mu4e--view-xwidget-display
-       (concat "file://" mu4e--view-xwidget-tmp-file) (current-buffer)))))
+      (mu4e--view-xwidget-display mu4e--view-xwidget-html (current-buffer)))))
 
 ;;; Main rendering function
 
@@ -310,9 +313,8 @@ The buffer must contain the raw message."
         (mu4e--view-register-html-links html)
         (setq-local mu4e--view-remote-images
                     (mu4e--view-remote-images-state html 'meta))
-        (setq-local mu4e--view-xwidget-tmp-file
-                    (mu4e--view-html-temp-file
-                     (concat html mu4e--view-xwidget-no-click-style)))
+        (setq-local mu4e--view-xwidget-html
+                    (concat html mu4e--view-xwidget-no-click-style))
         (add-hook 'kill-buffer-hook #'mu4e--view-xwidget-cleanup nil t)
         ;; display once the view buffer is in its window.
         (add-hook 'mu4e-view-rendered-hook #'mu4e--view-xwidget-show 90 t)
@@ -325,10 +327,9 @@ The buffer must contain the raw message."
   "Clean up xwidget resources when the view buffer is killed."
   ;; Note: deleting the selected window makes another buffer current, so
   ;; get what we need from the buffer-local variables first.
-  (let ((xw-buf mu4e--view-xwidget-buffer)
-        (tmp-file mu4e--view-xwidget-tmp-file))
+  (let ((xw-buf mu4e--view-xwidget-buffer))
     (setq mu4e--view-xwidget-buffer nil
-          mu4e--view-xwidget-tmp-file nil)
+          mu4e--view-xwidget-html nil)
     (when (buffer-live-p xw-buf)
       ;; Delete the xwidget window if visible; unless it is the
       ;; selected one, since then the caller (e.g.,
@@ -336,9 +337,7 @@ The buffer must contain the raw message."
       (when-let* ((win (get-buffer-window xw-buf))
                   ((not (eq win (selected-window)))))
         (ignore-errors (delete-window win)))
-      (kill-buffer xw-buf))
-    (when (and tmp-file (file-exists-p tmp-file))
-      (delete-file tmp-file))))
+      (kill-buffer xw-buf))))
 
 ;;; Toggling
 
