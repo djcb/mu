@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+"""Script to turn a text or binary into something we can #include.
+
+C++26 has #embed, but we're not there yet.
+
+Reads filename and variable name as argv[1] and argv[2]; writes to stdout
+
+E.g.:
+
+ $ make-embeddable foo.pdf foo_pdf_data
+
+inline constexpr auto foo_pdf_data = std::to_array<uint8_t>({
+  // n lines, 8 bytes per lines
+  0x00, 0x12, 0x0a, 0x12, 0x00, 0x12, 0x00, 0x12,
+});
+
+$ make-embeddable foo.txt foo_txt --text
+inline constexpr std::string_view foo_txt =
+R"(hello world
+a second line)";
+
+The including file is responsible for including <array>, <cstdint> and
+<string_view> as needed.
+
+"""
+
+import argparse
+import re
+import sys
+
+BYTES_PER_LINE = 8
+
+def embed_binary(data: bytes, name: str) -> str:
+    """Turn binary data into a std::array of uint8_t """
+    if not data:
+        return f"inline constexpr std::array<uint8_t, 0> {name}{{}};\n"
+
+    lines = []
+    for i in range(0, len(data), BYTES_PER_LINE):
+        chunk = data[i:i + BYTES_PER_LINE]
+        lines.append("  " + " ".join(f"0x{b:02x}," for b in chunk))
+
+    return (f"inline constexpr auto {name} = std::to_array<uint8_t>({{\n"
+            + "\n".join(lines)
+            + "\n});\n")
+
+def raw_delimiter(text: str) -> str:
+    """Find a raw-string delimiter such that )delim" does not occur in text."""
+    delim, n = "", 0
+    while f'){delim}"' in text:
+        n += 1
+        delim = f"x{n}"
+        if len(delim) > 16:  # C++ limit on raw-string delimiter length
+            sys.exit("error: cannot find a suitable raw-string delimiter")
+    return delim
+
+def embed_text(data: bytes, name: str) -> str:
+    """Turn textual data into a std::string_view"""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        sys.exit(f"error: not valid UTF-8 text: {e}")
+    if "\0" in text:
+        sys.exit("error: text contains NUL characters; use binary mode")
+
+    delim = raw_delimiter(text)
+    return (f"inline constexpr std::string_view {name} =\n"
+            f'R"{delim}({text}){delim}";\n')
+
+def main() -> None:
+    """Main routine"""
+    parser = argparse.ArgumentParser(
+        description="Turn a file into something we can #include.")
+    parser.add_argument("file", help="input file")
+    parser.add_argument("name", help="C++ variable name")
+    parser.add_argument("--text", action="store_true",
+                        help="embed as std::string_view (UTF-8 text)")
+    args = parser.parse_args()
+
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", args.name):
+        sys.exit(f"error: '{args.name}' is not a valid C++ identifier")
+
+    with open(args.file, "rb") as f:
+        data = f.read()
+
+    sys.stdout.write(embed_text(data, args.name) if args.text
+                     else embed_binary(data, args.name))
+
+if __name__ == "__main__":
+    main()
