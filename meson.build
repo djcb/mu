@@ -300,10 +300,23 @@ else
 endif
 
 #
-# use libpoppler for PDF extractions if we can find it
+# use libpoppler for PDF extractions if we can find it; we only use it from a
+# locked-down helper.
 poppler_dep = dependency('poppler-glib', required: get_option('poppler'))
+if poppler_dep.found() and not lockdown_helper_dep.found()
+  if get_option('poppler').enabled()
+    error('pdf-extraction requires locked-down helper support (libseccomp on Linux)')
+  endif
+  message('No locked-down helper support; disabling pdf-extraction')
+  poppler_dep = dependency('', required: false)
+endif
+
 if poppler_dep.found()
   config_h_data.set('BUILD_PDF_TO_TEXT', 1)
+  # the (sandboxed) pdf-to-text helper; can be overridden at runtime with
+  # the MU_PDF_TO_TEXT_PROGRAM environment variable.
+  config_h_data.set_quoted('MU_PDF_TO_TEXT_PROGRAM',
+                           prefixdir / get_option('libexecdir') / 'mu-pdf2text')
 else
   message('Poppler not found or disabled; no support for pdf-extraction')
   config_h_data.set('BUILD_PDF_TO_TEXT', 0)

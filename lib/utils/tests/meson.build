@@ -74,13 +74,16 @@ test('test-html-to-text',
                 cpp_args: ['-DBUILD_TESTS'],
                 dependencies: [glib_dep, lib_mu_utils_dep]))
 
-test('test-pdf-to-text',
-     executable('test-pdf-to-text', '../mu-pdf-to-text.cc',
-                install: false,
-                build_by_default: false,
-                cpp_args: ['-DBUILD_TESTS'],
-                dependencies: [config_h_dep, glib_dep, lib_mu_utils_dep, poppler_dep]))
-
+if poppler_dep.found()
+  test('test-pdf-to-text',
+       executable('test-pdf-to-text', '../mu-pdf-to-text.cc',
+                  install: false,
+                  build_by_default: false,
+                  cpp_args: ['-DBUILD_TESTS', '-DBUILD_PDF_TO_TEXT_INTERNAL'],
+                  dependencies: [config_h_dep, glib_dep, lib_mu_utils_dep, poppler_dep]),
+       env: pdf2text_env,
+       depends: pdf2text)
+endif
 
 test('test-error',
      executable('test-error', '../mu-error.cc',

@@ -25,7 +25,7 @@
 #include <vector>
 #include <chrono>
 #include <memory>
-#include <cstdarg>
+#include <span>
 #include <glib.h>
 #include <ostream>
 #include <type_traits>
@@ -465,13 +465,34 @@ constexpr ::time_t time_t_max = std::numeric_limits<::time_t>::max();
 
 /**
  * Crudely convert HTML to plain text. This attempts to scrape the
- * human-readable text from html-email so we can use it for indexing.
+ * human-readable text from the HTML so we can use it for indexing.
  *
- * @param html html
+ * @param html html-text
  *
  * @return plain text
  */
 [[nodiscard]] std::string html_to_text(const std::string& html);
+/**
+ * Crudely convert PDF to plain text. This attempts to scrape the
+ * human-readable text from the PDF so we can use it for indexing.
+ *
+ * Do the conversion in a separate, locked-down
+ * process, using the mu-pdf2text helper program since PDF data is untrusted.
+ *
+ * The helper is the installed one (<prefix>/libexec/mu-pdf2text), unless
+ * overridden through the MU_PDF_TO_TEXT_PROGRAM environment variable.
+ *
+ * PDFs bigger than max_pdf_size are not considered at all.
+ *
+ * @param data span with PDF data
+ *
+ * @return text extracted from the PDF, or Nothing
+ */
+[[nodiscard]] Option<std::string> pdf_to_text(std::span<const uint8_t> data);
+
+inline constexpr size_t max_pdf_size = 32 << 20;
+/**< Maximum size (in bytes) of PDFs for pdf_to_text; bigger ones are
+   skipped. */
 
 /**
  * Hack to avoid locale crashes

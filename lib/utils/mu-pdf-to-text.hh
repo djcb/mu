@@ -20,6 +20,12 @@
 #ifndef MU_PDF_TO_TEXT_HH
 #define MU_PDF_TO_TEXT_HH
 
+#include <string>
+#include <cstdint>
+#include <span>
+
+#include "mu-option.hh"
+
 namespace Mu {
 /**
  * Crudely convert PDF to plain text. This attempts to scrape the
@@ -27,9 +33,14 @@ namespace Mu {
  *
  * In-process version, for internal use.
  *
+ * @param data span with PDF data
+ * @param max_size the maximum size of the text; any text beyond
+ * that is dropped. 0 means unlimited.
+ *
  * @return text extracted from the PDF, or Nothing
  */
-[[nodiscard]] Option<std::string> pdf_to_text_internal(const std::vector<uint8_t>& data);
-};
+[[nodiscard]] Option<std::string> pdf_to_text_internal(std::span<const uint8_t> data,
+						       size_t max_size = 0);
+}
 
 #endif /*MU_PDF_TO_TEXT_HH*/

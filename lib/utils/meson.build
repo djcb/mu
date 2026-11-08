@@ -17,7 +17,6 @@
 srcs = [
   'mu-command-handler.cc',
   'mu-html-to-text.cc',
-  'mu-pdf-to-text.cc',
   'mu-lang-detector.cc',
   'mu-logger.cc',
   'mu-option.cc',
@@ -29,6 +28,13 @@ srcs = [
 
 if lockdown_helper_dep.found()
   srcs += [ 'mu-lockdown.cc' ]
+endif
+
+# only with pdf-to-text support; otherwise, there is a dummy in mu-utils.cc
+# Note, _without_ the poppler-using parts (BUILD_PDF_TO_TEXT_INTERNAL): only the
+# mu-pdf2text helper should link with poppler.
+if poppler_dep.found()
+  srcs += [ 'mu-pdf-to-text.cc' ]
 endif
 
 if get_option('tests').allowed()
@@ -46,7 +52,6 @@ lib_mu_utils=static_library('mu-utils',
   readline_dep,
   cld2_dep,
   lockdown_helper_dep,
-  poppler_dep,
   fmt_dep,
   tl_expected_dep,
   tl_optional_dep
@@ -65,11 +70,37 @@ lib_mu_utils_dep = declare_dependency(
 #
 # tools
 #
+make_embeddable = find_program(build_aux / 'make-embeddable')
+
 html2text = executable('mu-html2text',
                        'mu-html-to-text.cc',
   dependencies: [ lib_mu_utils_dep, glib_dep ],
   cpp_args: ['-DBUILD_HTML_TO_TEXT'],
   install: false)
+
+# we install the mu-pdf2text binary, we use it a runtime; it is the only thing
+# that links with poppler
+if poppler_dep.found()
+  # the tiny pdf we use for warming up poppler, as something we can #include
+  poppler_warmup_inc = custom_target('poppler-warmup-inc',
+    input: 'poppler-warmup.pdf',
+    output: 'poppler-warmup.pdf.inc',
+    command: [make_embeddable, '@INPUT@', 'warm_up_pdf'],
+    capture: true)
+  pdf2text = executable('mu-pdf2text',
+                        ['mu-pdf2text.cc',
+                         'mu-pdf-to-text.cc',
+                         poppler_warmup_inc],
+    cpp_args: ['-DBUILD_PDF_TO_TEXT_INTERNAL'],
+    dependencies: [ lib_mu_utils_dep, glib_dep, poppler_dep, config_h_dep, cli11_dep ],
+    install: true,
+    install_dir: get_option('libexecdir'))
+  # for tests, use the binary from the build-tree
+  pdf2text_env = ['MU_PDF_TO_TEXT_PROGRAM=' + pdf2text.full_path()]
+else
+  pdf2text = []
+  pdf2text_env = []
+endif
 
 if get_option('tests').allowed()
   subdir('tests')

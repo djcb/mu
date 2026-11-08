@@ -1,0 +1,31 @@
+%PDF-1.0
+% Minimal PDF for warming up poppler for mu-pdf2text: a page with text in CID
+% fonts for each of the Adobe character collections poppler has
+% cidToUnicode-maps for (GB1, CNS1, Japan1, Korea1), so extracting the text
+% loads those maps _before_ we lock down the process.
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 9 9]/Resources<</Font<</1 5 0 R/2 6 0 R/3 7 0 R/4 8 0 R>>>>/Contents 4 0 R>>endobj
+4 0 obj<</Length 65>>stream
+BT/1 1 Tf<0001>Tj/2 1 Tf<0001>Tj/3 1 Tf<0001>Tj/4 1 Tf<0001>Tj ET
+endstream
+endobj
+5 0 obj<</Type/Font/Subtype/Type0/BaseFont/F/Encoding/Identity-H/DescendantFonts[<</Type/Font/Subtype/CIDFontType0/BaseFont/F/CIDSystemInfo<</Registry(Adobe)/Ordering(GB1)/Supplement 0>>>>]>>endobj
+6 0 obj<</Type/Font/Subtype/Type0/BaseFont/F/Encoding/Identity-H/DescendantFonts[<</Type/Font/Subtype/CIDFontType0/BaseFont/F/CIDSystemInfo<</Registry(Adobe)/Ordering(CNS1)/Supplement 0>>>>]>>endobj
+7 0 obj<</Type/Font/Subtype/Type0/BaseFont/F/Encoding/Identity-H/DescendantFonts[<</Type/Font/Subtype/CIDFontType0/BaseFont/F/CIDSystemInfo<</Registry(Adobe)/Ordering(Japan1)/Supplement 0>>>>]>>endobj
+8 0 obj<</Type/Font/Subtype/Type0/BaseFont/F/Encoding/Identity-H/DescendantFonts[<</Type/Font/Subtype/CIDFontType0/BaseFont/F/CIDSystemInfo<</Registry(Adobe)/Ordering(Korea1)/Supplement 0>>>>]>>endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000052 00000 n 
+0000000101 00000 n 
+0000000230 00000 n 
+0000000341 00000 n 
+0000000539 00000 n 
+0000000738 00000 n 
+0000000939 00000 n 
+trailer<</Size 9/Root 1 0 R>>
+startxref
+1140
+%%EOF
