@@ -275,6 +275,30 @@ else
 endif
 
 
+# lockdown-helpers: helpers for locking-down small process untrusted data and
+# run in a sandbox; the mech is platform-specific.
+lockdown_helper_dep = dependency('', required: false) # not supported (yet)
+if host_machine.system() == 'linux'
+  # the linux lock-down needs:
+  # - a 64-bit system: our seccomp-filter only allows the syscalls used
+  #   there (e.g., 32-bit systems use mmap2 rather than mmap)
+  # - close_range (linux >= 5.9, glibc >= 2.34)
+  # - libseccomp
+  if cc.sizeof('void*') != 8
+    message('lockdown-helpers require 64-bit linux')
+  elif not cc.has_function('close_range',
+                           prefix: '#define _GNU_SOURCE\n#include <unistd.h>')
+    message('lockdown-helpers require close_range')
+  else
+    lockdown_helper_dep = dependency('libseccomp', required: false)
+  endif
+endif
+if lockdown_helper_dep.found()
+  config_h_data.set('HAVE_LOCKDOWN_HELPER', 1)
+else
+  config_h_data.set('HAVE_LOCKDOWN_HELPER', 0)
+endif
+
 #
 # use libpoppler for PDF extractions if we can find it
 poppler_dep = dependency('poppler-glib', required: get_option('poppler'))
@@ -431,6 +455,7 @@ summary(dep_summary, section: 'Dependencies')
 
 summary({'language detection (cld2)'    : cld2_dep.type_name() == 'internal' ? 'true (subproject)'
                                           : cld2_dep.found() and get_option('cld2').allowed(),
+         'lockdown-helpers'             : lockdown_helper_dep.found(),
          'pdf-extraction'               : poppler_dep.found(),
          'scm scripting'                : guile_dep.found() and get_option('scm').allowed(),
          'guile (old-style, deprecated)': guile_dep.found() and get_option('guile').allowed(),

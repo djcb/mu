@@ -27,6 +27,10 @@ srcs = [
   'mu-utils.cc',
 ]
 
+if lockdown_helper_dep.found()
+  srcs += [ 'mu-lockdown.cc' ]
+endif
+
 if get_option('tests').allowed()
   test_srcs =  [ 'mu-test-utils.cc' ]
 else
@@ -41,6 +45,7 @@ lib_mu_utils=static_library('mu-utils',
   config_h_dep,
   readline_dep,
   cld2_dep,
+  lockdown_helper_dep,
   poppler_dep,
   fmt_dep,
   tl_expected_dep,
@@ -52,7 +57,8 @@ install: false)
 lib_mu_utils_dep = declare_dependency(
   link_with: lib_mu_utils,
   # tl-expected/tl-optional propagate: mu-result.hh/mu-option.hh need them
-  dependencies: [fmt_dep, tl_expected_dep, tl_optional_dep],
+  # lockdown_helper_dep propagates for linking the static lib
+  dependencies: [fmt_dep, tl_expected_dep, tl_optional_dep, lockdown_helper_dep],
   include_directories:
     include_directories(['.', '..']))
 
