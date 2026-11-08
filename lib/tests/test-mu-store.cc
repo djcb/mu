@@ -24,6 +24,7 @@
 #include <thread>
 #include <array>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <fstream>
 
@@ -112,7 +113,36 @@ test_store_reinit()
 	}
 }
 
+static void
+test_store_reinit_interrupted()
+{
+	/* when a re-init gets interrupted (e.g. ctrl-c during 'mu index
+	 * --reindex'), the store must still have a valid conf */
+	TempDir tempdir;
+	{
+		auto store{Store::make_new(tempdir.path(), MuTestMaildir)};
+		assert_valid_result(store);
+	}
 
+	const auto pid{::fork()};
+	g_assert_cmpint(pid, >=, 0);
+	if (pid == 0) {
+		auto store{Store::make(tempdir.path(),
+				       Store::Options::Writable|Store::Options::ReInit)};
+		::_exit(store ? 0 : 1); /* no dtors, i.e., no final commit */
+	}
+
+	int status{};
+	g_assert_cmpint(::waitpid(pid, &status, 0), ==, pid);
+	g_assert_true(WIFEXITED(status));
+	g_assert_cmpint(WEXITSTATUS(status), ==, 0);
+
+	auto store{Store::make(tempdir.path())};
+	assert_valid_result(store);
+	g_assert_cmpuint(store->config().get<Config::Id::SchemaVersion>(), ==,
+			 MU_STORE_SCHEMA_VERSION);
+	assert_equal(store->root_maildir(), MuTestMaildir);
+}
 
 static void
 test_store_add_count_remove()
@@ -686,7 +716,6 @@ test_store_fail()
 	// }
 }
 
-
 int
 main(int argc, char* argv[])
 {
@@ -694,6 +723,7 @@ main(int argc, char* argv[])
 
 	g_test_add_func("/store/ctor-dtor", test_store_ctor_dtor);
 	g_test_add_func("/store/reinit", test_store_reinit);
+	g_test_add_func("/store/reinit-interrupted", test_store_reinit_interrupted);
 	g_test_add_func("/store/add-count-remove", test_store_add_count_remove);
 	g_test_add_func("/store/labels", test_store_labels);
 	g_test_add_func("/store/message/mailing-list",

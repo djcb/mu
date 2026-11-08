@@ -83,6 +83,9 @@ struct Store::Private {
 		// so tell xapian-db to update its internal cached values from
 		// config. In practice: batch-size.
 		xapian_db_.reinit();
+		// commit the new config right away, so we're setup
+		// even when interrupted quickly.
+		xapian_db_.request_commit(true/*force*/);
 	}
 
 	~Private() try {
