@@ -539,8 +539,8 @@ plain-text part."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
-    ;; just continue if some of the decoding fails.
-    (ignore-errors (run-hooks 'gnus-article-decode-hook))
+    ;; Note: avoid `gnus-article-decode-hook'; `mm-dissect-buffer' does the
+    ;; decoding (#2969).
     (let ((handles (mm-dissect-buffer t t)))
       (unwind-protect
           (mu4e--view-html-render
