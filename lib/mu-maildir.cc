@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2008-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2008-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -20,6 +20,8 @@
 #include "config.h"
 
 #include <string>
+#include <filesystem>
+#include <system_error>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,7 +32,6 @@
 #include <string.h>
 #include <errno.h>
 #include <glib/gprintf.h>
-#include <gio/gio.h>
 
 #include "mu-maildir.hh"
 #include "utils/mu-utils.hh"
@@ -41,11 +42,10 @@ using namespace Mu;
 #define MU_MAILDIR_NOINDEX_FILE  ".noindex"
 #define MU_MAILDIR_NOUPDATE_FILE ".noupdate"
 
-/* On Linux (and some BSD), we have entry->d_type, but some file
- * systems (XFS, ReiserFS) do not support it, and set it DT_UNKNOWN.
- * On other OSs, notably Solaris, entry->d_type is not present at all.
- * For these cases, we use lstat (in get_dtype) as a slower fallback,
- * and return it in the d_type parameter
+/* On Linux (and some BSD), we have entry->d_type, but some file systems (XFS,
+ * ReiserFS) do not support it, and set it DT_UNKNOWN. On other OSs, notably
+ * Solaris, entry->d_type is not present at all. For these cases, we use lstat
+ * (in get_dtype) as a slower fallback, and return it in the d_type parameter
  */
 static unsigned char
 get_dtype(struct dirent* dentry, const std::string& path, bool use_lstat)
@@ -159,8 +159,7 @@ get_target_fullpath(const std::string& src, const std::string& targetpath,
 
 	/* create target-path; note: make the filename *cough* unique by
 	 * including a hash of the srcname in the targetname. This helps if
-	 * there are copies of a message (which all have the same basename)
-	 */
+	 * there are copies of a message (which all have the same basename) */
 	if (unique_names)
 		return join_paths(targetpath, in_cur ? "cur" : "new",
 				  mu_format("{:08x}-{}", g_str_hash(src.c_str()), srcfile));
@@ -206,7 +205,8 @@ clear_links(const std::string& path, DIR* dir)
 		case DT_LNK:
 			if (::unlink(fullpath.c_str()) != 0) {
 				/* LCOV_EXCL_START*/
-				mu_warning("error unlinking {}: {}", fullpath, g_strerror(errno));
+				mu_warning("error unlinking {}: {}",
+					   fullpath, g_strerror(errno));
 				res = false;
 				/* LCOV_EXCL_STOP*/
 			} else
@@ -216,7 +216,8 @@ clear_links(const std::string& path, DIR* dir)
 			DIR* subdir{::opendir(fullpath.c_str())};
 			/* LCOV_EXCL_START*/
 			if (!subdir) {
-				mu_warning("error opening dir {}: {}", fullpath, g_strerror(errno));
+				mu_warning("error opening dir {}: {}",
+					   fullpath, g_strerror(errno));
 				res = false;
 				break;
 			}
@@ -269,47 +270,72 @@ msg_move_verify(const std::string& src, const std::string& dst)
 }
 /* LCOV_EXCL_STOP*/
 
-/* LCOV_EXCL_START*/
-// don't use this right now, since it gives as (false alarm)
-// valgrind warning in tests
-/* use GIO to move files; this is slower than rename() so only use
- * this when needed: when moving across filesystems */
-[[maybe_unused]] static Mu::Result<void>
-msg_move_g_file(const std::string& src, const std::string& dst)
+/**
+ * Move a file; first try rename(), and if src and dst live on different
+ * file systems (or assume_remote is true), copy src to dst and remove src.
+ *
+ * @param src source path
+ * @param dst destination path; overwritten if it exists
+ * @param assume_remote assume src and dst are on different file systems
+ *
+ * @return an error code; empty if the move succeeded
+ */
+static std::error_code
+move_file(const std::string& src, const std::string& dst, bool assume_remote)
 {
-	GFile *srcfile{g_file_new_for_path(src.c_str())};
-	GFile *dstfile{g_file_new_for_path(dst.c_str())};
+	namespace fs = std::filesystem;
+	std::error_code ec;
 
-	GError* err{};
-	auto res = g_file_move(srcfile, dstfile,
-			       G_FILE_COPY_OVERWRITE,
-			       NULL, NULL, NULL, &err);
-	g_clear_object(&srcfile);
-	g_clear_object(&dstfile);
+	if (!assume_remote) {
+		fs::rename(src, dst, ec);
+		if (ec != std::errc::cross_device_link)
+			return ec;
+	}
 
-	if (res)
-		return Ok();
+	/* src and dst live on different file systems; copy & remove. Like mv,
+	 * retain the modification time. */
+	const auto mtime{fs::last_write_time(src, ec)};
+	if (ec)
+		return ec;
+	if (fs::copy_file(src, dst, fs::copy_options::overwrite_existing, ec); ec)
+		return ec;
+	if (fs::last_write_time(dst, mtime, ec); ec)
+		mu_debug("failed to set mtime for {}: {}", dst, ec.message());
+	if (fs::remove(src, ec); ec) /* LCOV_EXCL_START*/
+		mu_warning("failed to remove {} after copying: {}", src, ec.message());
+	/* LCOV_EXCL_STOP*/
+
+	return {};
+}
+
+Mu::Option<std::string>
+Mu::maildir_fallback_path(const std::string& path)
+{
+	const auto slash{path.rfind('/')};
+	const auto base_pos{slash == std::string::npos ? 0 : slash + 1};
+	const auto delim_pos{path.rfind(':')};
+
+	if (delim_pos == std::string::npos || delim_pos < base_pos ||
+	    path.compare(delim_pos + 1, 2, "2,") != 0)
+		return Nothing;
+
+	auto fallback{path};
+	fallback[delim_pos] = ';';
+	return fallback;
+}
+
+/* LCOV_EXCL_START*/
+static Mu::Result<std::string>
+msg_move_verified(const std::string& src, const std::string& dst)
+{
+	if (auto&& res{msg_move_verify(src, dst)}; !res)
+		return Err(std::move(res.error()));
 	else
-		return Err(Error::Code::File, &err, "error moving {} -> {}", src, dst);
+		return Ok(std::string{dst});
 }
 /* LCOV_EXCL_STOP*/
 
-/* use mv to move files; this is slower than rename() so only use this when
- * needed: when moving across filesystems */
-[[maybe_unused]] static Mu::Result<void>
-msg_move_mv_file(const std::string& src, const std::string& dst)
-{
-	static const auto mv_path{program_in_path("mv")};
-	if (!mv_path)
-		return Err(Error::Code::File, "failed to find 'mv'");
-
-	if (auto res{run_command0({*mv_path, src, dst})}; !res)
-		return Err(Error::Code::File, "error moving {}->{}; err={}", src, dst, res.error());
-	else
-		return Ok();
-}
-
-Mu::Result<void>
+Mu::Result<std::string>
 Mu::maildir_move_message(const std::string&	oldpath,
 			 const std::string&	newpath,
 			 bool			assume_remote)
@@ -320,29 +346,24 @@ Mu::maildir_move_message(const std::string&	oldpath,
 		return Err(Error{Error::Code::File, "cannot read {}", oldpath});
 
 	if (oldpath == newpath)
-		return Ok(); // nothing to do.
+		return Ok(std::string{newpath}); // nothing to do.
 
-	if (!assume_remote) { /* for testing */
-		if (::rename(oldpath.c_str(), newpath.c_str()) == 0) /* seems it worked; double-check */
-			return msg_move_verify(oldpath, newpath);
-		/* LCOV_EXCL_START*/
-		if (errno != EXDEV) /* some unrecoverable error occurred */
-			return Err(Error{Error::Code::File, "error moving {} -> {}: {}",
-					oldpath, newpath, strerror(errno)});
-		/* LCOV_EXCL_STOP*/
-	}
+	auto ec{move_file(oldpath, newpath, assume_remote)};
+	if (!ec)
+		return msg_move_verified(oldpath, newpath);
 
-	/* the EXDEV / assume-remote case -- source and target live on different
-	 * file systems
-	 *
-	 * we can choose either msg_move_gio_file or msg_move_mv_file;
-	 * we use the latter for now, since the former gives some (false)
-	 * valgrind alarms.
-	 * */
-	if (auto&& res{msg_move_mv_file(oldpath, newpath)}; !res)
-		return res;
-	else
-		return msg_move_verify(oldpath, newpath);
+	/* file systems such as vfat do not allow ':' in file names; try with
+	 * ';' instead, as other Maildir tools do */
+	if (ec == std::errc::invalid_argument) { /* LCOV_EXCL_START*/
+		if (const auto fallback{maildir_fallback_path(newpath)}; fallback) {
+			mu_debug("retrying move with fallback {}", *fallback);
+			if (!move_file(oldpath, *fallback, assume_remote))
+				return msg_move_verified(oldpath, *fallback);
+		}
+	} /* LCOV_EXCL_STOP*/
+
+	return Err(Error{Error::Code::File, "error moving {} -> {}: {}",
+			oldpath, newpath, ec.message()});
 }
 
 static std::string
@@ -395,26 +416,26 @@ check_determine_target_params (const std::string& old_path,
 {
 	if (!g_path_is_absolute(old_path.c_str()))
 		return Err(Error{Error::Code::File,
-				"old_path is not absolute ({})", old_path});
+				 "old_path is not absolute ({})", old_path});
 
 	if (!g_path_is_absolute(root_maildir_path.c_str()))
 		return Err(Error{Error::Code::File,
-				"root maildir path is not absolute ({})",
+				 "root maildir path is not absolute ({})",
 				root_maildir_path});
 
 	if (!target_maildir.empty() && target_maildir[0] != '/')
 		return Err(Error{Error::Code::File,
-				"target maildir must be empty or start with / ({})",
+				 "target maildir must be empty or start with / ({})",
 				target_maildir});
 
 	if (!old_path.starts_with(root_maildir_path))
 		return Err(Error{Error::Code::File,
-				"old-path must be below root-maildir ({}) ({})",
-				old_path, root_maildir_path});
+				 "old-path must be below root-maildir ({}) ({})",
+				 old_path, root_maildir_path});
 
 	if (any_of(newflags & Flags::New) && newflags != Flags::New)
 		return Err(Error{Error::Code::File,
-					"if the New flag is specified, it must be the only flag"});
+				 "if the New flag is specified, it must be the only flag"});
 	return Ok();
 }
 

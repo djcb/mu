@@ -579,7 +579,7 @@ Store::Private::move_message_unlocked(Message&& msg,
 	const auto target_maildir = target_mdir.value_or(msg.maildir());
 
 	/* 1. first determine the file system path of the target */
-	const auto target_path =
+	auto target_path =
 		maildir_determine_target(msg.path(), root_maildir_,
 					 target_maildir, target_flags,
 					 any_of(opts & MoveOptions::ChangeName));
@@ -589,9 +589,12 @@ Store::Private::move_message_unlocked(Message&& msg,
 	// in dry-run mode, we only determine the target-path
 	if (none_of(opts & MoveOptions::DryRun)) {
 
-		/* 2. let's move it */
-		if (const auto res = maildir_move_message(msg.path(), target_path.value()); !res)
+		/* 2. let's move it; the actual path may differ from the
+		 * target_path, see maildir_move_message() */
+		if (auto&& res = maildir_move_message(msg.path(), target_path.value()); !res)
 			return Err(res.error());
+		else
+			*target_path = std::move(*res);
 
 		/* 3. file move worked, now update the message with the new info.*/
 		if (auto&& res = msg.update_after_move(

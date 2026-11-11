@@ -25,6 +25,8 @@
 #include <string.h>
 #include <vector>
 #include <fstream>
+#include <filesystem>
+#include <chrono>
 
 #include "utils/mu-test-utils.hh"
 #include "mu-maildir.hh"
@@ -408,6 +410,20 @@ test_maildir_get_new_path_custom_real(bool change_name)
 
 
 static void
+test_maildir_fallback_path(void)
+{
+	assert_equal(maildir_fallback_path("/home/foo/Maildir/test/cur/123456:2,FR").value(),
+		     "/home/foo/Maildir/test/cur/123456;2,FR");
+	assert_equal(maildir_fallback_path("/home/foo/Maildir/test/cur/123:456:2,").value(),
+		     "/home/foo/Maildir/test/cur/123:456;2,");
+
+	g_assert_false(!!maildir_fallback_path("/home/foo/Maildir/test/cur/123456;2,FR"));
+	g_assert_false(!!maildir_fallback_path("/home/foo/Maildir/test/new/123456"));
+	g_assert_false(!!maildir_fallback_path("/home/foo/Maildir/test/new/123456:3,"));
+	g_assert_false(!!maildir_fallback_path("/home/foo/Mail:2,dir/test/new/123456"));
+}
+
+static void
 test_maildir_get_new_path_custom(void)
 {
 	return test_maildir_get_new_path_custom_real(false);
@@ -507,7 +523,16 @@ test_maildir_move(bool assume_remote)
 
 	const auto dstpath = tmpdir.path() + "/test1";
 
-	assert_valid_result(maildir_move_message(srcpath1, dstpath, assume_remote));
+	namespace fs = std::filesystem;
+	const auto mtime{fs::last_write_time(srcpath1) - std::chrono::hours{1}};
+	fs::last_write_time(srcpath1, mtime);
+
+	const auto res{maildir_move_message(srcpath1, dstpath, assume_remote)};
+	assert_valid_result(res);
+	assert_equal(*res, dstpath);
+	g_assert_false(fs::exists(srcpath1));
+	g_assert_true(fs::last_write_time(dstpath) == mtime); // mtime is retained
+
 	assert_valid_result(maildir_move_message(srcpath2, dstpath, assume_remote));
 
 	assert_valid_result(maildir_move_message(dstpath, dstpath)); // self-move is okay.
@@ -545,6 +570,7 @@ main(int argc, char* argv[])
 	g_test_add_func("/maildir/get-new-path-01", test_maildir_get_new_path_01);
 	g_test_add_func("/maildir/get-new-path-02", test_maildir_get_new_path_02);
 	g_test_add_func("/maildir/get-new-path-custom", test_maildir_get_new_path_custom);
+	g_test_add_func("/maildir/fallback-path", test_maildir_fallback_path);
 	g_test_add_func("/maildir/get-new-path-custom-change-name",
 			test_maildir_get_new_path_custom_change_name);
 

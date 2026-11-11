@@ -74,7 +74,12 @@ Result<void> maildir_link(const std::string& src, const std::string& targetpath,
 Result<void> maildir_clear_links(const std::string& dir);
 
 /**
- * Move a message file to another maildir. If the target exists, it is overwritten.
+ * Move a message file to another maildir.
+ *
+ * If the target exists, it is overwritten. Note: if the target file system does
+ * not allow ':' in file names (e.g. VFAT), and newpath uses ':' as the Maildir
+ * info-delimiter,, retry with ';' instead. So the actual target path may differ
+ * from newpath.
  *
  * @param oldpath an absolute file system path to an existing message in an
  * actual maildir
@@ -82,11 +87,23 @@ Result<void> maildir_clear_links(const std::string& dir);
  * @param assume_remote assume the target is on a different file-system,
  * and hence rename() won't work and we need another method
  *
- * @return a valid result or an Error
+ * @return the actual target path or an Error
  */
-Result<void> maildir_move_message(const std::string& oldpath,
-				  const std::string& newpath,
-				  bool               assume_remote = false);
+Result<std::string> maildir_move_message(const std::string& oldpath,
+					 const std::string& newpath,
+					 bool assume_remote = false);
+
+/**
+ * Get the fallback path for a message file which uses ':' as its Maildir
+ * info-delimiter, i.e., with the ':' replaced by ';'. This is for file systems
+ * that do not support ':' in file names.
+ *
+ * @param path path to a message file
+ *
+ * @return the path with ';' as the info-delimiter, or Nothing if path does not
+ * use ':' as its info-delimiter.
+ */
+Option<std::string> maildir_fallback_path(const std::string& path);
 
 /**
  * Determine the target path for a to-be-moved message; i.e. this does not
