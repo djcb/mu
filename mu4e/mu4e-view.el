@@ -496,6 +496,8 @@ activates URLs (in plain-text mode only)."
          (charset (and charset (intern charset)))
          (mu4e--view-rendering t) ;; needed if e.g. an ics file is buttonized
          (gnus-article-emulate-mime nil) ;; avoid perf problems
+         ;; Strip ^M that only appear after decoding the parts
+         (gnus-treat-strip-cr t)
          (mm-discouraged-alternatives (mu4e--view-discouraged-alternatives))
          ;; handle remote images as per `mu4e-view-remote-image-policy'
          (mm-text-html-renderer (mu4e--view-html-renderer msg))
@@ -504,6 +506,10 @@ activates URLs (in plain-text mode only)."
             (detect-coding-region (point-min) (point-max) t)))
          ;; Possibly add headers (before "Attachments")
          (gnus-display-mime-function (mu4e--view-gnus-display-mime msg)))
+    ;; Strip ^M from the raw message; they can cause rendering problems
+    ;; (#2260, #2508), and with CRLF line-endings we would not find the
+    ;; end of the headers below.
+    (article-remove-cr)
     ;; Populate gnus-original-article-buffer with the headers so
     ;; Gnus helpers (e.g. mailing-list detection) can find them.
     (message-narrow-to-headers-or-head)
@@ -513,8 +519,6 @@ activates URLs (in plain-text mode only)."
           (get-buffer-create gnus-original-article-buffer 'no-hooks)
         (erase-buffer)
         (insert headers)))
-    ;; Strip ^M that can cause rendering problems (#2260, #2508).
-    (article-remove-cr)
     (condition-case err
         (progn
           (mm-enable-multibyte)
