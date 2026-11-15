@@ -43,42 +43,45 @@
 namespace Mu {
 
 struct Property {
-        enum struct Id {
-                // store properties, i.e. properties associated with
-                // some store object (and store in the database), either
-                // at init time or updated during runtime.
-                BatchSize,         /**< Xapian batch-size */
-                Contacts,          /**< Cache of contact information */
-                Created,           /**< Time of creation */
-                IgnoredAddresses,  /**< Email addresses ignored for the
-                                      contacts-cache */
-                Labels,            /**< Serialized label information. */
-                LastChange,        /**< Time of last change */
-                LastIndex,         /**< Time of last index */
-                MaxMessageSize,    /**< Maximum message size (in bytes) */
-                PersonalAddresses, /**< List of personal e-mail addresses */
-                RootMaildir,       /**< Root maildir path */
-                SchemaVersion,     /**< Xapian DB schema version */
-                NgramsEnabled,     /**< Support ngrams for indexing & querying
-                                    *  for e.g. CJK languages */
-                // build/system properties
-                MuVersion,     /**< Mu version */
-                XapianVersion, /**< Xapian runtime version */
-                GlibVersion,   /**< GLib version */
+	enum struct Id {
+		// store properties, i.e. properties associated with
+		// some store object (and store in the database), either
+		// at init time or updated during runtime.
+		BatchSize,	   /**< Xapian batch-size */
+		Contacts,	   /**< Cache of contact information */
+		Created,	   /**< Time of creation */
+		IgnoredAddresses,  /**< Email addresses ignored for the
+				      contacts-cache */
+		Labels,		   /**< Serialized label information. */
+		LastChange,	   /**< Time of last change */
+		LastIndex,	   /**< Time of last index */
+		MaxMessageSize,	   /**< Maximum message size (in bytes) */
+		PersonalAddresses, /**< List of personal e-mail addresses */
+		RootMaildir,	   /**< Root maildir path */
+		SchemaVersion,	   /**< Xapian DB schema version */
+		NgramsEnabled,	   /**< Support ngrams for indexing & querying
+				    *  for e.g. CJK languages */
+		ExtractorsEnabled,
+		/**< Are external extractors (such as PDF->text) enabled? */
+		// build/system properties
+		MuVersion,     /**< Mu version */
+		XapianVersion, /**< Xapian runtime version */
+		GlibVersion,   /**< GLib version */
 		GmimeVersion,  /**< GMime version */
-                ScmEnabled,    /**< Built with SCM (Guile) support */
-                LanguageEnabled /**< Built with language-detection support */
+		ScmEnabled,    /**< Built with SCM (Guile) support */
+		LanguageEnabled, /**< Built with language-detection support */
+		PdfToTextEnabled /**< Built with PDF extraction support */
 	};
 
-        enum struct Flags {
-                None     = 0,      /**< Nothing in particular */
-                ReadOnly = 1 << 0, /**< Property is read-only for external use
-                                    * (but can change from within the store) */
-                Configurable = 1 << 1, /**< A user-configurable parameter; name
-                                        * starts with 'conf-' */
-                Internal = 1 << 2,     /**< Mu-internal field */
-                Runtime  = 1 << 3,     /**< May change at runtime */
-                System = 1 << 4,     /**< System property; read-only */
+	enum struct Flags {
+		None	 = 0,	   /**< Nothing in particular */
+		ReadOnly = 1 << 0, /**< Property is read-only for external use
+				    * (but can change from within the store) */
+		Configurable = 1 << 1, /**< A user-configurable parameter; name
+					* starts with 'conf-' */
+		Internal = 1 << 2,     /**< Mu-internal field */
+		Runtime	 = 1 << 3,     /**< May change at runtime */
+		System = 1 << 4,     /**< System property; read-only */
 	};
 	enum struct Type {
 		Boolean,        /**< Some boolean value */
@@ -212,6 +215,14 @@ public:
 			{},
 			"Support n-grams for working with CJK and other languages"
 		},
+		{
+			Id::ExtractorsEnabled,
+			Type::Boolean,
+			Flags::Configurable,
+			"extractors-enabled",
+			{},
+			"Support external extractors (such as pdf->txt)",
+		},
 
 		// system properties
 		{
@@ -263,6 +274,14 @@ public:
 			"language-enabled",
 			[]()->std::string { return mu_format("{}", HAVE_CLD2); },
 			"Is language detection/searching supported?"
+		},
+		{
+			Id::PdfToTextEnabled,
+			Type::Boolean,
+			Flags::System,
+			"pdf-to-text",
+			[]()->std::string { return mu_format("{}", BUILD_PDF_TO_TEXT); },
+			"Is PDF extraction supported?"
 		},
 	});
 

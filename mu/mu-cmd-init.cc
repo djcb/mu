@@ -62,6 +62,12 @@ Mu::mu_cmd_init(const Options& opts)
 			conf.checked_set<Config::Id::IgnoredAddresses>(opts.init.ignored_addresses);
 		if (opts.init.support_ngrams)
 			conf.checked_set<Config::Id::NgramsEnabled>(true);
+		if (opts.init.enable_extractors) {
+			if (BUILD_PDF_TO_TEXT)
+				conf.checked_set<Config::Id::ExtractorsEnabled>(true);
+			else // warn but continue.
+				mu_printerrln("this mu build does not support extractors");
+		}
 
 		return Store::make_new(opts.runtime_path(RuntimePath::XapianDb),
 				       opts.init.maildir, conf);

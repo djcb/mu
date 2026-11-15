@@ -75,12 +75,32 @@ Whether to enable support for using ngrams in indexing and query parsing; this
 can be useful for languages without explicit word breaks, such as
 Chinese/Japanese/Korean. See *NGRAM SUPPORT* below for details.
 
+** --enable-extractors
+Whether to enable external /text-extractors/; currently, there is only the
+pdf-to-text extractor. With this option set, and a ~mu~ built with the necessary
+capabilities, ~mu~ attempts to extract the text from PDF-documents, and make it
+searchable.
+
+You can see if your ~mu~ installation has PDF-extraction support using ~mu info~:
+#+begin_example
+$ mu info
+#+end_example
+and you can see your database's support for external extractors using
+#+begin_example
+$ mu info store
+#+end_example
+
+Hence, for extraction you require both a ~mu~ with support and this option. The
+extractor(s) (currently only one) are implemented as sand-boxed external
+programs. See *TEXT EXTRACTORS* below for further details.
+
 ** --reinit
 Reinitialize the database from an earlier version; that is, create a new empty
 database with the existing settings. This cannot be combined with the other *init*
 options.
 
-When you have _labels_ defined for messages in your database, *mu* automatically exports those to a file for importing later. See *RESTORING LABELS* below.
+When you have _labels_ defined for messages in your database, *mu* automatically
+exports those to a file for importing later. See *RESTORING LABELS* below.
 
 #+include: "muhome.inc" :minlevel 2
 
@@ -94,6 +114,24 @@ to search for messages written in such languages.
 
 When enabled, *mu* uses ngrams automatically. Xapian environment
 variables such as *XAPIAN_CJK_NGRAM* are ignored.
+
+* TEXT EXTRACTORS
+
+*mu* supports extracting text from attachment files; right now this is limited to
+PDF files. For this to work, *mu* must have been built with text-to-pdf support;
+moreover, the database must have been initialized with =--enable-extractors=, as
+discussed above.
+
+You can use ~mu info~ and ~mu info store~ to see whether extraction is supported
+and/or enabled.
+
+PDF extraction is handled in an external, sandboxed process; this is currently
+only supported on Linux/64-bit. Not all PDFs allow for text-extraction -- this
+is "best effort".
+
+You need to re-initialize (~mu init~) and re-index your messages for the PDFs in
+your messages to appear in ~mu~, in the ~embed:~ field, which is matched when you do
+not specify any field.
 
 #+include: "exit-code.inc" :minlevel 1
 
@@ -124,6 +162,7 @@ $ mu init --maildir=~/Maildir --personal-address=alice@example.com --personal-ad
 * SEE ALSO
 
 {{{man-link(mu-index,1)}}},
+{{{man-link(mu-info,1)}}},
 {{{man-link(mu-find,1)}}},
 {{{man-link(mu-labels,1)}}},
 {{{man-link(mu-cfind,1)}}},

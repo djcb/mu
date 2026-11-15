@@ -196,7 +196,8 @@ struct Options {
 		OptSize		batch_size;		/**< db transaction batch size */
 		bool		reinit;			/**< re-initialize  */
 		bool		support_ngrams;		/**< support CJK etc. ngrams */
-
+		bool		enable_extractors;
+		/**< enable external extractors (such as pdf) */
 	} init;
 
 	/*

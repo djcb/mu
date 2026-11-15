@@ -53,6 +53,8 @@ public:
 						   * in make_from_path */
 		NgramsEnabled     = 1 << 3,     /**< Support ngrams, as used in
 						 * CJK and other languages. */
+		ExtractorsEnabled = 1 << 4,
+		/**< Are extractors (such as pdf->txt) enabled? */
 	};
 
 	/**

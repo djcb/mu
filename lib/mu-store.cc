@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2021-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2021-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -115,10 +115,13 @@ struct Store::Private {
 	}
 
 	Message::Options make_message_options(const Config& conf) {
+		using enum Message::Options;
+		Message::Options opts{None};
 		if (conf.get<Config::Id::NgramsEnabled>())
-			return Message::Options::NgramsEnabled;
-		else
-			return Message::Options::None;
+			opts |= NgramsEnabled;
+		if (conf.get<Config::Id::ExtractorsEnabled>())
+			opts |= ExtractorsEnabled;
+		return opts;
 	}
 
 	Result<void> serialize();
