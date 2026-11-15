@@ -24,11 +24,14 @@
 
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <unistd.h>
 
 #include <glib.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -313,70 +316,114 @@ Mu::run_command0(std::initializer_list<std::string> args, bool try_setsid)
 		return Ok(std::move(*res));
 }
 
+/**
+ * RAII-helper to block SIGPIPE for the current thread, so writing to a
+ * program that already exited gives us EPIPE rather than a fatal signal.
+ */
+struct SigPipeBlocker {
+	SigPipeBlocker() {
+		::sigemptyset(&sigpipe_);
+		::sigaddset(&sigpipe_, SIGPIPE);
+		::pthread_sigmask(SIG_BLOCK, &sigpipe_, &old_mask_);
+	}
+	~SigPipeBlocker() {
+		sigset_t pending;
+		::sigemptyset(&pending);
+		::sigpending(&pending);
+		if (int sig{}; ::sigismember(&pending, SIGPIPE) == 1)
+			::sigwait(&sigpipe_, &sig); // consume it.
+		::pthread_sigmask(SIG_SETMASK, &old_mask_, {});
+	}
+	sigset_t sigpipe_, old_mask_;
+};
+
+/**
+ * Get the output from a helper (see read_from_helper)
+ *
+ * read its standard output until EOF or until there is more than max_output; in
+ * the latter case, terminate the helper. Then, close the fd and reap the
+ * helper.
+ *
+ * Takes ownership of pid, out_fd
+ *
+ * @param prog name of the helper, for error messages
+ * @param pid the helper's process-id
+ * @param out_fd file descriptor for the helper's standard output
+ * @param max_output maximum number of bytes, or 0 for 'no limit'
+ *
+ * @return the (possibly truncated) output (Ok) or an error
+ */
 static Result<std::string>
-grab_subprocess_result(GSubprocess *proc, const std::string& prog,
-		       std::string_view input)
+output_from_helper(const std::string& prog, GPid pid, int out_fd, size_t max_output)
 {
-	GError *err{};
-	GBytes *in_bytes{g_bytes_new_static(input.data(), input.size())};
-	GBytes *out_bytes{}, *err_bytes{};
+	std::string output;
+	std::array<char, 16384> buf;
 
-	const auto ok{g_subprocess_communicate(proc, in_bytes, {},
-					       &out_bytes, &err_bytes, &err)};
-	g_bytes_unref(in_bytes);
+	const auto too_much=[&]{ return max_output != 0 && output.size() > max_output; };
+	while (!too_much()) {
+		if (const auto n{::read(out_fd, buf.data(), buf.size())}; n > 0)
+			output.append(buf.data(), static_cast<size_t>(n));
+		else if (n == 0 || errno != EINTR)
+			break;
+	}
+	::close(out_fd);
 
-	const auto bytes_str=[](GBytes *bytes)->std::string {
-		if (!bytes)
-			return {};
-		gsize len{};
+	const auto truncated{too_much()};
+	if (truncated) { // stop the helper
+		output.resize(max_output);
+		::kill(pid, SIGKILL);
+	}
 
-		const auto ptr{g_bytes_get_data(bytes, &len)};
-		std::string str{static_cast<const char*>(ptr), len};
-		g_bytes_unref(bytes);
+	int status{};
+	while (::waitpid(pid, &status, 0) < 0 && errno == EINTR);
 
-		return str;
-	};
-	auto out_str{bytes_str(out_bytes)}, err_str{bytes_str(err_bytes)};
-
-	if (!ok)
-		return Err(Error::Code::Command, &err,
-			   "failed to communicate with {}", prog);
-	else if (!g_subprocess_get_if_exited(proc))
-		return Err(Error::Code::Command, "{} terminated abnormally{}{}",
-			   prog, err_str.empty() ? "" : ": ", err_str);
-	else if (const auto code{g_subprocess_get_exit_status(proc)}; code != 0)
-		return Err(Error::Code::Command, "{} returned {}{}{}",
-			   prog, code, err_str.empty() ? "" : ": ", err_str);
+	if (truncated) // not an error.
+		return Ok(std::move(output));
+	else if (!WIFEXITED(status))
+		return Err(Error::Code::Command, "{} terminated abnormally", prog);
+	else if (const auto code{WEXITSTATUS(status)}; code != 0)
+		return Err(Error::Code::Command, "{} returned {}", prog, code);
 	else
-		return Ok(std::move(out_str));
+		return Ok(std::move(output));
 }
 
 Result<std::string>
-Mu::two_way_pipe(std::initializer_list<std::string> args, std::string_view input)
+Mu::read_from_helper(std::initializer_list<std::string> args, std::span<const uint8_t> input,
+		     size_t max_output)
 {
 	if (args.size() == 0)
 		return Err(Error::Code::InvalidArgument, "no program specified");
 
-	std::vector<const char*> argvec{};
+	const auto& prog{*args.begin()};
+	std::vector<char*> argvec{};
 	for (auto&& arg: args)
-		argvec.emplace_back(arg.c_str());
+		argvec.emplace_back(const_cast<char*>(arg.c_str()));
 	argvec.emplace_back(nullptr);
 
-	const auto& prog{*args.begin()};
 	GError *err{};
-	GSubprocess *proc{g_subprocess_newv(
-			argvec.data(),
-			static_cast<GSubprocessFlags>(G_SUBPROCESS_FLAGS_STDIN_PIPE  |
-						      G_SUBPROCESS_FLAGS_STDOUT_PIPE |
-						      G_SUBPROCESS_FLAGS_STDERR_PIPE),
-			&err)};
-	if (!proc)
+	GPid pid{};
+	int in_fd{-1}, out_fd{-1};
+	const auto flags{static_cast<GSpawnFlags>(G_SPAWN_DO_NOT_REAP_CHILD |
+						  G_SPAWN_STDERR_TO_DEV_NULL)};
+	if (!g_spawn_async_with_pipes({}, argvec.data(), {}, flags, {}, {},
+				      &pid, &in_fd, &out_fd, {}, &err))
 		return Err(Error::Code::Command, &err, "failed to start {}", prog);
 
-	auto res{grab_subprocess_result(proc, prog, input)};
-	g_object_unref(proc);
+	// first, write all the input...
+	{
+		SigPipeBlocker blocker;
+		for (size_t written{}; written < input.size();) {
+			if (const auto n{::write(in_fd, input.data() + written,
+						 input.size() - written)}; n > 0)
+				written += static_cast<size_t>(n);
+			else if (errno != EINTR)
+				break; // the helper is gone (EPIPE)
+		}
+		::close(in_fd); // signals EOF to the helper
+	}
 
-	return res;
+	// ...then, get the output.
+	return output_from_helper(prog, pid, out_fd, max_output);
 }
 
 Mu::Option<std::string>
@@ -624,40 +671,81 @@ test_read_write_from_to_file()
 	}
 }
 
-
-
-
 static void
-test_two_way_pipe()
+test_read_from_helper()
 {
 	const auto cat{program_in_path("cat")};
 	const auto sh{program_in_path("sh")};
-	if (!cat || !sh) {
-		g_test_skip("cat/sh not found");
+	const auto wc{program_in_path("wc")};
+	if (!cat || !sh || !wc) {
+		g_test_skip("cat/sh/wc not found");
 		return;
 	}
 
+	// note: cat does not read all input before writing, so only use it
+	// with small inputs.
 	const std::string input{"hello\0world", 11}; // binary-safe
-	const auto res{two_way_pipe({*cat}, input)};
+	const auto res{read_from_helper({*cat}, input)};
 	assert_ok(res);
 	assert_equal(*res, input);
 
-	const auto empty{two_way_pipe({*cat}, {})};
+	const auto empty{read_from_helper({*cat}, "")};
 	assert_ok(empty);
 	g_assert_true(empty->empty());
 
+	// input bigger than a pipe-buffer
+	const std::string big(1 << 20, 'x');
+	const auto count{read_from_helper({*wc, "-c"}, big)};
+	assert_ok(count);
+	g_assert_cmpuint(std::stoul(*count), ==, big.size());
+
+	// helper not interested in our input; we should survive that (no
+	// SIGPIPE).
+	assert_ok(read_from_helper({*sh, "-c", "exit 0"}, big));
+
 	// non-zero exit
-	const auto fail{two_way_pipe({*sh, "-c", "echo oops >&2; exit 3"}, "")};
+	const auto fail{read_from_helper({*sh, "-c", "echo oops >&2; exit 3"}, "")};
 	g_assert_false(!!fail);
 	g_assert_true(fail.error().code() == Error::Code::Command);
-	g_assert_true(std::string{fail.error().what()}.find("oops") != std::string::npos);
 
 	// killed by a signal
-	g_assert_false(!!two_way_pipe({*sh, "-c", "kill -9 $$"}, ""));
+	g_assert_false(!!read_from_helper({*sh, "-c", "kill -9 $$"}, ""));
 
 	// non-existent program
-	g_assert_false(!!two_way_pipe({"/nonexistent/program"}, "foo"));
-	g_assert_false(!!two_way_pipe({}, "foo"));
+	g_assert_false(!!read_from_helper({"/nonexistent/program"}, "foo"));
+	g_assert_false(!!read_from_helper({}, "foo"));
+}
+
+static void
+test_read_from_helper_max_output()
+{
+	const auto sh{program_in_path("sh")};
+	if (!sh) {
+		g_test_skip("sh not found");
+		return;
+	}
+
+	const std::string big(1 << 20, 'x');
+	const auto script{"cat > /dev/null; echo hello; echo world"};
+
+	// within the limit
+	{
+		const auto res{read_from_helper({*sh, "-c", script}, big, 12)};
+		assert_ok(res);
+		assert_equal(*res, "hello\nworld\n");
+	}
+	// too much output gets truncated
+	{
+		const auto res{read_from_helper({*sh, "-c", script}, big, 7)};
+		assert_ok(res);
+		assert_equal(*res, "hello\nw");
+	}
+	{ // ... also when it never ends
+		const auto res{read_from_helper(
+				{*sh, "-c", "while :; do echo hello; done"}, "", 1000)};
+		assert_ok(res);
+		g_assert_cmpuint(res->size(), ==, 1000);
+	}
 }
 
 int
@@ -678,7 +766,9 @@ main(int argc, char* argv[])
 	g_test_add_func("/utils/file/expand-path", test_expand_path);
 	g_test_add_func("/utils/file/make-remove-directory", test_make_remove_directory);
 	g_test_add_func("/utils/file/read-write-from-to-file", test_read_write_from_to_file);
-	g_test_add_func("/utils/file/two-way-pipe", test_two_way_pipe);
+	g_test_add_func("/utils/file/read-from-helper", test_read_from_helper);
+	g_test_add_func("/utils/file/read-from-helper-max-output",
+			test_read_from_helper_max_output);
 
 	return g_test_run();
 }
