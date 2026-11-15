@@ -135,7 +135,9 @@ test('test-store-query',
                 'test-mu-store-query.cc',
                 install: false,
                 build_by_default: false,
-                dependencies: [glib_dep, gmime_dep, lib_mu_dep]))
+                dependencies: [glib_dep, gmime_dep, lib_mu_dep]),
+     env: pdf2text_env,
+     depends: pdf2text)
 #
 # benchmarks
 #
