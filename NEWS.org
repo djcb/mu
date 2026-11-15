@@ -29,6 +29,30 @@
      =completions= sub-command for generating these, and include *experimental*
      support for the Fish shell (1.14.4)
 
+   - Based on ~libpoppler~, extract text from PDF documents, and include as
+     "embedded" text, and searchable, so e.g.
+     #+begin_example
+     mu find rumpelstiltskin
+     #+end_example
+     would match messages that contain a PDF with that string.
+
+     Not all PDFs allow for text-extraction -- this is "best effort".
+
+     PDF extraction is handled in an external, sandboxed process; this is
+     currently only supported on Linux/64-bit.
+
+     For PDF-extraction to work, build ~mu~ with the optional dependency
+     ~libpoppler-glib~; this builds a small sand-boxed external program
+     ~mu-pdf2text~, which performs the actual extraction. ~mu~ finds this program
+     after installation
+
+     After that, if you want to enable PDF-extraction, you need to pass the
+     =--enable-extractors= command-line option to ~mu init~. You can use ~mu info~ and
+     ~mu info store~ to see whether extraction is supported and/or enabled.
+
+     You need to re-initialize (~mu init~) and re-index your messages for the PDFs
+     in your messages to appear in ~mu~, in the ~embed:~ field (1.14.5)
+
 *** mu4e
 
    - ~mu4e-main-hide-personal-addresses~ can now also be a number, which

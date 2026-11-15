@@ -7,11 +7,12 @@ future.
 
 ** mu
 
-- Support indexing PDF (and other) attachments. This can be done extending
-  process_message_part in mu-message.cc; instead of using something
-  PDF-specific, we could pipe a PDF through some tool to extract text; and we'd
-  need some way for users to specify a MIME-type => tool mapping  (in Config).
-  https://github.com/djcb/mu/issues/2117
+- mu supports extracting text from HTML and PDF (since 1.14.5); other types
+  might be useful, most prominently ~docx~.
+
+  However for this, we require a library that can do the conversion (similar to
+  ~libpoppler~) and which is available in Debian stable and Fedora, and there does
+  not seem to be one.
 
 - Include "message summary" in message information, for display in the headers
   buffer: https://github.com/djcb/mu/issues/1821 It's not so easy to get a
@@ -77,9 +78,6 @@ future.
        operations for my mail directory by proxy'ing to tramp
   But perhaps can be documented.
 
-- Allow for watching notifications externally, perhaps using alert.el
-  https://github.com/djcb/mu/issues/2825
-
 - Allow for filling/aligning the personal e-mail addresses in the main view,
   https://github.com/djcb/mu/issues/2901 Note that you can already limit the
   number of addresses or hide them completely.
@@ -107,3 +105,11 @@ future.
 
 ** DONE perhaps use =--personal-addres= instead of =--my-address= for consistency
   https://github.com/djcb/mu/issues/2806 (done as per 1.12.12)
+
+** DONE Allow for watching notifications externally, perhaps using alert.el
+  This is available (see ~mu4e-notification.el~ and ~mu4e-dbus.el~)
+  https://github.com/djcb/mu/issues/2825
+
+** DONE Support indexing PDF (and other) attachments.
+  Available since 1.14.5.
+  https://github.com/djcb/mu/issues/2117
