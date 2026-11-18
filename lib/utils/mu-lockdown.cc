@@ -142,8 +142,8 @@ lockdown_common(int fd, size_t timeout_s) noexcept
 			g_error("cannot set time limit; terminating");
 		// SIGALRM to terminate a too-slow/hanging process
 		sigset_t sigalrm;
-		::sigemptyset(&sigalrm);
-		::sigaddset(&sigalrm, SIGALRM);
+		sigemptyset(&sigalrm);
+		sigaddset(&sigalrm, SIGALRM);
 		if (::signal(SIGALRM, SIG_DFL) == SIG_ERR ||
 		    ::sigprocmask(SIG_UNBLOCK, &sigalrm, {}) != 0)
 			g_error("cannot set time limit; terminating");

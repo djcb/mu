@@ -322,15 +322,15 @@ Mu::run_command0(std::initializer_list<std::string> args, bool try_setsid)
  */
 struct SigPipeBlocker {
 	SigPipeBlocker() {
-		::sigemptyset(&sigpipe_);
-		::sigaddset(&sigpipe_, SIGPIPE);
+		sigemptyset(&sigpipe_);
+		sigaddset(&sigpipe_, SIGPIPE);
 		::pthread_sigmask(SIG_BLOCK, &sigpipe_, &old_mask_);
 	}
 	~SigPipeBlocker() {
 		sigset_t pending;
-		::sigemptyset(&pending);
+		sigemptyset(&pending);
 		::sigpending(&pending);
-		if (int sig{}; ::sigismember(&pending, SIGPIPE) == 1)
+		if (int sig{}; sigismember(&pending, SIGPIPE) == 1)
 			::sigwait(&sigpipe_, &sig); // consume it.
 		::pthread_sigmask(SIG_SETMASK, &old_mask_, {});
 	}
