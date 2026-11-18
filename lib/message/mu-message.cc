@@ -396,15 +396,48 @@ append_text(Option<std::string>& str, Option<std::string>&& app)
 		str.value() += utf8_clean(app.value());
 }
 
+static Option<std::string>
+text_from_pdf(const MimePart& part, const MimeContentType& ctype,
+	      Message::Private& info)
+{
+	if (none_of(info.opts & Message::Options::ExtractorsEnabled) ||
+	    !ctype.is_type("application", "pdf"))
+		return Nothing; // nothing to extract
+
+	// Avoid decoding PDFs that are too big anyway. Guess the size,
+	// assuming base-64.
+	if (part.size() / 4 * 3 > max_pdf_size)
+		return Nothing;
+
+	if (const auto pdfbytes{part.to_bytes()}; pdfbytes)
+		return pdf_to_text(*pdfbytes);
+	else
+		return Nothing;
+}
+
+static Option<std::string>
+mime_part_to_text(const MimePart& part, const MimeContentType& ctype,
+		  Message::Private& info)
+{
+	// attempt to convert mime-part into something indexable.
+	if (ctype.is_type("text", "html")) {
+		const auto& html{part.to_string()};
+		return html ? Option(html_to_text(*html)) : Nothing;
+	} else if (ctype.is_type("text", "*"))
+		return part.to_string();
+	else if (ctype.is_type("application", "pdf"))
+		return text_from_pdf(part, ctype, info);
+	else
+		return Nothing;
+}
+
 static void
 accumulate_text(const MimePart& part, Message::Private& info,
 		const MimeContentType& ctype)
 {
-	if (!ctype.is_type("text", "*"))
-		return; /* not a text type */
-
-	if (part.is_attachment())
-		append_text(info.embedded, part.to_string());
+	// treat inline pdf as attachment
+	if (part.is_attachment() || ctype.is_type("application", "pdf"))
+		append_text(info.embedded, mime_part_to_text(part, ctype, info));
 	else if (ctype.is_type("text", "plain"))
 		append_text(info.body_txt, part.to_string());
 	else if (ctype.is_type("text", "html"))
@@ -467,12 +500,10 @@ process_message_part(const MimeMessagePart& msg_part,
 			return;
 		if (const auto ctype{child_obj.content_type()}; !ctype)
 			return;
-		else if (ctype->is_type("text", "plain"))
-			append_text(info.embedded, MimePart{child_obj}.to_string());
-		else if (ctype->is_type("text", "html")) {
-			if (auto&& str{MimePart{child_obj}.to_string()}; str)
-				append_text(info.embedded, html_to_text(*str));
-		}
+		else
+			append_text(info.embedded,
+				    mime_part_to_text(MimePart{child_obj},
+						      *ctype, info));
 	});
 }
 

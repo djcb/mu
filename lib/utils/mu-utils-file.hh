@@ -21,7 +21,8 @@
 #define MU_UTILS_FILE_HH__
 
 #include <string>
-#include <cinttypes>
+#include <span>
+#include <cstdint>
 #include <sys/stat.h>
 
 #include <gio/gio.h>
@@ -252,18 +253,37 @@ Result<CommandOutput> run_command0(std::initializer_list<std::string> args,
 				   bool try_setsid=false);
 
 /**
- * Run a program, write to its standard input and read its standard
- * output, until it terminates.
+ * Run a helper-program, write some input to its standard input and after that,
+ * read its standard output until it terminates.
  *
- * args[0] must be the full path to some program
+ * This is *not* a general way to pipe data through some program: the helper
+ * must read all of its input before writing any output (otherwise, things may
+ * deadlock). Anything the helper writes to its standard error is ignored. The
+ * helper should use mu-lockdown.
  *
- * @param args a list of commmand line arguments (like argv)
- * @param input data to write to the program's standard input
+ * args[0] must be the full path to the helper
  *
- * @return the output string (Ok) or an error
+ * @param args command line args (like argv)
+ * @param input data to write to the helper's standard input
+ * @param max_output maximum number of bytes to read from the helper's standard
+ * output; when there is more, terminate the helper and return the (truncated)
+ * output. 0 means 'no limit'
+ *
+ * @return the output string or an error
  */
-Result<std::string> two_way_pipe(std::initializer_list<std::string> args,
-				 std::string_view input);
+Result<std::string> read_from_helper(std::initializer_list<std::string> args,
+				     std::span<const uint8_t> input,
+				     size_t max_output = 0);
+
+/// compat wrapper for read_from_helper
+inline Result<std::string> read_from_helper(std::initializer_list<std::string> args,
+					    std::string_view input,
+					    size_t max_output = 0) {
+	return read_from_helper(
+		args, {reinterpret_cast<const uint8_t*>(input.data()), input.size()},
+		max_output);
+}
+
 
 /**
  * Try to 'play' (ie., open with it's associated program) a file. On MacOS, the

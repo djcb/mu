@@ -552,6 +552,8 @@ sub_init(CLI::App& sub, Options& opts)
 		       "Maximum size of database transaction");
 	sub.add_flag("--support-ngrams", opts.init.support_ngrams,
 		     "Support CJK n-grams for querying/indexing");
+	sub.add_flag("--enable-extractors", opts.init.enable_extractors,
+		     "Enable external extractors (such as PDF)");
 	sub.add_flag("--reinit", opts.init.reinit,
 		       "Re-initialize database with current settings")
 		->excludes("--maildir")

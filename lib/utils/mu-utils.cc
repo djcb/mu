@@ -17,6 +17,8 @@
 **  02110-1301, USA.
 */
 
+#include "config.h"
+
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE
 #include <stdexcept>
@@ -766,3 +768,12 @@ Mu::set_thread_name(const std::string& name)
 	pthread_setname_np(pthread_self(), name.c_str());
 #endif /*HAVE_PTHREAD_SETNAME_NP*/
 }
+
+#if !BUILD_PDF_TO_TEXT
+// dummy; the real one is in mu-pdf-to-text.cc
+Option<std::string>
+Mu::pdf_to_text(std::span<const uint8_t>)
+{
+	return Nothing;
+}
+#endif /*!BUILD_PDF_TO_TEXT*/

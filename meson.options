@@ -64,12 +64,17 @@ option('cld2',
        value: 'auto',
        description: 'Add support for language-detection through cld2')
 
+# pdf extraction
+option('poppler',
+       type : 'feature',
+       value: 'auto',
+       description: 'Enable support for PDF extraction through libpoppler-glib')
+
 # debug repl
 option('readline',
        type: 'feature',
        value: 'auto',
        description: 'enable readline support for the mu4e repl')
-
 
 #
 # completion
@@ -97,7 +102,6 @@ option('zsh-completion',
 option('zsh-completion-dir',
        type: 'string',
        description: 'custom install path for zsh completion')
-
 
 #
 # misc

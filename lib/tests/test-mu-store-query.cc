@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2022-2025 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+** Copyright (C) 2022-2026 Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
 **
 ** This program is free software; you can redistribute it and/or modify it
 ** under the terms of the GNU General Public License as published by the
@@ -36,7 +36,6 @@
 #include "mu-query-parser.hh"
 
 using namespace Mu;
-
 
 /// map of some (unique) path-tail to the message-text
 using TestMap = std::unordered_map<std::string, std::string>;
@@ -1128,6 +1127,56 @@ Boo!
 		assert_valid_result(qr);
 		g_assert_true(qr->empty());
 	}
+}
+
+static void
+test_pdf()
+{
+	const auto msgtxt{read_from_file(join_paths(MU_TESTMAILDIR4, "pdf!2,S"))};
+	assert_ok(msgtxt);
+
+	const TestMap test_msgs{{"inbox/new/msg",  *msgtxt }};
+
+	// extractors are not enabled by default
+	MemDb mdb;
+	Config conf{mdb};
+	assert_valid_result(conf.set<Config::Id::ExtractorsEnabled>(true));
+
+	TempDir tdir;
+	auto store{make_test_store(tdir.path(), test_msgs, conf)};
+
+	{
+		const auto qr = store.run_query("label:cheers");
+		assert_ok(qr);
+		g_assert_true(qr->empty());
+	}
+
+	{
+		const auto qr = store.run_query("subject:cheers!");
+		assert_ok(qr);
+		g_assert_true(qr->size() == 1);
+	}
+
+
+	constexpr auto pdf2text = BUILD_PDF_TO_TEXT;
+
+	{
+		const auto qr = store.run_query("stroopwafel");
+		assert_ok(qr);
+		g_assert_cmpuint(qr->size(), ==, pdf2text ? 1 : 0);
+	}
+
+	{
+		const auto qr = store.run_query("embed:hagelslag");
+		assert_ok(qr);
+		g_assert_cmpuint(qr->size(), ==, pdf2text ? 1 : 0);
+	}
+
+	{
+		const auto qr = store.run_query("bitterbal");
+		assert_ok(qr);
+		g_assert_true(qr->empty());
+	}
 
 }
 
@@ -1168,7 +1217,8 @@ main(int argc, char* argv[])
 			test_ngrams);
 	g_test_add_func("/store/query/update-labels",
 			test_update_labels);
-
+	g_test_add_func("/store/query/pdf",
+			test_pdf);
 
 	return g_test_run();
 }
