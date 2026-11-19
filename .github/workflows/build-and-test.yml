@@ -16,11 +16,13 @@ jobs:
         include:
           - name: ubuntu-24.04
             os: ubuntu-24.04
+            meson_flags: -Dpoppler=enabled
           - name: macos-latest
             os: macos-latest
           - name: fedora-latest
             os: ubuntu-latest
             container: fedora:latest
+            meson_flags: -Dpoppler=enabled
           - name: debian-stable
             os: ubuntu-latest
             container: debian:stable
@@ -32,12 +34,12 @@ jobs:
         name: ubuntu-deps
         run: |
           sudo apt update
-          sudo apt-get install meson ninja-build pkg-config libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev guile-3.0-dev libcld2-dev emacs texinfo
+          sudo apt-get install meson ninja-build pkg-config libxapian-dev libglib2.0-dev libgmime-3.0-dev libcli11-dev libfmt-dev libexpected-dev guile-3.0-dev libcld2-dev libpoppler-glib-dev libseccomp-dev emacs texinfo
 
       - if: startsWith(matrix.container, 'fedora')
         name: fedora-deps
         run: |
-          dnf install -y git make gcc-c++ glibc-gconv-extra gnupg2 meson ninja-build pkgconf-pkg-config xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel guile30-devel cld2-devel emacs texinfo
+          dnf install -y git make gcc-c++ glibc-gconv-extra gnupg2 meson ninja-build pkgconf-pkg-config xapian-core-devel glib2-devel gmime30-devel cli11-devel fmt-devel expected-devel guile30-devel cld2-devel poppler-glib-devel libseccomp-devel emacs texinfo
 
       - if: startsWith(matrix.container, 'debian')
         name: debian-deps
@@ -53,6 +55,8 @@ jobs:
           brew install meson ninja libgpg-error pkg-config glib gmime xapian guile emacs texinfo
 
       - name: build
+        env:
+          MESON_FLAGS: ${{ matrix.meson_flags }}
         run: make
 
       - name: test
